@@ -25,10 +25,12 @@
       "format": "{icon}",
       "all-outputs": false,
       "format-icons": {
-        "1": "",
-        "2": "󰖟",
-        "3": "",
-        "default": "",
+        "1": "",
+        "2": "󰈹",
+        "default": "",
+      },
+      "persistent-workspaces": {
+        "DP-2": [1, 2, 3, 4, 5], "DP-3": [1, 2, 3, 4, 5], "DP-1": [1, 2, 3, 4, 5], "HDMI-A-1": [1, 2, 3, 4, 5],
       },
     },
     "tray": {
@@ -108,10 +110,12 @@
       "format": "{icon}",
       "all-outputs": false,
       "format-icons": {
-        "1": "",
-        "2": "󰖟",
-        "3": "",
-        "default": "",
+        "1": "",
+        "2": "󰈹",
+        "default": "",
+      },
+      "persistent-workspaces": {
+        "eDP-1": [6, 7, 8, 9],
       },
     },
     "tray": {
