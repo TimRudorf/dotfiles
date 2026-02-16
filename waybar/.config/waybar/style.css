@@ -1,0 +1,130 @@
+@import url("./catppuccin/themes/mocha.css");
+
+* {
+  font-family: "Maple Mono NF";
+  font-size: 14px;
+  min-height: 0;
+  padding-right: 2px;
+  padding-left: 2px;
+  padding-bottom: 0px;
+}
+
+#waybar {
+  background: transparent;
+  color: @text;
+  margin: 2px 2px;
+}
+
+#workspaces {
+  border-radius: 5px;
+  margin: 5px;
+  background-color: @surface0;
+  margin-left: 15px;
+}
+
+#workspaces button {
+  color: @lavender;
+  border-radius: 5px;
+  padding: 0.4rem;
+}
+
+#workspaces button.active {
+  color: @sky;
+  border-radius: 5px;
+}
+
+#workspaces button:hover {
+  color: @sapphire;
+  border-radius: 5px;
+}
+
+button {
+  background: transparent;
+}
+
+#tray,
+#backlight,
+#custom-clock,
+#network,
+#custom-tailscale,
+#clock,
+#battery,
+#power-profiles-daemon,
+#pulseaudio,
+#custom-lock,
+#custom-power {
+  background-color: @surface0;
+  padding: 0.5rem 1rem;
+  margin: 5px 0;
+}
+
+#clock,
+#custom-clock {
+  color: @text;
+  border-radius: 5px;
+}
+
+#custom-tailscale.connected {
+  color: @green;
+}
+
+#custom-tailscale.stopped {
+  color: @red;
+}
+
+#battery {
+  color: @green;
+}
+
+#battery.charging {
+  color: @green;
+}
+
+#battery.warning:not(.charging) {
+  color: @red;
+}
+
+#power-profiles-daemon.power-saver {
+  color: @green;
+}
+
+#power-profiles-daemon.balances {
+  color: @text;
+}
+
+#power-profiles-daemon.performance {
+  color: @yellow;
+}
+
+#backlight {
+  color: @yellow;
+}
+
+#network {
+  color: @teal;
+}
+
+#backlight,
+#network,
+#custom-tailscale,
+#battery,
+#power-profiles-daemon,
+#tray,
+#custom-lock {
+  border-radius: 0;
+}
+
+#pulseaudio {
+  color: @maroon;
+  border-radius: 5px 0px 0px 5px;
+}
+
+#custom-power {
+  margin-right: 15px;
+  border-radius: 0px 5px 5px 0px;
+  color: @red;
+}
+
+#workspaces button.urgent {
+  color: @red;
+}

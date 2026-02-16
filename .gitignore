@@ -1,0 +1,10 @@
+# Machine-specific overrides
+*.local.conf
+local.conf
+
+# Generated files
+*.lock.json
+
+# OS artifacts
+.DS_Store
+Thumbs.db

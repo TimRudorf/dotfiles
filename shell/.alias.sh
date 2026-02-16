@@ -1,0 +1,5 @@
+alias cd="z"
+alias ls="eza -la"
+alias lg="lazygit"
+alias lsql="lazysql"
+alias cat="bat"
