@@ -26,9 +26,11 @@
     "all-outputs": true,
     "format-icons": {
       "1": "",
-      "2": "󰖟",
-      "3": "",
+      "2": "󰈹",
       "default": "",
+    },
+    "persistent-workspaces": {
+      "*": [1, 2, 3, 4, 5],
     },
   },
   "tray": {

@@ -39,9 +39,9 @@ restart_waybar() {
 
 if $has_dp2 && $has_dp3; then
     # Szenario 2: Docking-Station — eDP-1 + DP-2 (landscape) + DP-3 (portrait)
-    for ws in 1 2 3 4 5; do WORKSPACE_RULES+=("$ws, monitor:DP-2"); done
-    for ws in 6 7;       do WORKSPACE_RULES+=("$ws, monitor:DP-3"); done
-    for ws in 8 9;       do WORKSPACE_RULES+=("$ws, monitor:$INTERNAL"); done
+    for ws in 1 2 3 4 5; do WORKSPACE_RULES+=("$ws, monitor:DP-2, persistent:true"); done
+    for ws in 6 7;       do WORKSPACE_RULES+=("$ws, monitor:DP-3, persistent:true"); done
+    for ws in 8 9;       do WORKSPACE_RULES+=("$ws, monitor:$INTERNAL, persistent:true"); done
     generate_workspace_config
     restart_waybar docked
 elif [[ $external_count -eq 1 ]]; then
@@ -49,15 +49,22 @@ elif [[ $external_count -eq 1 ]]; then
     ext="${external:-DP-2}"
     $has_dp2 && ext="DP-2"
     $has_dp3 && ext="DP-3"
-    for ws in 1 2 3 4 5; do WORKSPACE_RULES+=("$ws, monitor:$ext"); done
-    for ws in 6 7 8 9;   do WORKSPACE_RULES+=("$ws, monitor:$INTERNAL"); done
+    for ws in 1 2 3 4 5; do WORKSPACE_RULES+=("$ws, monitor:$ext, persistent:true"); done
+    for ws in 6 7 8 9;   do WORKSPACE_RULES+=("$ws, monitor:$INTERNAL, persistent:true"); done
     generate_workspace_config
     restart_waybar single
 else
     # Szenario 1: Nur interner Monitor
-    for ws in 1 2 3 4 5; do WORKSPACE_RULES+=("$ws, monitor:$INTERNAL"); done
+    for ws in 1 2 3 4 5; do WORKSPACE_RULES+=("$ws, monitor:$INTERNAL, persistent:true"); done
     generate_workspace_config
     restart_waybar laptop
 fi
 
 hyprctl reload >/dev/null
+
+# Apps nur beim ersten Start (nicht bei Monitor-Wechsel)
+if [[ ! -f /tmp/hypr-apps-started ]]; then
+    touch /tmp/hypr-apps-started
+    hyprctl dispatch exec "[workspace 1 silent] kitty"
+    hyprctl dispatch exec "[workspace 2 silent] firefox"
+fi
