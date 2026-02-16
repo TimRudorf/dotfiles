@@ -4,6 +4,7 @@ local.conf
 
 # Generated files
 *.lock.json
+*-generated.conf
 
 # OS artifacts
 .DS_Store
