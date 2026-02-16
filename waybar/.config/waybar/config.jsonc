@@ -60,7 +60,7 @@
     "exec": "LC_TIME=de_DE.UTF-8 TZ=Europe/Berlin date '+ %H:%M Uhr   -    %A, %d.%m.%Y'",
   },
   "backlight": {
-    "device": "nvidia_0",
+    // device auto-detected; override in a local copy if needed
     "format": "{icon}",
     "on-scroll-up": "brightnessctl s '+10%'",
     "on-scroll-down": "brightnessctl s '10%-'",
@@ -103,7 +103,7 @@
     "interval": 3,
   },
   "network": {
-    "interface": "wlan0",
+    // uses default interface; override with "interface": "wlan0" if needed
     "interval": 10,
     "format-wifi": "󰖩",
     "format-disconnected": "󰖪",

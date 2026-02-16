@@ -1,11 +1,8 @@
 # Enable Powerlevel10k instant prompt. Should stay close to the top of ~/.zshrc.
-# Initialization code that may require console input (password prompts, [y/n]
-# confirmations, etc.) must go above this block; everything else may go below.
 if [[ -r "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh" ]]; then
   source "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh"
 fi
 
-# Editor setzen
 export EDITOR=nvim
 
 # oh-my-zsh
@@ -15,21 +12,19 @@ plugins=(
   git
   zsh-autosuggestions
   zsh-syntax-highlighting
-  )
+)
 
-source $ZSH/oh-my-zsh.sh
+source "$ZSH/oh-my-zsh.sh"
 
 # Powerlevel10k
 [[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
 
+# NVM (lazy loaded via shell init)
 export NVM_DIR="$HOME/.nvm"
-[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
-[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
+[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"
 
-# matlab fix
-export LD_LIBRARY_PATH=$HOME/matlab/gnutls/usr/lib/:;
-
-# Bildschirmfreigabe
+# Wayland / screen sharing
 export XDG_CURRENT_DESKTOP=Hyprland
 export MOZ_ENABLE_WAYLAND=1
 
@@ -39,14 +34,14 @@ eval "$(zoxide init zsh)"
 # fzf
 source <(fzf --zsh)
 
-# Alias
+# Aliases
 source ~/.alias.sh
 
-# EDP Helpers
-source ~/.edp_helpers.sh
+# Work helpers (optional, skip if missing)
+[[ -f ~/.edp_helpers.sh ]] && source ~/.edp_helpers.sh
 
-# LoaclBin
+# Local bin
 export PATH="$HOME/.local/bin:$PATH"
 
-# LSP Server für Claude Code
+# LSP for Claude Code
 export ENABLE_LSP_TOOL=1
