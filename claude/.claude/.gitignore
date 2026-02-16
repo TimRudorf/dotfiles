@@ -1,0 +1,8 @@
+# Track only settings and skills — ignore all runtime data
+*
+!.gitignore
+!settings.json
+!settings.local.json
+!skills/
+!skills/*/
+!skills/*/SKILL.md
