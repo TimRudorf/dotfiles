@@ -65,7 +65,7 @@ layout {
         pane size=1 borderless=true {
             plugin location="zellij:tab-bar"
         }
-        pane command="/home/tim/.nvm/versions/node/v24.11.1/lib/node_modules/@openai/codex/vendor/x86_64-unknown-linux-musl/codex/codex" name="codex" {
+        pane command="codex" name="codex" {
             start_suspended true
         }
         pane size=1 borderless=true {
