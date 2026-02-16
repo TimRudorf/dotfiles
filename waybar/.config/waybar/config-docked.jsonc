@@ -25,10 +25,12 @@
       "format": "{icon}",
       "all-outputs": false,
       "format-icons": {
-        "1": "",
-        "2": "󰖟",
-        "3": "",
-        "default": "",
+        "1": "",
+        "2": "󰈹",
+        "default": "",
+      },
+      "persistent-workspaces": {
+        "DP-2": [1, 2, 3, 4, 5],
       },
     },
     "tray": {
@@ -98,10 +100,12 @@
       "format": "{icon}",
       "all-outputs": false,
       "format-icons": {
-        "1": "",
-        "2": "󰖟",
-        "3": "",
-        "default": "",
+        "1": "",
+        "2": "󰈹",
+        "default": "",
+      },
+      "persistent-workspaces": {
+        "DP-3": [6, 7],
       },
     },
     "custom/clock": {
@@ -140,10 +144,12 @@
       "format": "{icon}",
       "all-outputs": false,
       "format-icons": {
-        "1": "",
-        "2": "󰖟",
-        "3": "",
-        "default": "",
+        "1": "",
+        "2": "󰈹",
+        "default": "",
+      },
+      "persistent-workspaces": {
+        "eDP-1": [8, 9],
       },
     },
     "tray": {
