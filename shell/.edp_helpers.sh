@@ -3,13 +3,22 @@
 
 # --- Configuration (override via env vars if needed) ---
 EDP_VM_HOST="${EDP_VM_HOST:-eifert-dev}"
-EDP_VM_DIR="${EDP_VM_DIR:-C:\\Users\\Admin\\Entwicklung\\edpweb}"
+EDP_VM_DIR="${EDP_VM_DIR:-\\\\192.168.122.1\\edp\\edpweb}"
+EDP_SMB_SHARE="${EDP_SMB_SHARE:-\\\\192.168.122.1\\edp}"
+EDP_SMB_USER="${EDP_SMB_USER:-tim}"
 EDP_PROJECT_ROOT="${EDP_PROJECT_ROOT:-$HOME/Develop/EDP}"
-EDP_HYPERVISOR="${EDP_HYPERVISOR:-zeus}"
 EDP_VM_NAME="${EDP_VM_NAME:-EifertSystem_Development}"
+
+# Run a command on the VM with SMB share connected (single SSH session)
+_edp_vm_cmd() {
+  ssh "$EDP_VM_HOST" "net use ${EDP_SMB_SHARE} PoseidonEDP /user:${EDP_SMB_USER} 2>nul & $*" | iconv -f CP850 -t UTF-8 2>/dev/null
+}
 
 # Sync current repo to Windows VM
 rsyncdev() {
+  echo "Hinweis: SMB-Share aktiv — rsyncdev normalerweise nicht nötig." >&2
+  echo "         Nur als Fallback nutzen wenn Share nicht gemountet." >&2
+  echo "" >&2
   local cwd
   cwd="$(pwd -P)"
 
@@ -50,16 +59,16 @@ rsyncdev() {
 edpweb() {
   case "${1:-}" in
     start|stop)
-      ssh "$EDP_VM_HOST" "net $1 edpwebservice"
+      ssh "$EDP_VM_HOST" "net $1 edpwebservice" | iconv -f CP850 -t UTF-8 2>/dev/null
       ;;
     status)
-      ssh "$EDP_VM_HOST" "sc query edpwebservice"
+      ssh "$EDP_VM_HOST" "sc query edpwebservice" | iconv -f CP850 -t UTF-8 2>/dev/null
       ;;
     build)
-      ssh "$EDP_VM_HOST" "cmd /c \"cd /d ${EDP_VM_DIR} && compile.cmd -b -cfg:Release -p:Win64\""
+      _edp_vm_cmd "cmd /c \"pushd ${EDP_VM_DIR} && compile.cmd -b -cfg:Release -p:Win64\""
       ;;
     compile)
-      ssh "$EDP_VM_HOST" "cmd /c \"cd /d ${EDP_VM_DIR} && compile.cmd -c -cfg:Release -p:Win64\""
+      _edp_vm_cmd "cmd /c \"pushd ${EDP_VM_DIR} && compile.cmd -c -cfg:Release -p:Win64\""
       ;;
     log)
       shift
@@ -74,7 +83,7 @@ edpweb() {
         shift
       done
       local filter="${text_parts[*]}"
-      LC_ALL=C ssh "$EDP_VM_HOST" "powershell -NoProfile -Command \"Get-Content -Path '${EDP_VM_DIR}\\edpweb.log' -Tail 200 -Wait\"" \
+      LC_ALL=C ssh "$EDP_VM_HOST" "net use ${EDP_SMB_SHARE} PoseidonEDP /user:${EDP_SMB_USER} 2>nul & powershell -NoProfile -Command \"Get-Content -Path '${EDP_VM_DIR}\\edpweb.log' -Tail 200 -Wait\"" \
         | LC_ALL=C awk -v f="$filter" -v lvl="$level" '
           BEGIN {
             use    = (length(f)   > 0)
@@ -107,11 +116,11 @@ edpweb() {
           }'
       ;;
     compilelog)
-      LC_ALL=C ssh "$EDP_VM_HOST" "powershell -NoProfile -Command \"Get-Content -Path '${EDP_VM_DIR}\\compile.log' -Tail 200 -Wait\"" \
+      LC_ALL=C ssh "$EDP_VM_HOST" "net use ${EDP_SMB_SHARE} PoseidonEDP /user:${EDP_SMB_USER} 2>nul & powershell -NoProfile -Command \"Get-Content -Path '${EDP_VM_DIR}\\compile.log' -Tail 200 -Wait\"" \
         | LC_ALL=C awk 'NR==1 { system("printf \"\\033c\"") } { sub(/\r$/,""); print; fflush() }'
       ;;
     startuplog)
-      ssh "$EDP_VM_HOST" "cmd /c \"cd /d ${EDP_VM_DIR} && type startup_error.log\""
+      _edp_vm_cmd "cmd /c \"pushd ${EDP_VM_DIR} && type startup_error.log\""
       ;;
     *)
       echo "Usage: edpweb {start|stop|status|build|compile|log|compilelog|startuplog}"
@@ -123,13 +132,14 @@ edpweb() {
 # VM lifecycle helper
 devvm() {
   case "${1:-}" in
-    start)      ssh "$EDP_HYPERVISOR" "virsh start '$EDP_VM_NAME'" ;;
-    stop)       ssh "$EDP_HYPERVISOR" "virsh shutdown '$EDP_VM_NAME'" ;;
-    force-stop) ssh "$EDP_HYPERVISOR" "virsh destroy '$EDP_VM_NAME'" ;;
-    status)     ssh "$EDP_HYPERVISOR" "virsh domstate '$EDP_VM_NAME'" ;;
-    console)    ssh -t "$EDP_HYPERVISOR" "virsh console '$EDP_VM_NAME'" ;;
+    start)      virsh start "$EDP_VM_NAME" ;;
+    stop)       virsh shutdown "$EDP_VM_NAME" ;;
+    force-stop) virsh destroy "$EDP_VM_NAME" ;;
+    status)     virsh domstate "$EDP_VM_NAME" ;;
+    console)    virt-viewer --attach "$EDP_VM_NAME" & ;;
+    ip)         virsh domifaddr "$EDP_VM_NAME" ;;
     *)
-      echo "Usage: devvm {start|stop|force-stop|status|console}"
+      echo "Usage: devvm {start|stop|force-stop|status|console|ip}"
       return 1
       ;;
   esac
