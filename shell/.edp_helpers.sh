@@ -3,9 +3,7 @@
 
 # --- Configuration ---
 EDP_VM_HOST="${EDP_VM_HOST:-eifert-dev}"
-EDP_VM_DIR_BASE="${EDP_VM_DIR_BASE:-C:\\Users\\Admin\\Entwicklung}"
-EDP_SMB_SHARE="${EDP_SMB_SHARE:-\\\\192.168.122.1\\edp}"
-EDP_SMB_USER="${EDP_SMB_USER:-tim}"
+EDP_VM_DIR_BASE='C:\EDP'
 EDP_PROJECT_ROOT="${EDP_PROJECT_ROOT:-$HOME/Develop/EDP}"
 EDP_VM_NAME="${EDP_VM_NAME:-EifertSystem_Development}"
 
@@ -15,9 +13,11 @@ EDP_MSBUILD='C:\Windows\Microsoft.NET\Framework\v4.0.30319\MSBuild.exe'
 
 # --- Internal helpers ---
 
-# Run a command on the VM with SMB share connected (single SSH session)
+# Run a command on a host via SSH
 _edp_vm_cmd() {
-  ssh "$EDP_VM_HOST" "net use ${EDP_SMB_SHARE} PoseidonEDP /user:${EDP_SMB_USER} 2>nul & $*" | iconv -f CP850 -t UTF-8 2>/dev/null
+  local host="$1"
+  shift
+  ssh "$host" "$*" | iconv -f CP850 -t UTF-8 2>/dev/null
 }
 
 # Read a value from a project's compile.config
@@ -27,9 +27,53 @@ _edp_config() {
   grep "^${key}=" "$file" 2>/dev/null | cut -d= -f2
 }
 
-# VM-side project directory path
-_edp_vm_dir() {
-  printf '%s\\%s\n' "$EDP_VM_DIR_BASE" "$1"
+# Target directory on VM: C:\EDP\<TARGET_DIR or project>
+_edp_target_dir() {
+  local project="$1"
+  local target_dir
+  target_dir="$(_edp_config "$project" TARGET_DIR)"
+  printf 'C:\\EDP\\%s' "${target_dir:-$project}"
+}
+
+# Push files via tar-over-SSH
+_edp_push() {
+  local project_dir="$1" target_host="$2" target_dir="$3"
+  shift 3
+  # $@ = additional --exclude= arguments from caller
+
+  ssh "$target_host" "if not exist \"${target_dir}\" mkdir \"${target_dir}\"" 2>/dev/null
+
+  tar cf - -C "$project_dir" \
+    --exclude='.git' \
+    --exclude='.claude' \
+    --exclude='__history' \
+    --exclude='__recovery' \
+    --exclude='Win64' \
+    --exclude='*.log' \
+    --exclude='*.ini' \
+    "$@" \
+    . | ssh "$target_host" "tar xf - --options=hdrcharset=UTF-8 -C \"${target_dir}\""
+}
+
+# Stop a Windows service and wait for STOPPED state
+_edp_svc_stop() {
+  local host="$1" svc="$2"
+  echo "Stoppe Dienst $svc..."
+  ssh "$host" "net stop $svc 2>nul" 2>/dev/null | iconv -f CP850 -t UTF-8 2>/dev/null
+  local i state
+  for i in {1..20}; do
+    state="$(ssh "$host" "sc query $svc" 2>/dev/null | iconv -f CP850 -t UTF-8 2>/dev/null)"
+    if [[ -z "$state" ]] || echo "$state" | grep -q "STOPPED"; then break; fi
+    echo "  Warte auf Stoppen..."
+    sleep 2
+  done
+}
+
+# Start a Windows service
+_edp_svc_start() {
+  local host="$1" svc="$2"
+  echo "Starte Dienst $svc..."
+  ssh "$host" "net start $svc" 2>/dev/null | iconv -f CP850 -t UTF-8 2>/dev/null
 }
 
 # --- Main function ---
@@ -42,130 +86,165 @@ edp() {
     echo "Usage: edp <project> <command> [options]"
     echo ""
     echo "Commands:"
-    echo "  compile [-b] [-p:Win32|Win64] [-cfg:Debug|Release]"
-    echo "  start       Start service"
-    echo "  stop        Stop service"
-    echo "  status      Query service status"
+    echo "  deploy [host]    Push files to host (default: \$EDP_VM_HOST)"
+    echo "  compile [host]   Build on host + fetch exe (default: \$EDP_VM_HOST)"
+    echo "    [-b] [-p:Win32|Win64] [-cfg:Debug|Release]"
+    echo "  start [host]     Start service"
+    echo "  stop [host]      Stop service"
+    echo "  status [host]    Query service status"
     echo "  log [filter] [-l=LEVEL]  Stream live log"
-    echo "  compilelog  Show compile log"
+    echo "  compilelog       Show compile log"
     return 1
   fi
 
   shift 2
 
-  local vm_dir
-  vm_dir="$(_edp_vm_dir "$project")"
-
   case "$command" in
     compile)
-      _edp_compile "$project" "$vm_dir" "$@"
+      _edp_compile "$project" "$@"
+      ;;
+    deploy)
+      _edp_deploy "$project" "$@"
       ;;
     start)
-      local svc
+      local svc host
       svc="$(_edp_config "$project" SERVICE_NAME)"
       if [[ -z "$svc" ]]; then
         echo "edp: no SERVICE_NAME in compile.config for $project" >&2
         return 1
       fi
-      _edp_vm_cmd "net start $svc"
+      host="${1:-$EDP_VM_HOST}"
+      _edp_vm_cmd "$host" "net start $svc"
       ;;
     stop)
-      local svc
+      local svc host
       svc="$(_edp_config "$project" SERVICE_NAME)"
       if [[ -z "$svc" ]]; then
         echo "edp: no SERVICE_NAME in compile.config for $project" >&2
         return 1
       fi
-      _edp_vm_cmd "net stop $svc"
+      host="${1:-$EDP_VM_HOST}"
+      _edp_vm_cmd "$host" "net stop $svc"
       ;;
     status)
-      local svc
+      local svc host
       svc="$(_edp_config "$project" SERVICE_NAME)"
       if [[ -z "$svc" ]]; then
         echo "edp: no SERVICE_NAME in compile.config for $project" >&2
         return 1
       fi
-      _edp_vm_cmd "sc query $svc"
+      host="${1:-$EDP_VM_HOST}"
+      _edp_vm_cmd "$host" "sc query $svc"
       ;;
     log)
-      _edp_log "$project" "$vm_dir" "$@"
+      _edp_log "$project" "$@"
       ;;
     compilelog)
-      LC_ALL=C ssh "$EDP_VM_HOST" "net use ${EDP_SMB_SHARE} PoseidonEDP /user:${EDP_SMB_USER} 2>nul & powershell -NoProfile -Command \"Get-Content -Path '${vm_dir}\\compile.log' -Tail 200 -Wait\"" \
+      local target_dir
+      target_dir="$(_edp_target_dir "$project")"
+      LC_ALL=C ssh "$EDP_VM_HOST" "powershell -NoProfile -Command \"Get-Content -Path '${target_dir}\\compile.log' -Tail 200 -Wait\"" \
         | LC_ALL=C awk 'NR==1 { system("printf \"\\033c\"") } { sub(/\r$/,""); print; fflush() }'
       ;;
     *)
       echo "edp: unknown command '$command'" >&2
-      echo "Commands: compile, start, stop, status, log, compilelog" >&2
+      echo "Commands: compile, deploy, start, stop, status, log, compilelog" >&2
       return 1
       ;;
   esac
 }
 
+# --- Deploy ---
+
+_edp_deploy() {
+  local project="$1"
+  shift
+  local target_host="${1:-$EDP_VM_HOST}"
+
+  local target_dir svc
+  target_dir="$(_edp_target_dir "$project")"
+  svc="$(_edp_config "$project" SERVICE_NAME)"
+
+  echo "=== Deploy $project → $target_host ==="
+  printf '  Ziel: %s\n' "$target_dir"
+  [[ -n "$svc" ]] && echo "  Service: $svc"
+  echo ""
+
+  # Stop service if configured
+  if [[ -n "$svc" ]]; then
+    _edp_svc_stop "$target_host" "$svc"
+  fi
+
+  # Push files
+  echo "Übertrage Dateien..."
+  _edp_push "$EDP_PROJECT_ROOT/$project" "$target_host" "$target_dir"
+  local rc=$?
+  if [[ $rc -ne 0 ]]; then
+    echo "FEHLER beim Übertragen! (exit code: $rc)" >&2
+    return $rc
+  fi
+
+  # Start service if configured
+  if [[ -n "$svc" ]]; then
+    _edp_svc_start "$target_host" "$svc"
+  fi
+
+  echo ""
+  echo "=== Deploy fertig ==="
+}
+
 # --- Compile ---
 
 _edp_compile() {
-  local project="$1" vm_dir="$2"
-  shift 2
+  local project="$1"
+  shift
+  local target_host="${1:-$EDP_VM_HOST}"
+  shift 2>/dev/null || true
 
-  # Read defaults from compile.config
-  local proj_name plat cfg svc deploy_mode target
+  local proj_name plat cfg svc target_dir
   proj_name="$(_edp_config "$project" PROJECT_NAME)"
   plat="$(_edp_config "$project" PLATFORM)"
   cfg="$(_edp_config "$project" CONFIG)"
   svc="$(_edp_config "$project" SERVICE_NAME)"
-  deploy_mode="$(_edp_config "$project" DEPLOY_MODE)"
-  deploy_mode="${deploy_mode:-none}"
-  target="Make"
+  target_dir="$(_edp_target_dir "$project")"
 
-  # Parse CLI options (override defaults)
+  # Parse optional CLI flags (after hostname)
+  local target="Make"
   while (($#)); do
     case "$1" in
-      -b)         target="Build" ;;
-      -p:*)       plat="${1#-p:}" ;;
-      -cfg:*)     cfg="${1#-cfg:}" ;;
-      *)          echo "edp compile: unknown option '$1'" >&2; return 1 ;;
+      -b)     target="Build" ;;
+      -p:*)   plat="${1#-p:}" ;;
+      -cfg:*) cfg="${1#-cfg:}" ;;
+      *)      echo "edp compile: unknown option '$1'" >&2; return 1 ;;
     esac
     shift
   done
+
+  plat="${plat:-Win64}"
+  cfg="${cfg:-Release}"
 
   if [[ -z "$proj_name" ]]; then
     echo "edp: no PROJECT_NAME in compile.config for $project" >&2
     return 1
   fi
 
-  # Defaults
-  plat="${plat:-Win64}"
-  cfg="${cfg:-Release}"
+  local exe_name="${proj_name%.dproj}.exe"
 
-  echo "=== Kompiliere $project ==="
+  echo "=== Kompiliere $project auf $target_host ==="
   echo "  Projekt:   $proj_name"
   echo "  Target:    $target"
   echo "  Plattform: $plat"
   echo "  Config:    $cfg"
-  echo "  Deploy:    $deploy_mode"
   echo ""
 
-  # Stop service before compile (mirror + exe modes, if SERVICE_NAME set)
-  if [[ "$deploy_mode" != "none" && -n "$svc" ]]; then
-    echo "Stoppe Dienst $svc..."
-    _edp_vm_cmd "net stop $svc 2>nul"
-    local i
-    for i in {1..20}; do
-      local state
-      state="$(ssh "$EDP_VM_HOST" "sc query $svc" 2>/dev/null | iconv -f CP850 -t UTF-8 2>/dev/null)"
-      if echo "$state" | grep -q "STOPPED"; then
-        break
-      fi
-      echo "  Warte auf Stoppen..."
-      sleep 2
-    done
+  # Stop service before compile
+  if [[ -n "$svc" ]]; then
+    _edp_svc_stop "$target_host" "$svc"
   fi
 
-  # Compile via SSH
+  # MSBuild via SSH
   echo "Kompiliere..."
-  local compile_cmd="call \"${EDP_RSVARS}\" && cd /d ${vm_dir} && \"${EDP_MSBUILD}\" ${proj_name} /t:${target} /p:config=${cfg} /p:platform=${plat}"
-  _edp_vm_cmd "$compile_cmd" > /tmp/edp_compile_$$.log 2>&1
+  local compile_cmd="call \"${EDP_RSVARS}\" && cd /d ${target_dir} && \"${EDP_MSBUILD}\" ${proj_name} /t:${target} /p:config=${cfg} /p:platform=${plat}"
+  ssh "$target_host" "$compile_cmd" > /tmp/edp_compile_$$.log 2>&1
   local rc=$?
 
   if [[ $rc -ne 0 ]]; then
@@ -176,7 +255,6 @@ _edp_compile() {
     return $rc
   fi
 
-  # Check for "Build succeeded" or "0 Error(s)" in output
   if ! grep -qi "0 Error(s)\|Build succeeded\|0 Fehler\|Buildvorgang.*erfolgreich" /tmp/edp_compile_$$.log; then
     echo ""
     echo "FEHLER: Build nicht erfolgreich. Output:" >&2
@@ -188,27 +266,15 @@ _edp_compile() {
   echo "Kompilierung erfolgreich."
   rm -f /tmp/edp_compile_$$.log
 
-  # Deploy based on DEPLOY_MODE
-  case "$deploy_mode" in
-    mirror)
-      local deploy_dir="C:\\${project}"
-      printf 'Kopiere nach %s...\n' "$deploy_dir"
-      _edp_vm_cmd "robocopy \"${vm_dir}\" \"${deploy_dir}\" /mir /xd .git src Win64 setup tools wiki .claude /xf *.dpr *.dproj *.dproj.local *.res *.cmds *.delphilsp.json *.ico compile.config compile.log jsconfig.json .gitignore .prettierrc schema.sql sign.bat setup.iss CLAUDE.md README.md /njh /njs /ndl /nc /ns /np /nfl >nul"
-      ;;
-    exe)
-      local exe_name="${proj_name%.dproj}.exe"
-      printf 'Kopiere %s nach C:\\edpserver...\n' "$exe_name"
-      _edp_vm_cmd "copy /y \"${vm_dir}\\${exe_name}\" \"C:\\edpserver\\${exe_name}\" >nul"
-      ;;
-    none)
-      echo "Kein Deploy (DEPLOY_MODE=none)."
-      ;;
-  esac
+  # Fetch exe back to Linux
+  local remote_dir="C:/EDP/${target_dir##*\\}"
+  echo "Hole ${exe_name} zurück..."
+  scp "$target_host:${remote_dir}/${exe_name}" \
+    "$EDP_PROJECT_ROOT/$project/${exe_name}"
 
-  # Start service after deploy (mirror + exe modes, if SERVICE_NAME set)
-  if [[ "$deploy_mode" != "none" && -n "$svc" ]]; then
-    echo "Starte Dienst $svc..."
-    _edp_vm_cmd "net start $svc"
+  # Start service after compile
+  if [[ -n "$svc" ]]; then
+    _edp_svc_start "$target_host" "$svc"
   fi
 
   echo ""
@@ -219,21 +285,11 @@ _edp_compile() {
 
 _edp_log() {
   local project="$1"
-  shift; shift  # skip vm_dir (unused, kept for call compat)
+  shift
 
-  local deploy_mode
-  deploy_mode="$(_edp_config "$project" DEPLOY_MODE)"
-  deploy_mode="${deploy_mode:-none}"
-
-  local logpath
-  case "$deploy_mode" in
-    mirror) logpath="C:\\${project}\\${project}.log" ;;
-    exe)    logpath="C:\\edpserver\\Logfiles\\${project}.log" ;;
-    none)
-      echo "edp log: kein Log-Streaming für DEPLOY_MODE=none" >&2
-      return 1
-      ;;
-  esac
+  local target_dir
+  target_dir="$(_edp_target_dir "$project")"
+  local logpath="${target_dir}\\${project}.log"
 
   local level=""
   local text_parts=()
@@ -247,7 +303,7 @@ _edp_log() {
   done
   local filter="${text_parts[*]}"
 
-  LC_ALL=C ssh "$EDP_VM_HOST" "net use ${EDP_SMB_SHARE} PoseidonEDP /user:${EDP_SMB_USER} 2>nul & powershell -NoProfile -Command \"Get-Content -Path '${logpath}' -Tail 200 -Wait\"" \
+  LC_ALL=C ssh "$EDP_VM_HOST" "powershell -NoProfile -Command \"Get-Content -Path '${logpath}' -Tail 200 -Wait\"" \
     | LC_ALL=C awk -v f="$filter" -v lvl="$level" '
       BEGIN {
         use    = (length(f)   > 0)
@@ -278,46 +334,6 @@ _edp_log() {
         else                        print line
         fflush()
       }'
-}
-
-# --- Sync (legacy fallback) ---
-
-rsyncdev() {
-  echo "Hinweis: SMB-Share aktiv — rsyncdev normalerweise nicht nötig." >&2
-  echo "         Nur als Fallback nutzen wenn Share nicht gemountet." >&2
-  echo "" >&2
-  local cwd
-  cwd="$(pwd -P)"
-
-  if [[ "$cwd" != "$EDP_PROJECT_ROOT" && "$cwd" != "$EDP_PROJECT_ROOT"/* ]]; then
-    echo "rsyncdev: must be within $EDP_PROJECT_ROOT" >&2
-    return 1
-  fi
-
-  local dir
-  dir="$(basename "$PWD")"
-  local changesfile
-  changesfile="$(mktemp)"
-
-  rsync -rltD --delete --itemize-changes \
-    --exclude '.git/' \
-    --exclude '*.exe' \
-    --exclude '*.log' \
-    --exclude 'html/' \
-    --exclude 'Win64/' \
-    --exclude 'Logs/' \
-    --exclude 'rechte/' \
-    --exclude 'keys/' \
-    --exclude 'setup/' \
-    --no-perms --no-owner --no-group --chmod=ugo=rwX \
-    ./ "${EDP_VM_HOST}:/cygdrive/c/Users/Admin/Entwicklung/${dir}/" >"$changesfile"
-
-  if [[ -s "$changesfile" ]]; then
-    tail -n +2 "$changesfile"
-  else
-    echo "rsync: no changes"
-  fi
-  rm -f "$changesfile"
 }
 
 # --- VM lifecycle ---

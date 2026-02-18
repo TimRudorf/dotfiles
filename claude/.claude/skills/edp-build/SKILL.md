@@ -8,6 +8,22 @@ user-invocable: false
 
 Documentation for the `edp()` shell function (`~/.edp_helpers.sh`) — the central build, deploy and service control tool for all EDP projects.
 
+## Architecture
+
+All file transfers use **tar-over-SSH**. Deploy and compile are separate commands:
+
+```bash
+edp <project> deploy [host]   # Push files to host, stop/start service
+edp <project> compile [host]  # MSBuild on host, fetch exe back
+```
+
+Typical workflow:
+```bash
+edp edpweb deploy eifert-dev      # Source auf Dev-VM schicken
+edp edpweb compile                # Bauen + exe zurückholen
+edp edpweb deploy dev-edpweb01    # Alles (inkl. exe) auf Remote deployen
+```
+
 ## Usage
 
 ```bash
@@ -18,10 +34,11 @@ edp <project> <command> [options]
 
 | Command | Description |
 |---------|-------------|
-| `compile [-b] [-p:Win32\|Win64] [-cfg:Debug\|Release]` | Compile (default: incremental Make) |
-| `start` | Start Windows service |
-| `stop` | Stop Windows service |
-| `status` | Query service status |
+| `deploy [host]` | Push project files via tar-over-SSH (default host: `$EDP_VM_HOST`) |
+| `compile [host] [-b] [-p:Win32\|Win64] [-cfg:Debug\|Release]` | Compile on host + fetch exe (default host: `$EDP_VM_HOST`) |
+| `start [host]` | Start Windows service |
+| `stop [host]` | Stop Windows service |
+| `status [host]` | Query service status |
 | `log [filter] [--level=LEVEL]` | Stream live log (levels: fehler, debug, etc.) |
 | `compilelog` | Tail the compile output log |
 
@@ -31,17 +48,22 @@ edp <project> <command> [options]
 - `-p:Win32` / `-p:Win64` — Override platform (default from compile.config)
 - `-cfg:Debug` / `-cfg:Release` — Override configuration (default from compile.config)
 
+## Deploy Flow
+
+1. Read `TARGET_DIR` from `compile.config` (default: project name)
+2. Stop Windows service (if `SERVICE_NAME` set)
+3. tar-over-SSH: push all project files to `C:\EDP\<target_dir>` on target host
+4. Start Windows service (if `SERVICE_NAME` set)
+
 ## Compile Flow
 
-1. Read defaults from `<project>/compile.config`
+1. Read config from `<project>/compile.config`
 2. CLI flags override defaults
-3. Stop Windows service (if `DEPLOY_MODE` ≠ `none` and `SERVICE_NAME` set)
-4. SSH to VM: `rsvars.bat` → `MSBuild` → compile
-5. Deploy based on `DEPLOY_MODE`:
-   - `mirror`: `robocopy /mir` to `C:\<project>\`
-   - `exe`: copy EXE to `C:\edpserver\`
-   - `none`: skip deploy
-6. Start Windows service (same condition as step 3)
+3. Stop Windows service (if `SERVICE_NAME` set)
+4. SSH to host: `rsvars.bat` → `MSBuild` → compile
+5. Check build output for success
+6. SCP the built exe back to Linux project directory
+7. Start Windows service (if `SERVICE_NAME` set)
 
 ## compile.config Format
 
@@ -52,7 +74,7 @@ PROJECT_NAME=edpweb.dproj
 PLATFORM=Win64
 CONFIG=Release
 SERVICE_NAME=edpwebservice
-DEPLOY_MODE=mirror
+TARGET_DIR=edpweb
 ```
 
 | Key | Description |
@@ -61,26 +83,28 @@ DEPLOY_MODE=mirror
 | `PLATFORM` | `Win32` or `Win64` |
 | `CONFIG` | `Release` or `Debug` |
 | `SERVICE_NAME` | Windows service name (optional — omit if no service) |
-| `DEPLOY_MODE` | `none` (default), `mirror` (robocopy), `exe` (copy EXE only) |
+| `TARGET_DIR` | Subdirectory under `C:\EDP\` (optional, defaults to project name) |
+
+## Target Directory
+
+All projects deploy to `C:\EDP\<TARGET_DIR>`. The `TARGET_DIR` defaults to the project name if not set in `compile.config`.
 
 ## VM Configuration
 
 - **SSH alias**: `eifert-dev` (configured in `~/.ssh/config`)
-- **SMB share**: `\\192.168.122.1\edp` → mounts to `C:\Users\Admin\Entwicklung\` on VM
+- **Default host**: `$EDP_VM_HOST` (eifert-dev)
 - **VM host**: KVM/libvirt, name `EifertSystem_Development`
 - **VM lifecycle**: `devvm start|stop|force-stop|status|console|ip`
 
-## Service Paths on VM
-
-| Project | Service | Binary Path | Deploy Mode |
-|---------|---------|-------------|-------------|
-| edpweb | `edpwebservice` | `C:\edpweb\edpweb.exe` | `mirror` |
-| schn_ivena | `EDPSrv` | `C:\edpserver\Schn_IVENA.exe` | `exe` |
-
 ## Adding a New Project
 
-1. Create `compile.config` in the project directory (set `DEPLOY_MODE` accordingly)
+1. Create `compile.config` in the project directory
 2. If the project runs as a Windows service, register it on the VM:
    ```bash
-   ssh eifert-dev 'sc create MyService binPath= "C:\edpserver\MyApp.exe"'
+   ssh eifert-dev 'sc create MyService binPath= "C:\EDP\myproject\MyApp.exe"'
+   ```
+3. Deploy and compile:
+   ```bash
+   edp myproject deploy        # Push source files
+   edp myproject compile       # Build + fetch exe
    ```
