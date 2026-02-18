@@ -1,3 +1,9 @@
+---
+name: pull-request
+description: This skill should be used when the user asks to "create a PR", "edit a PR", "open a pull request", or uses /pull-request. It creates or updates PRs on GHE with auto-generated title, body, and Zammad integration.
+argument-hint: [pr-number]
+---
+
 # Pull Request erstellen oder bearbeiten
 
 Erstellt oder bearbeitet einen Pull Request auf `einsatzleitsoftware.ghe.com`.
@@ -35,16 +41,18 @@ GH_HOST=einsatzleitsoftware.ghe.com git diff dev...HEAD --stat
 
 **Nur im Edit-Modus** — zusätzlich den bestehenden PR laden:
 
-```bash
-GH_HOST=einsatzleitsoftware.ghe.com gh pr view <nummer> --json title,body,assignees,reviewRequests
+```tool
+mcp__github__pull_request_read(method: "get", owner: "edp", repo: <repo>, pullNumber: <nummer>)
 ```
 
 ### Schritt 2: Metadaten live abfragen (parallel)
 
-```bash
-GH_HOST=einsatzleitsoftware.ghe.com gh api user --jq '.login'
+**User-Login** (MCP):
+```tool
+mcp__github__get_me()
 ```
 
+**Projects** (Bash — kein MCP-Äquivalent):
 ```bash
 GH_HOST=einsatzleitsoftware.ghe.com gh project list --owner edp
 ```
@@ -130,23 +138,33 @@ Falls nicht vorhanden:
 GH_HOST=einsatzleitsoftware.ghe.com git push -u origin <branch>
 ```
 
-**6b: PR erstellen**
+**6b: PR erstellen (MCP)**
 
-Den Body immer per HEREDOC übergeben:
-
-```bash
-GH_HOST=einsatzleitsoftware.ghe.com gh pr create \
-  --base dev \
-  --title "<titel>" \
-  --assignee tim-rudorf \
-  --reviewer patrick-vogel,copilot-pull-request-reviewer \
-  --body "$(cat <<'EOF'
-<body>
-EOF
-)"
+```tool
+mcp__github__create_pull_request(
+  owner: "edp",
+  repo: <repo>,
+  title: <titel>,
+  head: <branch>,
+  base: "dev",
+  body: <body>
+)
 ```
 
-**6c: Project zuordnen (optional)**
+**6c: Assignee, Reviewer & Copilot**
+
+Assignee (Bash — kein MCP-Parameter für Assignee bei PR-Erstellung):
+```bash
+GH_HOST=einsatzleitsoftware.ghe.com gh pr edit <pr-nummer> -R edp/<repo> --add-assignee tim-rudorf
+```
+
+Reviewer & Copilot (MCP):
+```tool
+mcp__github__update_pull_request(owner: "edp", repo: <repo>, pullNumber: <pr-nummer>, reviewers: ["patrick-vogel"])
+mcp__github__request_copilot_review(owner: "edp", repo: <repo>, pullNumber: <pr-nummer>)
+```
+
+**6d: Project zuordnen (optional)**
 
 Falls ein Project gewählt wurde:
 
@@ -156,20 +174,32 @@ GH_HOST=einsatzleitsoftware.ghe.com gh pr edit <pr-nummer> --add-project "<proje
 
 #### Edit-Modus
 
-**6a: PR aktualisieren**
+**6a: PR aktualisieren (MCP)**
 
-```bash
-GH_HOST=einsatzleitsoftware.ghe.com gh pr edit <nummer> \
-  --title "<titel>" \
-  --add-assignee tim-rudorf \
-  --add-reviewer patrick-vogel,copilot-pull-request-reviewer \
-  --body "$(cat <<'EOF'
-<body>
-EOF
-)"
+```tool
+mcp__github__update_pull_request(
+  owner: "edp",
+  repo: <repo>,
+  pullNumber: <nummer>,
+  title: <titel>,
+  body: <body>,
+  reviewers: ["patrick-vogel"]
+)
 ```
 
-**6b: Project zuordnen (optional)**
+**6b: Assignee & Copilot**
+
+Assignee (Bash — kein MCP-Parameter):
+```bash
+GH_HOST=einsatzleitsoftware.ghe.com gh pr edit <nummer> -R edp/<repo> --add-assignee tim-rudorf
+```
+
+Copilot (MCP):
+```tool
+mcp__github__request_copilot_review(owner: "edp", repo: <repo>, pullNumber: <nummer>)
+```
+
+**6c: Project zuordnen (optional)**
 
 Falls ein Project gewählt wurde:
 
@@ -185,8 +215,8 @@ Falls eine Ticket-Nummer aus dem Branch extrahiert wurde (Schritt 1):
 
 **7a: Issue-Body auf Zammad-Referenz prüfen**
 
-```bash
-GH_HOST=einsatzleitsoftware.ghe.com gh issue view <nummer> --json body --jq '.body'
+```tool
+mcp__github__issue_read(method: "get", owner: "edp", repo: <repo>, issue_number: <nummer>)
 ```
 
 Im Body nach dem Pattern `EDP#<zammad-nummer>` suchen. Falls gefunden → weiter mit 7b. Falls nicht → Schritt überspringen.
@@ -205,7 +235,8 @@ Die Bestätigung per `AskUserQuestion` aus dem /zammad-write Skill **überspring
 
 ## Regeln
 
-- **Immer** `GH_HOST=einsatzleitsoftware.ghe.com` vor allen `gh`- und relevanten `git`-Befehlen setzen
+- **GitHub-Abfragen** bevorzugt über MCP-Tools (`mcp__github__*`)
+- **Nur** `GH_HOST=einsatzleitsoftware.ghe.com` vor verbleibenden `gh`-/`git`-Befehlen setzen (project list, assignee, git push/log/diff)
 - **Deutsche Sprache** im PR-Body mit echten Umlauten (ä, ö, ü, ß)
 - **Kein** `Co-Authored-By` Trailer
 - **Kein Hinweis** auf AI oder automatische Erstellung im PR-Body
@@ -216,3 +247,21 @@ Die Bestätigung per `AskUserQuestion` aus dem /zammad-write Skill **überspring
 - Reviewer sind immer `patrick-vogel` und `copilot-pull-request-reviewer`
 - **Fehlertoleranz**: Fehlende GitHub-Scopes oder API-Fehler bei optionalen Schritten (Projects) überspringen statt abbrechen
 - Bei Unsicherheiten den User fragen
+
+---
+
+## Skill-Optimierung
+
+Nach Abschluss dieses Skills kurz bewerten, ob Optimierungsbedarf besteht:
+
+- **Empfehlung "ja"**: Fehler aufgetreten, Workarounds nötig, Befehle wiederholt, User-Korrekturen
+- **Empfehlung "nein"**: Reibungsloser Lauf wie dokumentiert
+
+Per `AskUserQuestion` fragen:
+
+> Skill abgeschlossen. Soll die Skill-Dokumentation optimiert werden?
+> Empfehlung: {ja — [kurzer Grund] | nein — Lauf war reibungslos}
+
+Optionen: **"Ja, optimieren"**, **"Nein"**
+
+Bei "Ja": `skill-optimize` mit Skill-Name `pull-request` ausführen.

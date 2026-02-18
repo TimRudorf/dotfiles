@@ -1,3 +1,9 @@
+---
+name: edp-build
+description: This skill should be used when the user asks to "compile a Delphi project", "build an EDP project", "start/stop a Windows service", "check service status", or mentions the edp() shell function, compile.config, or the dev VM.
+user-invocable: false
+---
+
 # EDP Build System
 
 Documentation for the `edp()` shell function (`~/.edp_helpers.sh`) — the central build, deploy and service control tool for all EDP projects.

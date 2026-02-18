@@ -1,3 +1,9 @@
+---
+name: edp-clone
+description: This skill should be used when the user asks to "clone an EDP repo", "set up a new EDP project", or uses /edp-clone. It clones from GHE or GitLab and sets up CLAUDE.md.
+argument-hint: [host] [repo-name]
+---
+
 # EDP Clone
 
 User-invocable skill for cloning EDP repositories and setting up the project.
@@ -59,3 +65,21 @@ edp <repo-name> log
 If `compile.config` does not exist in the repo root, inform the user:
 
 > No `compile.config` found. Create one to enable `edp <repo-name> compile`. See the **edp-build** skill for the format.
+
+---
+
+## Skill-Optimierung
+
+Nach Abschluss dieses Skills kurz bewerten, ob Optimierungsbedarf besteht:
+
+- **Empfehlung "ja"**: Fehler aufgetreten, Workarounds nötig, Befehle wiederholt, User-Korrekturen
+- **Empfehlung "nein"**: Reibungsloser Lauf wie dokumentiert
+
+Per `AskUserQuestion` fragen:
+
+> Skill abgeschlossen. Soll die Skill-Dokumentation optimiert werden?
+> Empfehlung: {ja — [kurzer Grund] | nein — Lauf war reibungslos}
+
+Optionen: **"Ja, optimieren"**, **"Nein"**
+
+Bei "Ja": `skill-optimize` mit Skill-Name `edp-clone` ausführen.

@@ -1,3 +1,9 @@
+---
+name: sudo-askpass
+description: This skill should be used when Claude needs to run a command with sudo, encounters a "sudo: a terminal is required" error, or the user asks to "run as root" in a non-interactive terminal.
+user-invocable: false
+---
+
 # Sudo Askpass
 
 When running commands that require `sudo` in a non-interactive environment (no TTY for password input), use the graphical askpass helper:

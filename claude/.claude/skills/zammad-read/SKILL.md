@@ -1,12 +1,18 @@
+---
+name: zammad-read
+description: This skill should be used when the user asks to "read a Zammad ticket", "show ticket details", "look up EDP# ticket", or when another skill needs to fetch Zammad ticket data.
+user-invocable: false
+---
+
 # Zammad Ticket lesen
 
 Zeigt ein Zammad-Ticket mit allen Artikeln an.
 
 ## Configuration
 
-Environment variables from `~/.claude/.env`:
+Environment variables from `~/.env`:
 
-- `ZAMMAD_BASE_URL` — Base URL of the Zammad instance
+- `ZAMMAD_HOST` — Base URL of the Zammad instance
 - `ZAMMAD_TOKEN` — API token for authentication
 
 ## Resolving Ticket Number → ID
@@ -14,8 +20,8 @@ Environment variables from `~/.claude/.env`:
 Users typically provide a **ticket number** (e.g. `7620726` or `EDP#7620726`). Strip any `EDP#` prefix and search:
 
 ```bash
-source ~/.claude/.env
-BASE="${ZAMMAD_BASE_URL%/}"
+source ~/.env
+BASE="${ZAMMAD_HOST%/}"
 AUTH="Authorization: Token token=${ZAMMAD_TOKEN}"
 
 curl -s -H "$AUTH" "$BASE/api/v1/tickets/search?query=number:{number}" > /tmp/z_search.json \
@@ -29,8 +35,8 @@ If the user provides a numeric ticket ID directly, skip the search.
 Run both requests in a **single bash command** and save to temp files (piping curl directly to jq can produce empty output):
 
 ```bash
-source ~/.claude/.env
-BASE="${ZAMMAD_BASE_URL%/}"
+source ~/.env
+BASE="${ZAMMAD_HOST%/}"
 AUTH="Authorization: Token token=${ZAMMAD_TOKEN}"
 TICKET_ID={ticket_id}
 
@@ -79,5 +85,23 @@ Then list each article with: sender (`from`), date, type/sender-role, internal f
 ## Notes
 
 - Always save curl output to temp files first, then process with `jq`. Direct piping can silently produce empty output.
-- The trailing slash in `ZAMMAD_BASE_URL` is stripped with `${ZAMMAD_BASE_URL%/}` to avoid double slashes.
+- The trailing slash in `ZAMMAD_HOST` is stripped with `${ZAMMAD_HOST%/}` to avoid double slashes.
 - If a request fails, show the HTTP status code and error message to the user.
+
+---
+
+## Skill-Optimierung
+
+Nach Abschluss dieses Skills kurz bewerten, ob Optimierungsbedarf besteht:
+
+- **Empfehlung "ja"**: Fehler aufgetreten, Workarounds nötig, Befehle wiederholt, User-Korrekturen
+- **Empfehlung "nein"**: Reibungsloser Lauf wie dokumentiert
+
+Per `AskUserQuestion` fragen:
+
+> Skill abgeschlossen. Soll die Skill-Dokumentation optimiert werden?
+> Empfehlung: {ja — [kurzer Grund] | nein — Lauf war reibungslos}
+
+Optionen: **"Ja, optimieren"**, **"Nein"**
+
+Bei "Ja": `skill-optimize` mit Skill-Name `zammad-read` ausführen.
