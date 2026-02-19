@@ -1,13 +1,17 @@
 ---
 name: init-uni-project
-description: Initialisiert ein Uni-Lernprojekt mit standardisierter Ordnerstruktur und CLAUDE.md
+description: This skill should be used when the user asks to "initialize a uni project",
+  "set up a learning project", "init Lernprojekt", or uses /init-uni-project. It creates
+  a standardized folder structure, sorts existing files, normalizes filenames, and generates
+  a CLAUDE.md for university course materials.
 allowed-tools: Bash, Read, Write, Edit, Glob, Grep, AskUserQuestion
 argument-hint: "[Fachname] [Abschluss] [Semester]"
+disable-model-invocation: true
 ---
 
-Du initialisierst ein Uni-Lernprojekt. Der Benutzer gibt dir den Fachnamen, Abschluss (z.B. Master, Bachelor) und das Semester (z.B. WiSe 25/26).
+# Uni-Lernprojekt initialisieren
 
-Falls diese Infos nicht über `$ARGUMENTS` gegeben wurden, frage den Benutzer danach.
+Initialisiert ein Uni-Lernprojekt mit standardisierter Ordnerstruktur. Der Benutzer gibt Fachname, Abschluss und Semester über `$ARGUMENTS` — falls nicht gegeben, danach fragen.
 
 ## Schritt 1: Informationen sammeln
 
@@ -31,8 +35,6 @@ docs/
 └── Sonstiges/
 ```
 
-Verwende `mkdir -p` um alle Ordner auf einmal zu erstellen.
-
 ## Schritt 3: Vorhandene Dateien einordnen
 
 1. Scanne das gesamte Projektverzeichnis nach vorhandenen Dateien (PDFs und andere Dokumente).
@@ -42,26 +44,19 @@ Verwende `mkdir -p` um alle Ordner auf einmal zu erstellen.
    - Dateien mit "Lösung" oder "Loesung" oder "Musterlösung" im Namen → `docs/Übungen/Lösungen/`
    - Dateien mit "Klausur" oder "Exam" oder "Prüfung" im Namen → `docs/Probeklausur/`
    - Alle anderen Dokumente → `docs/Sonstiges/`
-3. Falls Dateien nicht eindeutig zugeordnet werden können, frage den Benutzer wo sie hin sollen.
-4. Ignoriere `.DS_Store`, `CLAUDE.md` und versteckte Dateien/Ordner.
 
-## Schritt 3b: Dateinamen-Konsistenz prüfen und herstellen
+## Schritt 4: Dateinamen normalisieren
 
-Analysiere die Dateinamen **pro Ordner** und entscheide selbstständig, ob ein konsistentes Naming-Schema vorliegt. Prüfe dabei:
+Analysiere die Dateinamen **pro Ordner** und prüfe:
+- **Trennzeichen**: Unterstriche, Bindestriche, Leerzeichen oder CamelCase gemischt? → Vereinheitlichen
+- **Nummerierung**: Uneinheitlich (`01` vs `1` vs `001`)? → Auf gleiche Stellenanzahl normalisieren
+- **Groß-/Kleinschreibung**: Gemischt? → Vereinheitlichen
+- **Präfixe/Suffixe**: Unterschiedliche Konventionen? → Auf das häufigste Schema angleichen
+- **Sprache**: Deutsch/Englisch gemischt beibehalten, aber Schreibweise vereinheitlichen
 
-- **Trennzeichen**: Werden gemischt Unterstriche (`_`), Bindestriche (`-`), Leerzeichen oder CamelCase verwendet? → Vereinheitlichen auf ein Schema.
-- **Nummerierung**: Sind Nummern unterschiedlich formatiert (z.B. `01` vs `1` vs `001`)? → Auf einheitliche Stellenanzahl normalisieren (z.B. zweistellig `01`, `02`, ... oder dreistellig je nach Anzahl).
-- **Groß-/Kleinschreibung**: Sind manche Dateien groß, andere klein geschrieben? → Vereinheitlichen.
-- **Präfixe/Suffixe**: Haben zusammengehörige Dateien unterschiedliche Namenskonventionen (z.B. `Klausur_SS15.pdf` vs `Klausur SS15.pdf`)? → Auf das häufigste Schema angleichen.
-- **Sprache**: Wird gemischt Deutsch und Englisch verwendet? → Beibehalten, aber Schreibweise vereinheitlichen.
+Identifiziere das dominante Schema pro Ordner. Falls >90% der Dateien bereits konsistent sind, nichts ändern. Andernfalls abweichende Dateien mit `mv` umbenennen.
 
-**Vorgehen:**
-1. Liste alle Dateien pro Unterordner auf und identifiziere das dominante Naming-Schema (das von der Mehrheit der Dateien verwendet wird).
-2. Falls das Naming bereits konsistent ist (>90% der Dateien folgen dem gleichen Schema), nimm keine Änderungen vor.
-3. Falls Inkonsistenzen bestehen, benenne die abweichenden Dateien so um, dass sie dem dominanten Schema folgen. Verwende `mv` zum Umbenennen.
-4. Zeige in der Zusammenfassung (Schritt 5) an, welche Dateien umbenannt wurden (alter Name → neuer Name).
-
-## Schritt 4: CLAUDE.md erstellen (nach eventuellem Umbenennen!)
+## Schritt 5: CLAUDE.md erstellen
 
 Erstelle eine `CLAUDE.md` im Projektstamm mit folgendem Aufbau:
 
@@ -76,9 +71,7 @@ Dieses Repository enthält die Kursmaterialien für **{Fachname}** ({Abschluss},
 
 ## Verzeichnisstruktur
 
-\```
 {Tatsächliche Verzeichnisstruktur mit allen einsortierten Dateien als Tree-Darstellung}
-\```
 
 ## Hinweise für Claude
 
@@ -90,10 +83,37 @@ Dieses Repository enthält die Kursmaterialien für **{Fachname}** ({Abschluss},
 
 Passe die Verzeichnisstruktur an die tatsächlich vorhandenen Dateien an. Füge Kommentare hinzu, die den Inhalt der Dateien beschreiben.
 
-## Schritt 5: Zusammenfassung
+## Schritt 6: Zusammenfassung anzeigen
 
-Zeige dem Benutzer eine Zusammenfassung:
+Zeige dem Benutzer:
 - Welche Ordner erstellt wurden
 - Welche Dateien wohin verschoben wurden
 - Welche Dateien umbenannt wurden (alter Name → neuer Name), oder dass keine Umbenennung nötig war
 - Dass die CLAUDE.md erstellt wurde
+
+## Regeln
+
+- **Sprache**: Deutsch mit echten Umlauten (ä, ö, ü, ß)
+- **Ordnerstruktur** ist fix (`docs/Skript`, `docs/Übungen/Aufgaben` etc.) — keine abweichenden Pfade
+- **Versteckte Dateien**, `.DS_Store` und `CLAUDE.md` ignorieren
+- **`mkdir -p`** für Ordnererstellung verwenden
+- Bei **Unsicherheit bei Dateizuordnung**: User fragen
+- **CLAUDE.md immer zuletzt** erstellen (nach Umbenennung, damit der Tree aktuell ist)
+
+---
+
+## Skill-Optimierung
+
+Nach Abschluss dieses Skills kurz bewerten, ob Optimierungsbedarf besteht:
+
+- **Empfehlung "ja"**: Fehler aufgetreten, Workarounds nötig, Befehle wiederholt, User-Korrekturen
+- **Empfehlung "nein"**: Reibungsloser Lauf wie dokumentiert
+
+Per `AskUserQuestion` fragen:
+
+> Skill abgeschlossen. Soll die Skill-Dokumentation optimiert werden?
+> Empfehlung: {ja — [kurzer Grund] | nein — Lauf war reibungslos}
+
+Optionen: **"Ja, optimieren"**, **"Nein"**
+
+Bei "Ja": `skill-optimize` mit Skill-Name `init-uni-project` ausführen.
