@@ -9,7 +9,7 @@ Zeigt einen Überblick über alle offenen Aufgaben: Zammad-Tickets, GitHub Issue
 
 ## Configuration
 
-- Zammad: Environment variables from `~/.env` (`ZAMMAD_HOST`, `ZAMMAD_TOKEN`)
+- Zammad: Environment variables from `~/Develop/EDP/.env` (`ZAMMAD_HOST`, `ZAMMAD_TOKEN`)
 - GitHub: MCP-Server `github` (konfiguriert für `einsatzleitsoftware.ghe.com`)
 
 ## Workflow
@@ -21,7 +21,7 @@ Alle folgenden Abfragen **parallel** ausführen (separate Bash-Aufrufe):
 **1a) Offene Zammad-Tickets** (Status `new` oder `open`, Owner = Tim):
 
 ```bash
-source ~/.env
+source ~/Develop/EDP/.env
 BASE="${ZAMMAD_HOST%/}"
 AUTH="Authorization: Token token=${ZAMMAD_TOKEN}"
 
@@ -32,7 +32,7 @@ curl -s -H "$AUTH" "$BASE/api/v1/tickets/search?query=owner.email:tim.rudorf@ein
 **1b) Zammad-Tickets "Warten auf Rückmeldung"** (`pending close` oder `warten auf Rückmeldung -extern`):
 
 ```bash
-source ~/.env
+source ~/Develop/EDP/.env
 BASE="${ZAMMAD_HOST%/}"
 AUTH="Authorization: Token token=${ZAMMAD_TOKEN}"
 
@@ -45,7 +45,7 @@ curl -s -H "$AUTH" "$BASE/api/v1/tickets/search?query=owner.email:tim.rudorf@ein
 **1c) Zammad-Tickets "Warten auf Erinnerung"** (`pending reminder`):
 
 ```bash
-source ~/.env
+source ~/Develop/EDP/.env
 BASE="${ZAMMAD_HOST%/}"
 AUTH="Authorization: Token token=${ZAMMAD_TOKEN}"
 
@@ -80,7 +80,7 @@ Für jedes Ticket/Issue/PR eine **kurze Zusammenfassung** (1 Satz oder wenige St
 **Zammad-Tickets**: Für jedes Ticket den letzten Kundenartikel laden:
 
 ```bash
-source ~/.env
+source ~/Develop/EDP/.env
 BASE="${ZAMMAD_HOST%/}"
 AUTH="Authorization: Token token=${ZAMMAD_TOKEN}"
 
@@ -178,7 +178,7 @@ Kategorien ohne Einträge **komplett ausblenden** (keine Überschrift, keine Tab
 ## Regeln
 
 - **GitHub-Abfragen** über MCP-Tools (`mcp__github__*`) — kein `gh` CLI für GitHub-Daten
-- **Immer** `source ~/.env` für Zammad-Credentials
+- **Immer** `source ~/Develop/EDP/.env` für Zammad-Credentials
 - **Immer** curl-Output in temp files speichern, dann mit `jq` verarbeiten
 - **Immer** `?expand=true` bei der Zammad Tickets API verwenden
 - Alle Datenabfragen in Schritt 1 **maximal parallel** ausführen
