@@ -8,6 +8,34 @@ argument-hint: [ticket-number]
 
 Erstellt aus einem Zammad-Ticket ein strukturiertes GitHub Issue auf `einsatzleitsoftware.ghe.com`.
 
+## Configuration
+
+Environment variables via `~/.env` (automatisch geladen durch `.zshrc`):
+
+- `ZAMMAD_HOST` — Base URL of the Zammad instance
+- `ZAMMAD_TOKEN` — API token for authentication
+
+## Schritt 0: Env-Variablen prüfen
+
+Vor dem Start per Bash prüfen, ob die Pflicht-Variablen gesetzt und nicht leer sind:
+
+```bash
+echo "ZAMMAD_HOST=${ZAMMAD_HOST:-NICHT_GESETZT}"
+echo "ZAMMAD_TOKEN=${ZAMMAD_TOKEN:-NICHT_GESETZT}"
+```
+
+Falls eine Variable `NICHT_GESETZT` oder leer ist → dem User mitteilen welche Variable(n) fehlen und per `AskUserQuestion` fragen:
+
+> Fehlende Env-Variablen: `ZAMMAD_TOKEN`
+> Diese müssen in `~/.env` eingetragen sein. Die Datei wird automatisch via `.zshrc` geladen.
+
+Optionen:
+- **"Ist eingetragen"** → Schritt 0 wiederholen (erneut prüfen)
+- **"Abbrechen"** → Skill beenden
+- **"Direkt eingeben"** → User gibt Wert ein, per `Bash` an `~/.env` anhängen (`echo 'VAR=wert' >> ~/.env`), dann `source ~/.env` und erneut prüfen
+
+Wenn der User "Direkt eingeben" wählt: Per `AskUserQuestion` den Wert für jede fehlende Variable einzeln abfragen, mit `echo 'VARNAME=wert' >> ~/.env` anhängen (single quotes um Sonderzeichen zu schützen), dann erneut prüfen.
+
 ## Workflow
 
 ### Schritt 1: Zammad-Ticket auslesen
@@ -217,7 +245,6 @@ Die Bestätigung per `AskUserQuestion` aus dem /zammad-write Skill **überspring
 Wenn das Ticket **intern** ist (Organisation = "Eifert Systems GmbH"), das Zammad-Ticket nach dem Kommentar auf Status "closed" setzen:
 
 ```bash
-source ~/Develop/EDP/.env
 BASE="${ZAMMAD_HOST%/}"
 AUTH="Authorization: Token token=${ZAMMAD_TOKEN}"
 

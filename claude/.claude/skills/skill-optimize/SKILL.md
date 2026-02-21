@@ -44,6 +44,7 @@ Lies `~/.claude/skills/.shared/skill-best-practices.md` und prüfe die SKILL.md 
 - Frontmatter-Korrektheit (Bindestriche, nicht Unterstriche)
 - Token-Effizienz (Dateigröße, Progressive Disclosure)
 - Invocation-Steuerung (disable-model-invocation bei Side-Effects?)
+- Env-Validierung: Falls der Skill Env-Variablen nutzt — gibt es einen Validierungsschritt am Anfang? Pattern: Bash-Check ob Vars gesetzt sind → `AskUserQuestion` mit "Ist eingetragen" / "Abbrechen" / "Direkt eingeben".
 
 **Nur Verbesserungen vorschlagen die durch den Lauf oder offensichtliche Mängel motiviert sind** — keine spekulativen Optimierungen.
 

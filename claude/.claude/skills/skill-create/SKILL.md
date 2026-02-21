@@ -50,6 +50,7 @@ Basierend auf der Beschreibung autonom entscheiden:
 - `$ARGUMENTS` für Parameter-Substitution nutzen wo sinnvoll
 - Unter 500 Zeilen halten
 - Bei komplexen Skills: Hinweis auf separate Dateien (reference.md etc.) die der User später ergänzen kann
+- **Env-Validierung**: Falls der Skill Env-Variablen aus `~/.env` benötigt, einen "Schritt 0: Env-Variablen prüfen" einfügen. Pattern: Per Bash prüfen ob Variablen gesetzt sind, bei fehlenden Werten `AskUserQuestion` mit 3 Optionen: "Ist eingetragen" (retry), "Abbrechen", "Direkt eingeben" (Wert abfragen, an `~/.env` anhängen).
 
 ## Schritt 5: Dateien erstellen
 
