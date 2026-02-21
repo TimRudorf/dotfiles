@@ -1,19 +1,81 @@
 ---
 name: uni-init-project
 description: This skill should be used when the user asks to "initialize a uni project",
-  "set up a learning project", "init Lernprojekt", or uses /init-uni-project. It creates
-  a standardized folder structure, sorts existing files, normalizes filenames, and generates
-  a CLAUDE.md for university course materials.
+  "set up a learning project", "init Lernprojekt", "download Moodle materials",
+  "Moodle-Kurs herunterladen", or uses /uni-init-project. It downloads course materials
+  from Moodle (optional), creates a standardized folder structure, sorts files,
+  normalizes filenames, and generates a CLAUDE.md.
 allowed-tools: Bash, Read, Write, Edit, Glob, Grep, AskUserQuestion
-argument-hint: "[Fachname] [Abschluss] [Semester]"
+argument-hint: "[Moodle-Kurs-URL]"
 disable-model-invocation: true
 ---
 
 # Uni-Lernprojekt initialisieren
 
-Initialisiert ein Uni-Lernprojekt mit standardisierter Ordnerstruktur. Der Benutzer gibt Fachname, Abschluss und Semester über `$ARGUMENTS` — falls nicht gegeben, danach fragen.
+Initialisiert ein Uni-Lernprojekt mit standardisierter Ordnerstruktur. Optional Moodle-Kurs-URL als Argument — dann werden Kursmaterialien automatisch heruntergeladen und Kursinfos aus der Moodle API bezogen.
 
-## Schritt 1: Informationen sammeln
+## Schritt 0: Moodle-Token validieren (nur Modus A)
+
+Nur ausführen wenn `$ARGUMENTS` eine URL enthält (beginnt mit `https://`).
+
+Prüfe ob `~/.config/moodle-dl/token.json` existiert (Format: `{"domain": "...", "token": "..."}`).
+
+Falls vorhanden → Token lesen, weiter mit Schritt 1.
+
+Falls nicht vorhanden → User via `AskUserQuestion` fragen:
+- Frage: "Für den Moodle-Download wird einmalig ein API-Token benötigt. Das Setup startet `moodle-dl --init --sso` — du wirst im Browser zur Anmeldung weitergeleitet."
+- Optionen: "Token einrichten" / "Abbrechen"
+
+Bei "Abbrechen" → Skill abbrechen.
+
+Bei "Token einrichten":
+1. `pip install moodle-dl` falls `moodle-dl` nicht installiert
+2. Temporäres Verzeichnis erstellen: `mktemp -d`
+3. In tmpdir: `moodle-dl --init --sso` ausführen (interaktiv, User meldet sich im Browser an)
+4. Aus der erzeugten `config.json` im tmpdir die Felder `moodle_domain` und `token` extrahieren
+5. Nach `~/.config/moodle-dl/token.json` speichern: `{"domain": "<moodle_domain>", "token": "<token>"}`
+6. tmpdir aufräumen (`rm -rf`)
+
+## Schritt 1: Argument prüfen & Informationen sammeln
+
+### Argument-Erkennung
+
+- Falls `$ARGUMENTS` eine URL enthält (beginnt mit `https://`) → **Modus A** (Moodle-Download)
+- Sonst → **Modus B** (manuell)
+
+### Modus A: Moodle-URL gegeben
+
+**1a) Kursinfo abrufen:**
+
+1. Domain und Kurs-ID aus URL extrahieren (z.B. `https://moodle.tu-darmstadt.de/course/view.php?id=12345` → domain=`moodle.tu-darmstadt.de`, id=`12345`)
+2. Token aus `~/.config/moodle-dl/token.json` lesen
+3. Kursname via Moodle API abrufen:
+   ```
+   curl -s "https://{domain}/webservice/rest/server.php?wstoken={token}&wsfunction=core_course_get_courses_by_field&field=id&value={id}&moodlewsrestformat=json"
+   ```
+4. Kursnamen aus Response extrahieren (`.courses[0].fullname`)
+5. User via `AskUserQuestion` fragen:
+   - Kursname bestätigen/anpassen
+   - Abschluss (Master/Bachelor)
+   - Semester (z.B. WiSe 25/26, SoSe 26)
+
+**1c) Materialien herunterladen:**
+
+1. Kursinhalte via Moodle API abrufen:
+   ```
+   curl -s "https://{domain}/webservice/rest/server.php?wstoken={token}&wsfunction=core_course_get_contents&courseid={id}&moodlewsrestformat=json"
+   ```
+2. Alle Einträge mit `type: "file"` aus der Response sammeln
+3. Jede Datei flach ins aktuelle Verzeichnis herunterladen:
+   ```
+   curl -L --fail -o "{filename}" "{fileurl}?token={token}"
+   ```
+4. Duplikate (gleicher Dateiname bereits vorhanden) überspringen
+5. Download-Zusammenfassung anzeigen (Anzahl heruntergeladener Dateien, übersprungene Duplikate)
+
+Bei API-Fehlern (HTTP-Fehler, leere Response, `exception` in JSON) → klare Fehlermeldung und Skill abbrechen.
+
+### Modus B: Ohne Moodle-URL
 
 Frage den Benutzer (sofern nicht bereits bekannt):
 - **Fachname** (z.B. "Systemdynamik und Regelungstechnik 3")
@@ -99,6 +161,10 @@ Zeige dem Benutzer:
 - **`mkdir -p`** für Ordnererstellung verwenden
 - Bei **Unsicherheit bei Dateizuordnung**: User fragen
 - **CLAUDE.md immer zuletzt** erstellen (nach Umbenennung, damit der Tree aktuell ist)
+- **Token** zentral in `~/.config/moodle-dl/token.json` speichern und wiederverwenden
+- **Downloads** mit `curl -L --fail` ausführen
+- Bei **API-Fehlern** → klare Fehlermeldung und Abbruch
+- **Duplikate** (gleicher Dateiname) beim Download überspringen
 
 ---
 
