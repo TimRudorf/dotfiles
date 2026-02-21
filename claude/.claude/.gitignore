@@ -5,4 +5,4 @@
 !settings.local.json
 !skills/
 !skills/*/
-!skills/*/SKILL.md
+!skills/**
