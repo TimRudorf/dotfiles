@@ -119,3 +119,4 @@ Analyse → Aktion → Validierung → Fix → Repeat
 - [ ] Konsistente Terminologie
 - [ ] Keine redundanten Erklärungen
 - [ ] Frontmatter-Felder mit Bindestrichen (nicht Unterstrichen)
+- [ ] Skills mit Env-Variablen haben Schritt 0 (Validierung mit "Ist eingetragen" / "Abbrechen" / "Direkt eingeben")

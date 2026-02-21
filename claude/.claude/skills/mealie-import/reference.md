@@ -29,9 +29,6 @@ JSON in eine Datei schreiben, dann `curl -d @datei` nutzen. Das ist sicherer als
 ### curl Status-Code zuverlässig erfassen
 **Nicht** `curl -w "\n%{http_code}" | grep` verwenden (liefert `000` oder leere Ausgabe). Stattdessen: `HTTP_CODE=$(curl -s -o /tmp/mealie_response.txt -w "%{http_code}" ...)` und dann `echo "Status: $HTTP_CODE"`.
 
-### Shell-State resettet
-`source .env` muss in **jedem** Bash-Aufruf stehen, da Umgebungsvariablen zwischen Tool-Aufrufen nicht persistieren. Newlines oder Semikolons verwenden, **nicht `&&`** für `source`+`curl`-Verkettung.
-
 ### Tools separat PATCHen
 Analog zu Tags/Kategorien: `tools` in einem eigenen PATCH-Call senden, **nicht** im selben Call wie `recipeInstructions` oder `tags`. RecipeTool-Schema braucht alle 3 Felder: `id`, `name`, `slug`.
 
@@ -95,7 +92,6 @@ with open('/tmp/mealie_image_prompt.json', 'w') as f:
 **API-Call:**
 
 ```bash
-source /Users/timrudorf/Nextcloud/Rezepte/.env
 curl -s -X POST "https://api.openai.com/v1/images/generations" \
   -H "Authorization: Bearer $OPENAI_TOKEN" \
   -H "Content-Type: application/json" \
@@ -124,7 +120,6 @@ print('Bild gespeichert: /tmp/mealie_recipe_image.png')
 ### Stockfoto suchen (Pexels)
 
 ```bash
-source /Users/timrudorf/Nextcloud/Rezepte/.env
 curl -s -H "Authorization: $PEXELS_TOKEN" \
   "https://api.pexels.com/v1/search?query=ENGLISCHER_SUCHBEGRIFF&per_page=5&orientation=landscape" \
   | python3 -c "
@@ -145,7 +140,6 @@ else:
 **KI-Bild (lokale Datei) → multipart PUT:**
 
 ```bash
-source /Users/timrudorf/Nextcloud/Rezepte/.env
 curl -s -X PUT "$MEALIE_URL/api/recipes/$SLUG/image" \
   -H "Authorization: Bearer $MEALIE_TOKEN" \
   -F "image=@/tmp/mealie_recipe_image.png" \
@@ -155,7 +149,6 @@ curl -s -X PUT "$MEALIE_URL/api/recipes/$SLUG/image" \
 **Stockfoto (URL) → POST:**
 
 ```bash
-source /Users/timrudorf/Nextcloud/Rezepte/.env
 curl -s -X POST "$MEALIE_URL/api/recipes/$SLUG/image" \
   -H "Authorization: Bearer $MEALIE_TOKEN" \
   -H "Content-Type: application/json" \
@@ -191,4 +184,4 @@ curl -s -X POST "$MEALIE_URL/api/recipes/$SLUG/image" \
 
 **Kosten:** ~$0.04 pro Bild bei `medium` quality, `1536x1024`.
 
-**Env-Var:** `OPENAI_TOKEN` in `/Users/timrudorf/Nextcloud/Rezepte/.env`
+**Env-Var:** `OPENAI_TOKEN` via `~/.env` (automatisch geladen durch `.zshrc`)

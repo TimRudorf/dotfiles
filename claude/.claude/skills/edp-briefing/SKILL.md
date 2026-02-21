@@ -9,8 +9,29 @@ Zeigt einen Überblick über alle offenen Aufgaben: Zammad-Tickets, GitHub Issue
 
 ## Configuration
 
-- Zammad: Environment variables from `~/Develop/EDP/.env` (`ZAMMAD_HOST`, `ZAMMAD_TOKEN`)
+- Zammad: Environment variables via `~/.env` (`ZAMMAD_HOST`, `ZAMMAD_TOKEN`) — automatisch geladen durch `.zshrc`
 - GitHub: MCP-Server `github` (konfiguriert für `einsatzleitsoftware.ghe.com`)
+
+## Schritt 0: Env-Variablen prüfen
+
+Vor dem Start per Bash prüfen, ob die Pflicht-Variablen gesetzt und nicht leer sind:
+
+```bash
+echo "ZAMMAD_HOST=${ZAMMAD_HOST:-NICHT_GESETZT}"
+echo "ZAMMAD_TOKEN=${ZAMMAD_TOKEN:-NICHT_GESETZT}"
+```
+
+Falls eine Variable `NICHT_GESETZT` oder leer ist → dem User mitteilen welche Variable(n) fehlen und per `AskUserQuestion` fragen:
+
+> Fehlende Env-Variablen: `ZAMMAD_TOKEN`
+> Diese müssen in `~/.env` eingetragen sein. Die Datei wird automatisch via `.zshrc` geladen.
+
+Optionen:
+- **"Ist eingetragen"** → Schritt 0 wiederholen (erneut prüfen)
+- **"Abbrechen"** → Skill beenden
+- **"Direkt eingeben"** → User gibt Wert ein, per `Bash` an `~/.env` anhängen (`echo 'VAR=wert' >> ~/.env`), dann `source ~/.env` und erneut prüfen
+
+Wenn der User "Direkt eingeben" wählt: Per `AskUserQuestion` den Wert für jede fehlende Variable einzeln abfragen, mit `echo 'VARNAME=wert' >> ~/.env` anhängen (single quotes um Sonderzeichen zu schützen), dann erneut prüfen.
 
 ## Workflow
 
@@ -21,7 +42,6 @@ Alle folgenden Abfragen **parallel** ausführen (separate Bash-Aufrufe):
 **1a) Offene Zammad-Tickets** (Status `new` oder `open`, Owner = Tim):
 
 ```bash
-source ~/Develop/EDP/.env
 BASE="${ZAMMAD_HOST%/}"
 AUTH="Authorization: Token token=${ZAMMAD_TOKEN}"
 
@@ -32,7 +52,6 @@ curl -s -H "$AUTH" "$BASE/api/v1/tickets/search?query=owner.email:tim.rudorf@ein
 **1b) Zammad-Tickets "Warten auf Rückmeldung"** (`pending close` oder `warten auf Rückmeldung -extern`):
 
 ```bash
-source ~/Develop/EDP/.env
 BASE="${ZAMMAD_HOST%/}"
 AUTH="Authorization: Token token=${ZAMMAD_TOKEN}"
 
@@ -45,7 +64,6 @@ curl -s -H "$AUTH" "$BASE/api/v1/tickets/search?query=owner.email:tim.rudorf@ein
 **1c) Zammad-Tickets "Warten auf Erinnerung"** (`pending reminder`):
 
 ```bash
-source ~/Develop/EDP/.env
 BASE="${ZAMMAD_HOST%/}"
 AUTH="Authorization: Token token=${ZAMMAD_TOKEN}"
 
@@ -80,7 +98,6 @@ Für jedes Ticket/Issue/PR eine **kurze Zusammenfassung** (1 Satz oder wenige St
 **Zammad-Tickets**: Für jedes Ticket den letzten Kundenartikel laden:
 
 ```bash
-source ~/Develop/EDP/.env
 BASE="${ZAMMAD_HOST%/}"
 AUTH="Authorization: Token token=${ZAMMAD_TOKEN}"
 
@@ -178,7 +195,7 @@ Kategorien ohne Einträge **komplett ausblenden** (keine Überschrift, keine Tab
 ## Regeln
 
 - **GitHub-Abfragen** über MCP-Tools (`mcp__github__*`) — kein `gh` CLI für GitHub-Daten
-- **Immer** `source ~/Develop/EDP/.env` für Zammad-Credentials
+- Zammad-Credentials (`ZAMMAD_HOST`, `ZAMMAD_TOKEN`) sind via `.zshrc` automatisch verfügbar
 - **Immer** curl-Output in temp files speichern, dann mit `jq` verarbeiten
 - **Immer** `?expand=true` bei der Zammad Tickets API verwenden
 - Alle Datenabfragen in Schritt 1 **maximal parallel** ausführen

@@ -10,16 +10,39 @@ Lädt Dateien in die Nextcloud-basierte Sharecloud (`einsatzleitsoftware.de/next
 
 ## Configuration
 
-Environment variables from `~/Develop/EDP/.env`:
+Environment variables via `~/.env` (automatisch geladen durch `.zshrc`):
 
+- `NC_HOST` — Nextcloud base URL
+- `NC_WEBDAV` — WebDAV path
+- `NC_USER` — Nextcloud username
+- `NC_PASSWORD` — Nextcloud password (single-quoted wegen Sonderzeichen)
+- `ZAMMAD_HOST` — Zammad base URL
+- `ZAMMAD_TOKEN` — Zammad API token
+
+## Schritt 0: Env-Variablen prüfen
+
+Vor dem Start per Bash prüfen, ob die Pflicht-Variablen gesetzt und nicht leer sind:
+
+```bash
+echo "ZAMMAD_HOST=${ZAMMAD_HOST:-NICHT_GESETZT}"
+echo "ZAMMAD_TOKEN=${ZAMMAD_TOKEN:-NICHT_GESETZT}"
+echo "NC_HOST=${NC_HOST:-NICHT_GESETZT}"
+echo "NC_WEBDAV=${NC_WEBDAV:-NICHT_GESETZT}"
+echo "NC_USER=${NC_USER:-NICHT_GESETZT}"
+echo "NC_PASSWORD=${NC_PASSWORD:-NICHT_GESETZT}"
 ```
-NC_HOST=https://einsatzleitsoftware.de/nextcloud
-NC_WEBDAV=/remote.php/dav/files/tim.rudorf
-NC_USER=tim.rudorf
-NC_PASSWORD=...
-ZAMMAD_HOST=...
-ZAMMAD_TOKEN=...
-```
+
+Falls eine Variable `NICHT_GESETZT` oder leer ist → dem User mitteilen welche Variable(n) fehlen und per `AskUserQuestion` fragen:
+
+> Fehlende Env-Variablen: `NC_HOST`, `NC_PASSWORD`
+> Diese müssen in `~/.env` eingetragen sein. Die Datei wird automatisch via `.zshrc` geladen.
+
+Optionen:
+- **"Ist eingetragen"** → Schritt 0 wiederholen (erneut prüfen)
+- **"Abbrechen"** → Skill beenden
+- **"Direkt eingeben"** → User gibt Wert ein, per `Bash` an `~/.env` anhängen (`echo 'VAR=wert' >> ~/.env`), dann `source ~/.env` und erneut prüfen
+
+Wenn der User "Direkt eingeben" wählt: Per `AskUserQuestion` den Wert für jede fehlende Variable einzeln abfragen, mit `echo 'VARNAME=wert' >> ~/.env` anhängen (single quotes um Sonderzeichen zu schützen), dann erneut prüfen.
 
 ## Workflow
 
@@ -37,7 +60,6 @@ Aus den Argumenten extrahieren:
 **Bei Kundenname** → Zammad-API durchsuchen:
 
 ```bash
-source ~/Develop/EDP/.env
 BASE="${ZAMMAD_HOST%/}"
 
 curl -s -H "Authorization: Token token=${ZAMMAD_TOKEN}" \
@@ -52,7 +74,6 @@ Bei Unsicherheit (mehrere Treffer, kein Treffer) → User per `AskUserQuestion` 
 Ordnerliste unter `/Kunden/` laden:
 
 ```bash
-source ~/Develop/EDP/.env
 
 curl -s -u "$NC_USER:$NC_PASSWORD" \
   -X PROPFIND \
@@ -79,7 +100,6 @@ Nur wenn kein passender Ordner gefunden wurde.
 **4a: Ordner anlegen** via WebDAV MKCOL:
 
 ```bash
-source ~/Develop/EDP/.env
 
 ORDNER="{ordnername}"  # lowercase, Bindestriche, passender Prefix
 curl -s -o /dev/null -w "%{http_code}" \
@@ -93,7 +113,6 @@ HTTP 201 = Erfolg. Den Ordnernamen mit bestehendem Namensschema konsistent wähl
 **4b: Public Link mit Passwort erstellen** via OCS Share API:
 
 ```bash
-source ~/Develop/EDP/.env
 
 PASSWORD=$(openssl rand -base64 12 | tr -dc 'A-Za-z0-9' | head -c 12)
 curl -s -u "$NC_USER:$NC_PASSWORD" \
@@ -116,7 +135,6 @@ Link + Passwort für Schritt 7 merken.
 Passend zum Anlass einen Unterordner erstellen (z.B. `Setup_2026-02`, `Testlizenz`, `Update_v4.5`):
 
 ```bash
-source ~/Develop/EDP/.env
 
 ORDNER="{ordnername}"
 UNTERORDNER="{unterordner}"
@@ -131,7 +149,6 @@ curl -s -o /dev/null -w "%{http_code}" \
 Für jede Datei ein WebDAV PUT:
 
 ```bash
-source ~/Develop/EDP/.env
 
 ORDNER="{ordnername}"
 UNTERORDNER="{unterordner}"
@@ -176,7 +193,6 @@ Nach Erfolg anzeigen:
 Falls unklar, ob ein Ordner bereits freigegeben ist:
 
 ```bash
-source ~/Develop/EDP/.env
 
 ORDNER="{ordnername}"
 curl -s -u "$NC_USER:$NC_PASSWORD" \
@@ -187,7 +203,7 @@ curl -s -u "$NC_USER:$NC_PASSWORD" \
 
 ## Notes
 
-- **Jeder Bash-Aufruf ist eine eigene Shell** — `source ~/Develop/EDP/.env` in jedem Schritt.
+- **Jeder Bash-Aufruf ist eine eigene Shell** — Env-Variablen sind via `.zshrc` automatisch verfügbar.
 - **Nextcloud-Passwort enthält Sonderzeichen** — immer in Anführungszeichen verwenden, `$NC_PASSWORD` nie unquoted.
 - **WebDAV-URLs**: Immer `$NC_HOST$NC_WEBDAV/Kunden/...` für Dateioperationen.
 - **OCS-API-URLs**: Immer `$NC_HOST/ocs/v2.php/apps/files_sharing/...` für Freigaben.
