@@ -6,6 +6,10 @@ local.conf
 *.lock.json
 *-generated.conf
 
+# Claude Code local state
+settings.local.json
+.claude/settings.local.json
+
 # OS artifacts
 .DS_Store
 Thumbs.db

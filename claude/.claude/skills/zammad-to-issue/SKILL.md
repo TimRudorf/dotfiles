@@ -217,7 +217,7 @@ Die Bestätigung per `AskUserQuestion` aus dem /zammad-write Skill **überspring
 Wenn das Ticket **intern** ist (Organisation = "Eifert Systems GmbH"), das Zammad-Ticket nach dem Kommentar auf Status "closed" setzen:
 
 ```bash
-source ~/.env
+source ~/Develop/EDP/.env
 BASE="${ZAMMAD_HOST%/}"
 AUTH="Authorization: Token token=${ZAMMAD_TOKEN}"
 
