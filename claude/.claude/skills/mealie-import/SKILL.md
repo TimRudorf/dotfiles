@@ -12,9 +12,30 @@ Importiert ein Rezept aus Markdown in die Mealie-Instanz unter `https://mealie.t
 
 ## Konfiguration
 
-**Env-Datei:** `/Users/timrudorf/Nextcloud/Rezepte/.env` enthält `MEALIE_URL`, `MEALIE_TOKEN`, `PEXELS_TOKEN` (optional, Stockfotos) und `OPENAI_TOKEN` (optional, KI-Bildgenerierung).
+**Env-Variablen:** `MEALIE_URL`, `MEALIE_TOKEN`, `PEXELS_TOKEN` (optional, Stockfotos) und `OPENAI_TOKEN` (optional, KI-Bildgenerierung) — via `~/.env` (automatisch geladen durch `.zshrc`).
 
-**WICHTIG:** Jeder `Bash`-Aufruf braucht `source /Users/timrudorf/Nextcloud/Rezepte/.env` am Anfang, da Shell-State zwischen Aufrufen nicht persistiert. Newlines oder Semikolons verwenden, **NICHT `&&`** für `source`+`curl`-Verkettung (Variablen kommen sonst nicht an → "No host part in URL").
+## Schritt 0: Env-Variablen prüfen
+
+Vor dem Start per Bash prüfen, ob die Pflicht-Variablen gesetzt und nicht leer sind:
+
+```bash
+echo "MEALIE_URL=${MEALIE_URL:-NICHT_GESETZT}"
+echo "MEALIE_TOKEN=${MEALIE_TOKEN:-NICHT_GESETZT}"
+```
+
+Falls eine Variable `NICHT_GESETZT` oder leer ist → dem User mitteilen welche Variable(n) fehlen und per `AskUserQuestion` fragen:
+
+> Fehlende Env-Variablen: `MEALIE_TOKEN`
+> Diese müssen in `~/.env` eingetragen sein. Die Datei wird automatisch via `.zshrc` geladen.
+
+Optionen:
+- **"Ist eingetragen"** → Schritt 0 wiederholen (erneut prüfen)
+- **"Abbrechen"** → Skill beenden
+- **"Direkt eingeben"** → User gibt Wert ein, per `Bash` an `~/.env` anhängen (`echo 'VAR=wert' >> ~/.env`), dann `source ~/.env` und erneut prüfen
+
+Wenn der User "Direkt eingeben" wählt: Per `AskUserQuestion` den Wert für jede fehlende Variable einzeln abfragen, mit `echo 'VARNAME=wert' >> ~/.env` anhängen (single quotes um Sonderzeichen zu schützen), dann erneut prüfen.
+
+**Optionale Variablen** (`PEXELS_TOKEN`, `OPENAI_TOKEN`): Falls nicht gesetzt, nur Hinweis ausgeben — kein Abbruch. Der Skill kann ohne Bild weiterlaufen.
 
 ## Schritt 1: Input ermitteln
 
@@ -102,7 +123,6 @@ Optionen: **"Importieren"**, **"Ändern"**, **"Abbrechen"**
 ## Schritt 3: Rezept erstellen (POST)
 
 ```bash
-source /Users/timrudorf/Nextcloud/Rezepte/.env
 SLUG=$(curl -s -X POST "$MEALIE_URL/api/recipes" \
   -H "Authorization: Bearer $MEALIE_TOKEN" \
   -H "Content-Type: application/json" \
@@ -115,7 +135,6 @@ Rückgabe ist der Slug als JSON-String (z.B. `"mischbrot-mit-sauerteig-roggen-vo
 Danach die Recipe-ID abrufen:
 
 ```bash
-source /Users/timrudorf/Nextcloud/Rezepte/.env
 curl -s -H "Authorization: Bearer $MEALIE_TOKEN" \
   "$MEALIE_URL/api/recipes/$SLUG" | python3 -c "import sys,json; print(json.load(sys.stdin)['id'])"
 ```
@@ -125,12 +144,10 @@ curl -s -H "Authorization: Bearer $MEALIE_TOKEN" \
 ### 4a: Existierende Tags/Kategorien abfragen (parallel)
 
 ```bash
-source /Users/timrudorf/Nextcloud/Rezepte/.env
 curl -s -H "Authorization: Bearer $MEALIE_TOKEN" "$MEALIE_URL/api/organizers/tags" | python3 -c "import sys,json; [print(f'{t[\"id\"]} {t[\"name\"]}') for t in json.load(sys.stdin).get('items',[])]"
 ```
 
 ```bash
-source /Users/timrudorf/Nextcloud/Rezepte/.env
 curl -s -H "Authorization: Bearer $MEALIE_TOKEN" "$MEALIE_URL/api/organizers/categories" | python3 -c "import sys,json; [print(f'{c[\"id\"]} {c[\"name\"]}') for c in json.load(sys.stdin).get('items',[])]"
 ```
 
@@ -139,7 +156,6 @@ curl -s -H "Authorization: Bearer $MEALIE_TOKEN" "$MEALIE_URL/api/organizers/cat
 Für jeden Tag der noch nicht existiert:
 
 ```bash
-source /Users/timrudorf/Nextcloud/Rezepte/.env
 curl -s -X POST "$MEALIE_URL/api/organizers/tags" \
   -H "Authorization: Bearer $MEALIE_TOKEN" \
   -H "Content-Type: application/json" \
@@ -149,7 +165,6 @@ curl -s -X POST "$MEALIE_URL/api/organizers/tags" \
 Für jede Kategorie die noch nicht existiert:
 
 ```bash
-source /Users/timrudorf/Nextcloud/Rezepte/.env
 curl -s -X POST "$MEALIE_URL/api/organizers/categories" \
   -H "Authorization: Bearer $MEALIE_TOKEN" \
   -H "Content-Type: application/json" \
@@ -165,7 +180,6 @@ curl -s -X POST "$MEALIE_URL/api/organizers/categories" \
 **Alle existierenden Units laden:**
 
 ```bash
-source /Users/timrudorf/Nextcloud/Rezepte/.env
 curl -s -H "Authorization: Bearer $MEALIE_TOKEN" "$MEALIE_URL/api/units?perPage=100" | python3 -c "
 import sys,json
 data=json.load(sys.stdin)
@@ -182,7 +196,6 @@ for u in data.get('items',[]):
 3. **Nur wenn kein Match** → neue Unit anlegen:
 
 ```bash
-source /Users/timrudorf/Nextcloud/Rezepte/.env
 curl -s -X POST "$MEALIE_URL/api/units" \
   -H "Authorization: Bearer $MEALIE_TOKEN" \
   -H "Content-Type: application/json" \
@@ -198,7 +211,6 @@ curl -s -X POST "$MEALIE_URL/api/units" \
 **Food suchen (per Search-Parameter, effizienter als alle laden):**
 
 ```bash
-source /Users/timrudorf/Nextcloud/Rezepte/.env
 curl -s -H "Authorization: Bearer $MEALIE_TOKEN" "$MEALIE_URL/api/foods?search=SUCHBEGRIFF&perPage=10" | python3 -c "
 import sys,json
 data=json.load(sys.stdin)
@@ -214,7 +226,6 @@ for f in data.get('items',[]):
 4. **Nur wenn gar kein Match** → neues Food anlegen:
 
 ```bash
-source /Users/timrudorf/Nextcloud/Rezepte/.env
 curl -s -X POST "$MEALIE_URL/api/foods" \
   -H "Authorization: Bearer $MEALIE_TOKEN" \
   -H "Content-Type: application/json" \
@@ -232,7 +243,6 @@ Analog zu Tags/Kategorien: Utensilien (aus Schritt 2 abgeleitet) gegen existiere
 **Alle existierenden Tools laden:**
 
 ```bash
-source /Users/timrudorf/Nextcloud/Rezepte/.env
 curl -s -H "Authorization: Bearer $MEALIE_TOKEN" "$MEALIE_URL/api/organizers/tools" | python3 -c "
 import sys,json
 data=json.load(sys.stdin)
@@ -246,7 +256,6 @@ for t in data.get('items',[]):
 2. **Nur wenn kein Match** → neues Tool anlegen:
 
 ```bash
-source /Users/timrudorf/Nextcloud/Rezepte/.env
 curl -s -X POST "$MEALIE_URL/api/organizers/tools" \
   -H "Authorization: Bearer $MEALIE_TOKEN" \
   -H "Content-Type: application/json" \
@@ -322,7 +331,6 @@ with open('/tmp/mealie_recipe_update.json', 'w') as f:
 ```
 
 ```bash
-source /Users/timrudorf/Nextcloud/Rezepte/.env
 HTTP_CODE=$(curl -s -o /tmp/mealie_response.txt -w "%{http_code}" -X PATCH "$MEALIE_URL/api/recipes/$SLUG" \
   -H "Authorization: Bearer $MEALIE_TOKEN" \
   -H "Content-Type: application/json" \
@@ -356,7 +364,6 @@ with open('/tmp/mealie_tags_update.json', 'w') as f:
 ```
 
 ```bash
-source /Users/timrudorf/Nextcloud/Rezepte/.env
 HTTP_CODE=$(curl -s -o /tmp/mealie_response.txt -w "%{http_code}" -X PATCH "$MEALIE_URL/api/recipes/$SLUG" \
   -H "Authorization: Bearer $MEALIE_TOKEN" \
   -H "Content-Type: application/json" \
@@ -387,7 +394,6 @@ with open('/tmp/mealie_tools_update.json', 'w') as f:
 ```
 
 ```bash
-source /Users/timrudorf/Nextcloud/Rezepte/.env
 HTTP_CODE=$(curl -s -o /tmp/mealie_response.txt -w "%{http_code}" -X PATCH "$MEALIE_URL/api/recipes/$SLUG" \
   -H "Authorization: Bearer $MEALIE_TOKEN" \
   -H "Content-Type: application/json" \
@@ -400,7 +406,6 @@ Erwarteter Status: **200**. RecipeTool-Schema braucht alle 3 Felder: `id`, `name
 ## Schritt 7a: Verifizieren
 
 ```bash
-source /Users/timrudorf/Nextcloud/Rezepte/.env
 curl -s -H "Authorization: Bearer $MEALIE_TOKEN" \
   "$MEALIE_URL/api/recipes/$SLUG" -o /tmp/mealie_verify.json
 python3 -c "
@@ -500,7 +505,6 @@ Quelldatei: gelöscht / (kein Datei-Input)
 - `ingredientReferences: []` ist Pflichtfeld in jeder Instruktion
 - Jede Instruktion braucht `id` (UUID v4)
 - Payload immer über Temp-Datei + `curl -d @datei`
-- `source .env` in **jedem** Bash-Aufruf
 - Pexels Env-Var heißt `PEXELS_TOKEN`
 
 ---
