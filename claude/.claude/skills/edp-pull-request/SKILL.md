@@ -1,5 +1,5 @@
 ---
-name: pull-request
+name: edp-pull-request
 description: This skill should be used when the user asks to "create a PR", "edit a PR", "open a pull request", or uses /pull-request. It creates or updates PRs on GHE with auto-generated title, body, and Zammad integration.
 argument-hint: [pr-number]
 ---
@@ -264,4 +264,4 @@ Per `AskUserQuestion` fragen:
 
 Optionen: **"Ja, optimieren"**, **"Nein"**
 
-Bei "Ja": `skill-optimize` mit Skill-Name `pull-request` ausführen.
+Bei "Ja": `skill-optimize` mit Skill-Name `edp-pull-request` ausführen.
