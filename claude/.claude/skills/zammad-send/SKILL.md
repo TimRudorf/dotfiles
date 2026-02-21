@@ -1,37 +1,55 @@
 ---
 name: zammad-send
-description: This skill should be used when the user asks to "reply to a customer", "answer a Zammad ticket", "send a response", or uses /zammad-send. It replies to the last customer message with auto-detected channel (web/email).
-argument-hint: [ticket-number] [options]
+description: This skill should be used when the user asks to "reply to a customer", "answer a Zammad ticket", "send a response", "create a new ticket", "neues Ticket erstellen", "E-Mail an Kunden senden", or uses /zammad-send. It replies to existing tickets or creates new ones with auto-detected channel.
+argument-hint: [ticket-number | customer-name] [options]
 ---
 
-# Zammad Kundenantwort senden
+# Zammad Kundenantwort senden / Neues Ticket erstellen
 
-Antwortet auf die letzte Kundennachricht in einem Zammad-Ticket. Erkennt automatisch den Kanal (Web oder E-Mail), verfasst eine professionelle Antwort auf Deutsch und lässt den User vor dem Versenden bestätigen.
+Zwei Modi: **Reply-Modus** (auf bestehendes Ticket antworten) und **Create-Modus** (neues Ticket erstellen und E-Mail senden).
 
 ## Configuration
 
-Environment variables from `~/.env`:
+Environment variables from `~/Develop/EDP/.env`:
 
 - `ZAMMAD_HOST` — Base URL of the Zammad instance
 - `ZAMMAD_TOKEN` — API token for authentication
 
+## Modus-Erkennung
+
+Analysiere das erste Argument:
+
+- **Zahl** oder `EDP#...` → **Reply-Modus** (bestehendes Ticket)
+- **Alles andere** (Name, Organisation) → **Create-Modus** (neues Ticket)
+
 ## Parameters
+
+### Reply-Modus
 
 | Parameter | Required | Beschreibung |
 |---|---|---|
 | Ticketnummer | Ja | Zammad-Ticketnummer (z.B. `7620726` oder `EDP#7620726`) |
-| Antwortform | Nein | `email` oder `web` — erzwingt den Antwortkanal unabhängig vom letzten Kundenkontakt. Ohne Angabe wird automatisch der Kanal des letzten Kundenartikels verwendet. |
-| Status | Nein | Neuer Ticket-Status nach dem Senden (z.B. `closed`, `open`, `pending close`) |
+| Antwortform | Nein | `email` oder `web` — erzwingt den Antwortkanal |
+| Status | Nein | Neuer Ticket-Status nach dem Senden |
 | Context | Nein | Zusätzlicher Kontext / Anweisungen für die Antwort |
 
-## Workflow
+### Create-Modus
+
+| Parameter | Required | Beschreibung |
+|---|---|---|
+| Kunde | Ja | Kundenname oder Organisationsname |
+| Context | Ja | Inhalt / Anlass der E-Mail |
+
+Für den vollständigen Create-Workflow siehe `create-mode.md` in diesem Skill-Verzeichnis.
+
+## Reply-Modus Workflow
 
 ### Schritt 1: Ticket auslesen
 
 Strip any `EDP#` prefix from the ticket number and resolve it:
 
 ```bash
-source ~/.env
+source ~/Develop/EDP/.env
 BASE="${ZAMMAD_HOST%/}"
 AUTH="Authorization: Token token=${ZAMMAD_TOKEN}"
 
@@ -155,7 +173,7 @@ Options: **"Absenden"**, **"Ändern"**, **"Als Entwurf speichern"**, **"Abbreche
 If the user chose "Als Entwurf speichern", save the reply as a Shared Draft via `PUT /api/v1/tickets/{ticket_id}/shared_draft`. The draft will be visible in the Zammad WebUI under the ticket.
 
 ```bash
-source ~/.env
+source ~/Develop/EDP/.env
 BASE="${ZAMMAD_HOST%/}"
 TICKET_ID={ticket_id}
 FORM_ID=$(date +%s%N | head -c 12)
@@ -214,7 +232,7 @@ After confirmation, send the article via API.
 
 **E-Mail:**
 ```bash
-source ~/.env
+source ~/Develop/EDP/.env
 BASE="${ZAMMAD_HOST%/}"
 TICKET_ID={ticket_id}
 
@@ -240,7 +258,7 @@ curl -s -X POST \
 
 **Web:**
 ```bash
-source ~/.env
+source ~/Develop/EDP/.env
 BASE="${ZAMMAD_HOST%/}"
 TICKET_ID={ticket_id}
 
@@ -268,7 +286,7 @@ If a status was resolved in Schritt 4, update the ticket. Ansonsten weiter zu Sc
 
 **Einfacher Status** (z.B. `closed`, `open`):
 ```bash
-source ~/.env
+source ~/Develop/EDP/.env
 BASE="${ZAMMAD_HOST%/}"
 TICKET_ID={ticket_id}
 
@@ -284,7 +302,7 @@ curl -s -X PUT \
 
 **Pending-Status** (`pending close` oder `pending reminder`) — diese erfordern zusätzlich ein `pending_time` (ISO 8601 Zeitstempel), ab dem die Aktion ausgelöst wird:
 ```bash
-source ~/.env
+source ~/Develop/EDP/.env
 BASE="${ZAMMAD_HOST%/}"
 TICKET_ID={ticket_id}
 
@@ -330,7 +348,7 @@ On error: show HTTP status code and error body.
 
 ## Notes
 
-- **Jeder Bash-Aufruf ist eine eigene Shell** — Variablen wie `$AUTH`, `$BASE`, `$TICKET_ID` gehen zwischen Tool-Aufrufen verloren. Jeder Schritt muss `source ~/.env` und die nötigen Variablen neu setzen.
+- **Jeder Bash-Aufruf ist eine eigene Shell** — Variablen wie `$AUTH`, `$BASE`, `$TICKET_ID` gehen zwischen Tool-Aufrufen verloren. Jeder Schritt muss `source ~/Develop/EDP/.env` und die nötigen Variablen neu setzen.
 - **Auth-Header immer inline** — Nicht `$AUTH` als Variable speichern und an curl übergeben. Stattdessen direkt: `-H "Authorization: Token token=${ZAMMAD_TOKEN}"`. Die Variable mit Leerzeichen kann sonst beim Piping an curl zu `blank argument` Fehlern führen.
 - **Body niemals per `jq --arg`** — `jq --arg body "text\nmehr"` escapet `\n` als literale Zeichen (`\\n`), was zu fehlender Formatierung führt. Stattdessen: Body in Temp-Datei schreiben (Heredoc), dann `jq --rawfile body /tmp/z_body.html` verwenden.
 - **Payload immer über Temp-Datei** — JSON-Payload erst in Datei schreiben (`> /tmp/z_payload.json`), dann `curl --data @/tmp/z_payload.json`. Nicht per Pipe (`| curl ... --data @-`), da dies bei Variablen-Problemen silent fails verursacht.

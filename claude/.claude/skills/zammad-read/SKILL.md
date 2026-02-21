@@ -10,7 +10,7 @@ Zeigt ein Zammad-Ticket mit allen Artikeln an.
 
 ## Configuration
 
-Environment variables from `~/.env`:
+Environment variables from `~/Develop/EDP/.env`:
 
 - `ZAMMAD_HOST` — Base URL of the Zammad instance
 - `ZAMMAD_TOKEN` — API token for authentication
@@ -20,7 +20,7 @@ Environment variables from `~/.env`:
 Users typically provide a **ticket number** (e.g. `7620726` or `EDP#7620726`). Strip any `EDP#` prefix and search:
 
 ```bash
-source ~/.env
+source ~/Develop/EDP/.env
 BASE="${ZAMMAD_HOST%/}"
 AUTH="Authorization: Token token=${ZAMMAD_TOKEN}"
 
@@ -35,7 +35,7 @@ If the user provides a numeric ticket ID directly, skip the search.
 Run both requests in a **single bash command** and save to temp files (piping curl directly to jq can produce empty output):
 
 ```bash
-source ~/.env
+source ~/Develop/EDP/.env
 BASE="${ZAMMAD_HOST%/}"
 AUTH="Authorization: Token token=${ZAMMAD_TOKEN}"
 TICKET_ID={ticket_id}
