@@ -1,5 +1,5 @@
 ---
-name: lernzusammenfassung
+name: uni-study-summary
 description: This skill should be used when the user asks to create a learning summary,
   Lernzusammenfassung, or Zusammenfassung for a Uebungsblatt or exercise sheet.
   It reads the exercise PDF, solution PDF, and lecture notes, then writes a structured
@@ -130,4 +130,4 @@ Per `AskUserQuestion` fragen:
 
 Optionen: **"Ja, optimieren"**, **"Nein"**
 
-Bei "Ja": `skill-optimize` mit Skill-Name `lernzusammenfassung` ausführen.
+Bei "Ja": `skill-optimize` mit Skill-Name `uni-study-summary` ausführen.
