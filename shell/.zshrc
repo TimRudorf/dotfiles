@@ -43,6 +43,9 @@ source ~/.alias.sh
 # Work helpers (optional, skip if missing)
 [[ -f ~/.edp_helpers.sh ]] && source ~/.edp_helpers.sh
 
+# Secrets & API tokens (Claude Code Skills)
+[[ -f ~/.env ]] && source ~/.env
+
 # Local bin
 export PATH="$HOME/.local/bin:$PATH"
 
