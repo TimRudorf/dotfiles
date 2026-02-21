@@ -1,5 +1,5 @@
 ---
-name: init-uni-project
+name: uni-init-project
 description: This skill should be used when the user asks to "initialize a uni project",
   "set up a learning project", "init Lernprojekt", or uses /init-uni-project. It creates
   a standardized folder structure, sorts existing files, normalizes filenames, and generates
@@ -116,4 +116,4 @@ Per `AskUserQuestion` fragen:
 
 Optionen: **"Ja, optimieren"**, **"Nein"**
 
-Bei "Ja": `skill-optimize` mit Skill-Name `init-uni-project` ausführen.
+Bei "Ja": `skill-optimize` mit Skill-Name `uni-init-project` ausführen.
