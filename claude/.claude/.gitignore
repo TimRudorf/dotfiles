@@ -2,7 +2,6 @@
 *
 !.gitignore
 !settings.json
-!settings.local.json
 !skills/
 !skills/*/
 !skills/**
