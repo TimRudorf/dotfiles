@@ -115,20 +115,4 @@ Zeige dem Benutzer:
 - **Iterationslimit**: Maximal 3 Kompilier-/Prüf-Zyklen
 - **tcolorbox vermeiden**: `mdframed` statt `tcolorbox` verwenden (Tagging-Bug in LaTeX 2024+)
 
----
-
-## Skill-Optimierung
-
-Nach Abschluss dieses Skills kurz bewerten, ob Optimierungsbedarf besteht:
-
-- **Empfehlung "ja"**: Fehler aufgetreten, Workarounds nötig, Befehle wiederholt, User-Korrekturen
-- **Empfehlung "nein"**: Reibungsloser Lauf wie dokumentiert
-
-Per `AskUserQuestion` fragen:
-
-> Skill abgeschlossen. Soll die Skill-Dokumentation optimiert werden?
-> Empfehlung: {ja — [kurzer Grund] | nein — Lauf war reibungslos}
-
-Optionen: **"Ja, optimieren"**, **"Nein"**
-
-Bei "Ja": `skill-optimize` mit Skill-Name `uni-study-summary` ausführen.
+Abschließend `skill-optimize` mit `uni-study-summary` aufrufen.

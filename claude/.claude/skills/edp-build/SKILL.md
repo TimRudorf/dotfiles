@@ -108,3 +108,5 @@ All projects deploy to `C:\EDP\<TARGET_DIR>`. The `TARGET_DIR` defaults to the p
    edp myproject deploy        # Push source files
    edp myproject compile       # Build + fetch exe
    ```
+
+Abschließend `skill-optimize` mit `edp-build` aufrufen.

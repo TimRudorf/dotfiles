@@ -6,7 +6,12 @@ argument-hint: [pr-number]
 
 # Pull Request erstellen oder bearbeiten
 
-Erstellt oder bearbeitet einen Pull Request auf `einsatzleitsoftware.ghe.com`.
+Erstellt oder bearbeitet einen Pull Request auf der GHE-Instanz.
+
+## Voraussetzungen
+- Tools: `gh`, `git`
+
+Voraussetzungen gemäß `requirement-checker` Skill validieren. Bei Fehlschlag abbrechen.
 
 ## Modus-Erkennung
 
@@ -15,49 +20,43 @@ Erstellt oder bearbeitet einen Pull Request auf `einsatzleitsoftware.ghe.com`.
 
 ## Workflow
 
-### Schritt 1: Kontext ermitteln (parallel)
+### Schritt 1+2: Kontext und Metadaten ermitteln (Subagent-Delegation)
 
-Folgende Informationen parallel abfragen:
+Einen **Subagent** (`git-expert`) starten, der alle benötigten Informationen beschafft.
 
-```bash
-GH_HOST=einsatzleitsoftware.ghe.com git branch --show-current
+**Was wird gebraucht:**
+
+**Rückgabeformat:**
+```json
+{
+  "branch": "feature/42-neue-funktion",
+  "repo": "edpweb",
+  "ticket_nummer": 42,
+  "commits_summary": ["abc1234 feat: erste Änderung", "def5678 fix: Korrektur"],
+  "diff_stats": "3 files changed, 42 insertions(+), 10 deletions(-)\n src/foo.pas | 30 +++--\n src/bar.pas | 22 +++-",
+  "user_login": "tim-rudorf",
+  "projects": [{"nummer": 1, "titel": "Release 2026.1.0"}]
+}
 ```
 
-```bash
-GH_HOST=einsatzleitsoftware.ghe.com git remote get-url origin
+**Im Edit-Modus** zusätzlich:
+```json
+{
+  "pr": {"titel": "...", "body": "...", "assignees": ["tim-rudorf"], "reviewer": ["patrick-vogel"]}
+}
 ```
 
-Repo-Name aus der Remote-URL extrahieren (z.B. `edp/edpweb`).
+**Details zur Ermittlung:**
+- `branch`: Aktueller Branch-Name
+- `repo`: Aus Remote-URL extrahiert (z.B. `edp/edpweb` → `edpweb`)
+- `ticket_nummer`: Aus Branch-Pattern `(bugfix|feature|hotfix|refactor)/<nummer>-*` extrahiert, oder `null`
+- `commits_summary`: `git log dev..HEAD --oneline`
+- `diff_stats`: `git diff dev...HEAD --stat`
+- `user_login`: GitHub-Login (`gh api user --jq .login`)
+- `projects`: `gh project list --owner edp` — Liste mit Nummer + Titel
+- [Edit-Modus] `pr`: Bestehender PR via `gh pr view <nummer> -R edp/<repo> --json title,body,assignees,reviewRequests`
 
-```bash
-GH_HOST=einsatzleitsoftware.ghe.com git log dev..HEAD --oneline
-```
-
-```bash
-GH_HOST=einsatzleitsoftware.ghe.com git diff dev...HEAD --stat
-```
-
-**Ticket-Nummer extrahieren**: Aus dem Branch-Namen das Pattern `(bugfix|feature|hotfix|refactor)/<nummer>-*` erkennen → `#<nummer>`. Falls kein Match, gibt es kein Ticket.
-
-**Nur im Edit-Modus** — zusätzlich den bestehenden PR laden:
-
-```tool
-mcp__github__pull_request_read(method: "get", owner: "edp", repo: <repo>, pullNumber: <nummer>)
-```
-
-### Schritt 2: Metadaten live abfragen (parallel)
-
-**User-Login** (MCP):
-```tool
-mcp__github__get_me()
-```
-
-**Projects** (Bash — kein MCP-Äquivalent):
-```bash
-GH_HOST=einsatzleitsoftware.ghe.com gh project list --owner edp
-```
-
-**Fehlerbehandlung**: Falls `gh project list` wegen fehlender Scopes fehlschlägt (`read:project`), den Project-Schritt überspringen und den User kurz darauf hinweisen.
+**Nicht benötigt:** Commit-Hashes (außer im Oneline-Format), vollständige Diffs, Branch-Topologie.
 
 ### Schritt 3: Project-Auswahl
 
@@ -129,39 +128,25 @@ Verhalten:
 **6a: Branch pushen (falls nötig)**
 
 ```bash
-GH_HOST=einsatzleitsoftware.ghe.com git ls-remote --heads origin <branch>
+git ls-remote --heads origin <branch>
 ```
 
 Falls nicht vorhanden:
 
 ```bash
-GH_HOST=einsatzleitsoftware.ghe.com git push -u origin <branch>
+git push -u origin <branch>
 ```
 
-**6b: PR erstellen (MCP)**
+**6b: PR erstellen**
 
-```tool
-mcp__github__create_pull_request(
-  owner: "edp",
-  repo: <repo>,
-  title: <titel>,
-  head: <branch>,
-  base: "dev",
-  body: <body>
-)
+```bash
+gh pr create -R edp/<repo> --title "<titel>" --body "<body>" --head <branch> --base dev
 ```
 
 **6c: Assignee, Reviewer & Copilot**
 
-Assignee (Bash — kein MCP-Parameter für Assignee bei PR-Erstellung):
 ```bash
-GH_HOST=einsatzleitsoftware.ghe.com gh pr edit <pr-nummer> -R edp/<repo> --add-assignee tim-rudorf
-```
-
-Reviewer & Copilot (MCP):
-```tool
-mcp__github__update_pull_request(owner: "edp", repo: <repo>, pullNumber: <pr-nummer>, reviewers: ["patrick-vogel"])
-mcp__github__request_copilot_review(owner: "edp", repo: <repo>, pullNumber: <pr-nummer>)
+gh pr edit <pr-nummer> -R edp/<repo> --add-assignee tim-rudorf --add-reviewer patrick-vogel --add-reviewer copilot-pull-request-reviewer
 ```
 
 **6d: Project zuordnen (optional)**
@@ -169,34 +154,21 @@ mcp__github__request_copilot_review(owner: "edp", repo: <repo>, pullNumber: <pr-
 Falls ein Project gewählt wurde:
 
 ```bash
-GH_HOST=einsatzleitsoftware.ghe.com gh pr edit <pr-nummer> --add-project "<project>"
+gh pr edit <pr-nummer> --add-project "<project>"
 ```
 
 #### Edit-Modus
 
-**6a: PR aktualisieren (MCP)**
+**6a: PR aktualisieren**
 
-```tool
-mcp__github__update_pull_request(
-  owner: "edp",
-  repo: <repo>,
-  pullNumber: <nummer>,
-  title: <titel>,
-  body: <body>,
-  reviewers: ["patrick-vogel"]
-)
-```
-
-**6b: Assignee & Copilot**
-
-Assignee (Bash — kein MCP-Parameter):
 ```bash
-GH_HOST=einsatzleitsoftware.ghe.com gh pr edit <nummer> -R edp/<repo> --add-assignee tim-rudorf
+gh pr edit <nummer> -R edp/<repo> --title "<titel>" --body "<body>"
 ```
 
-Copilot (MCP):
-```tool
-mcp__github__request_copilot_review(owner: "edp", repo: <repo>, pullNumber: <nummer>)
+**6b: Assignee & Reviewer**
+
+```bash
+gh pr edit <nummer> -R edp/<repo> --add-assignee tim-rudorf --add-reviewer patrick-vogel --add-reviewer copilot-pull-request-reviewer
 ```
 
 **6c: Project zuordnen (optional)**
@@ -204,7 +176,7 @@ mcp__github__request_copilot_review(owner: "edp", repo: <repo>, pullNumber: <num
 Falls ein Project gewählt wurde:
 
 ```bash
-GH_HOST=einsatzleitsoftware.ghe.com gh pr edit <nummer> --add-project "<project>"
+gh pr edit <nummer> --add-project "<project>"
 ```
 
 Nach dem Erstellen/Aktualisieren die PR-URL dem User anzeigen.
@@ -215,8 +187,8 @@ Falls eine Ticket-Nummer aus dem Branch extrahiert wurde (Schritt 1):
 
 **7a: Issue-Body auf Zammad-Referenz prüfen**
 
-```tool
-mcp__github__issue_read(method: "get", owner: "edp", repo: <repo>, issue_number: <nummer>)
+```bash
+gh issue view <nummer> -R edp/<repo> --json body --jq .body
 ```
 
 Im Body nach dem Pattern `EDP#<zammad-nummer>` suchen. Falls gefunden → weiter mit 7b. Falls nicht → Schritt überspringen.
@@ -235,8 +207,8 @@ Die Bestätigung per `AskUserQuestion` aus dem /zammad-write Skill **überspring
 
 ## Regeln
 
-- **GitHub-Abfragen** bevorzugt über MCP-Tools (`mcp__github__*`)
-- **Nur** `GH_HOST=einsatzleitsoftware.ghe.com` vor verbleibenden `gh`-/`git`-Befehlen setzen (project list, assignee, git push/log/diff)
+- **GitHub-Leseabfragen** über Subagent-Delegation — kein MCP
+- **GitHub-Schreibaktionen** über `gh` CLI
 - **Deutsche Sprache** im PR-Body mit echten Umlauten (ä, ö, ü, ß)
 - **Kein** `Co-Authored-By` Trailer
 - **Kein Hinweis** auf AI oder automatische Erstellung im PR-Body
@@ -248,20 +220,4 @@ Die Bestätigung per `AskUserQuestion` aus dem /zammad-write Skill **überspring
 - **Fehlertoleranz**: Fehlende GitHub-Scopes oder API-Fehler bei optionalen Schritten (Projects) überspringen statt abbrechen
 - Bei Unsicherheiten den User fragen
 
----
-
-## Skill-Optimierung
-
-Nach Abschluss dieses Skills kurz bewerten, ob Optimierungsbedarf besteht:
-
-- **Empfehlung "ja"**: Fehler aufgetreten, Workarounds nötig, Befehle wiederholt, User-Korrekturen
-- **Empfehlung "nein"**: Reibungsloser Lauf wie dokumentiert
-
-Per `AskUserQuestion` fragen:
-
-> Skill abgeschlossen. Soll die Skill-Dokumentation optimiert werden?
-> Empfehlung: {ja — [kurzer Grund] | nein — Lauf war reibungslos}
-
-Optionen: **"Ja, optimieren"**, **"Nein"**
-
-Bei "Ja": `skill-optimize` mit Skill-Name `edp-pull-request` ausführen.
+Abschließend `skill-optimize` mit `edp-pull-request` aufrufen.

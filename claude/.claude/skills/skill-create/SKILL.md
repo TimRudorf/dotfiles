@@ -46,11 +46,35 @@ Basierend auf der Beschreibung autonom entscheiden:
 - Weitere Felder (`model`, `context`, `agent`) nur setzen wenn die Beschreibung es nahelegt.
 
 ### Body
+
+Die Zielstruktur orientiert sich am SKILL.md-Format (siehe `~/.claude/skills/.shared/skill-best-practices.md`, Abschnitt 9):
+
+```
+# Titel
+Kurzbeschreibung.
+
+## Voraussetzungen          ← deklarativ, optional
+- Env: `VAR1`, `VAR2`
+- Tools: `cmd1`, `cmd2`
+
+Voraussetzungen gemäß `requirement-checker` Skill validieren. Bei Fehlschlag abbrechen.
+
+## Schritt 1: Kern-Logik    ← direkt ins Wesentliche
+...
+
+## Schritt N: Letzter Schritt
+...
+
+Abschließend `skill-optimize` mit `skill-name` aufrufen.
+```
+
 - Klare Schritt-für-Schritt-Anweisungen im Imperativ
 - `$ARGUMENTS` für Parameter-Substitution nutzen wo sinnvoll
 - Unter 500 Zeilen halten
+- **Datenbeschaffung vs. Schreibaktionen trennen**: Wenn der Skill externe Daten benötigt (APIs, Tickets, Repos, etc.), die Datenbeschaffung als eigenen Schritt formulieren. Dabei beschreiben **was** gebraucht wird und in **welchem Format** (JSON-Beispiel mit minimalen Feldern). Explizit benennen was **nicht** benötigt wird. Keine konkreten Lese-Befehle (`curl`, `gh api`) in diesen Schritten — der Main-Agent entscheidet selbst ob er die Daten delegiert oder selbst beschafft. Schreibaktionen (erstellen, ändern, senden) bleiben als konkrete Befehle im Skill.
 - Bei komplexen Skills: Hinweis auf separate Dateien (reference.md etc.) die der User später ergänzen kann
-- **Env-Validierung**: Falls der Skill Env-Variablen aus `~/.env` benötigt, einen "Schritt 0: Env-Variablen prüfen" einfügen. Pattern: Per Bash prüfen ob Variablen gesetzt sind, bei fehlenden Werten `AskUserQuestion` mit 3 Optionen: "Ist eingetragen" (retry), "Abbrechen", "Direkt eingeben" (Wert abfragen, an `~/.env` anhängen).
+- **Voraussetzungen**: Falls der Skill Env-Variablen, Tools, Dateien oder Projektpfade benötigt, eine **Voraussetzungen-Sektion** mit deklarativer Auflistung (Typ-Prefix: `Env`, `Tools`, `Datei`, `Projekt`) generieren + Verweis auf `requirement-checker` Skill. **Keinen** inline Validierungscode (Schritt 0) generieren.
+- **Skill-Optimierung**: Am Ende der SKILL.md den Einzeiler `Abschließend \`skill-optimize\` mit \`{skill-name}\` aufrufen.` einfügen.
 
 ## Schritt 5: Dateien erstellen
 
