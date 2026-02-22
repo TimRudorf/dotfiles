@@ -10,32 +10,12 @@ argument-hint: "[path/to/recipe.md | inline markdown text]"
 
 Importiert ein Rezept aus Markdown in die Mealie-Instanz unter `https://mealie.timrudorf.de`.
 
-## Konfiguration
+## Voraussetzungen
+- Env: `MEALIE_URL`, `MEALIE_TOKEN`
+- Env (optional): `PEXELS_TOKEN`, `OPENAI_TOKEN`
+- Tools: `curl`, `python3`
 
-**Env-Variablen:** `MEALIE_URL`, `MEALIE_TOKEN`, `PEXELS_TOKEN` (optional, Stockfotos) und `OPENAI_TOKEN` (optional, KI-Bildgenerierung) — via `~/.env` (automatisch geladen durch `.zshrc`).
-
-## Schritt 0: Env-Variablen prüfen
-
-Vor dem Start per Bash prüfen, ob die Pflicht-Variablen gesetzt und nicht leer sind:
-
-```bash
-echo "MEALIE_URL=${MEALIE_URL:-NICHT_GESETZT}"
-echo "MEALIE_TOKEN=${MEALIE_TOKEN:-NICHT_GESETZT}"
-```
-
-Falls eine Variable `NICHT_GESETZT` oder leer ist → dem User mitteilen welche Variable(n) fehlen und per `AskUserQuestion` fragen:
-
-> Fehlende Env-Variablen: `MEALIE_TOKEN`
-> Diese müssen in `~/.env` eingetragen sein. Die Datei wird automatisch via `.zshrc` geladen.
-
-Optionen:
-- **"Ist eingetragen"** → Schritt 0 wiederholen (erneut prüfen)
-- **"Abbrechen"** → Skill beenden
-- **"Direkt eingeben"** → User gibt Wert ein, per `Bash` an `~/.env` anhängen (`echo 'VAR=wert' >> ~/.env`), dann `source ~/.env` und erneut prüfen
-
-Wenn der User "Direkt eingeben" wählt: Per `AskUserQuestion` den Wert für jede fehlende Variable einzeln abfragen, mit `echo 'VARNAME=wert' >> ~/.env` anhängen (single quotes um Sonderzeichen zu schützen), dann erneut prüfen.
-
-**Optionale Variablen** (`PEXELS_TOKEN`, `OPENAI_TOKEN`): Falls nicht gesetzt, nur Hinweis ausgeben — kein Abbruch. Der Skill kann ohne Bild weiterlaufen.
+Voraussetzungen gemäß `requirement-checker` Skill validieren. Bei Fehlschlag abbrechen. Optionale Env-Variablen nur als Hinweis melden — kein Abbruch.
 
 ## Schritt 1: Input ermitteln
 
@@ -507,20 +487,4 @@ Quelldatei: gelöscht / (kein Datei-Input)
 - Payload immer über Temp-Datei + `curl -d @datei`
 - Pexels Env-Var heißt `PEXELS_TOKEN`
 
----
-
-## Skill-Optimierung
-
-Nach Abschluss dieses Skills kurz bewerten, ob Optimierungsbedarf besteht:
-
-- **Empfehlung "ja"**: Fehler aufgetreten, Workarounds nötig, Befehle wiederholt, User-Korrekturen
-- **Empfehlung "nein"**: Reibungsloser Lauf wie dokumentiert
-
-Per `AskUserQuestion` fragen:
-
-> Skill abgeschlossen. Soll die Skill-Dokumentation optimiert werden?
-> Empfehlung: {ja — [kurzer Grund] | nein — Lauf war reibungslos}
-
-Optionen: **"Ja, optimieren"**, **"Nein"**
-
-Bei "Ja": `skill-optimize` mit Skill-Name `mealie-import` ausführen.
+Abschließend `skill-optimize` mit `mealie-import` aufrufen.
