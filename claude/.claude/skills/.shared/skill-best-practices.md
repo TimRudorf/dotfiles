@@ -23,6 +23,7 @@
 - Klare, schrittweise Anweisungen im Imperativ
 - `$ARGUMENTS` / `$0`, `$1` für Parameter-Substitution
 - `` !`command` `` für dynamische Kontext-Injection (wird vor Ausführung evaluiert)
+- **Voraussetzungen-Sektion** (optional): Deklarativ Env-Variablen und Tool-Abhängigkeiten auflisten (siehe Zielstruktur unten)
 
 ### Verzeichnisstruktur
 
@@ -79,7 +80,33 @@ On-demand:   reference.md, examples.md nur bei Bedarf
 
 ---
 
-## 5. Invocation-Steuerung
+## 5. Datenbeschaffung & Schreibaktionen
+
+Skills unterteilen ihre Schritte in **Datenbeschaffung** (read) und **Schreibaktionen** (write).
+
+### Datenbeschaffung
+
+Beschreibt nur **was** gebraucht wird — nicht **wie** es beschafft wird:
+
+- **Inhalt**: Was wird gebraucht (z.B. "offene Issues des Repos")
+- **Rückgabeformat**: Minimale Felder als JSON-Beispiel
+  ```json
+  { "number": 42, "title": "Bug in Login", "state": "open" }
+  ```
+- **Was weglassen**: Explizit benennen was nicht benötigt wird (z.B. "Keine Kommentare, keine Labels")
+- **Keine Lese-Befehle**: Keine `curl`, `gh api`, `cat` etc. in Datenbeschaffungs-Schritten — der Main-Agent entscheidet selbst ob/wie er die Daten beschafft oder delegiert
+
+### Schreibaktionen
+
+Bleiben als **konkrete Befehle** (`gh`, `curl`, etc.) im Skill — hier wird explizit angegeben was ausgeführt werden soll.
+
+### Keine Subagent-Benennung
+
+Skills benennen keine Subagents (kein "delegiere an Explore-Agent"). Der Main-Agent entscheidet autonom ob und welcher Subagent delegiert wird.
+
+---
+
+## 6. Invocation-Steuerung
 
 | Einstellung | User ruft auf? | Claude ruft auf? | Anwendungsfall |
 |-------------|---------------|-----------------|----------------|
@@ -90,7 +117,7 @@ On-demand:   reference.md, examples.md nur bei Bedarf
 
 ---
 
-## 6. Fortgeschrittene Patterns
+## 7. Fortgeschrittene Patterns
 
 ### Dynamische Kontext-Injection
 ```markdown
@@ -108,7 +135,72 @@ Analyse → Aktion → Validierung → Fix → Repeat
 
 ---
 
-## 7. Checkliste
+## 8. Shared-Dateien
+
+Gemeinsame Patterns sind in `~/.claude/skills/.shared/` ausgelagert:
+
+| Datei | Inhalt |
+|-------|--------|
+| `skill-best-practices.md` | Diese Datei — Struktur, Konventionen, Checkliste |
+
+### Voraussetzungen-Validierung
+
+Voraussetzungen werden deklarativ in der SKILL.md gelistet und per `requirement-checker` Skill validiert. Format:
+
+```markdown
+## Voraussetzungen
+- Env: `ZAMMAD_HOST`, `ZAMMAD_TOKEN`
+- Tools: `curl`, `jq`
+- Projekt: `~/Develop/EDP/*`
+- Datei: `~/.config/moodle-dl/token.json`
+
+Voraussetzungen gemäß `requirement-checker` Skill validieren. Bei Fehlschlag abbrechen.
+```
+
+Jede Zeile beginnt mit dem Typ-Prefix (`Env`, `Tools`, `Projekt`, `Datei`). Variablen/Tools sind backtick-umschlossen, komma-getrennt. Skills ohne Voraussetzungen haben diese Sektion nicht.
+
+Der `requirement-checker` Skill wird automatisch geladen, prüft alle Voraussetzungen direkt im Hauptkontext und meldet ERFÜLLT oder NICHT ERFÜLLT mit Anleitung zum Beheben.
+
+### Skill-Optimierung
+
+Jeder Skill ruft am Ende explizit `skill-optimize` auf (Einzeiler am Ende der SKILL.md). Ausnahmen: `skill-optimize` selbst und `skill-create`.
+
+---
+
+## 9. SKILL.md Zielstruktur
+
+```yaml
+---
+name: example-skill
+description: ...
+disable-model-invocation: true
+argument-hint: [ticket-number]
+---
+
+# Titel
+
+Kurzbeschreibung.
+
+## Voraussetzungen
+- Env: `ZAMMAD_HOST`, `ZAMMAD_TOKEN`
+- Tools: `curl`, `jq`
+
+Voraussetzungen gemäß `requirement-checker` Skill validieren. Bei Fehlschlag abbrechen.
+
+## Schritt 1: Kern-Logik
+...
+
+## Schritt N: Letzte Schritte
+...
+
+Abschließend `skill-optimize` mit `example-skill` aufrufen.
+```
+
+**Boilerplate pro Skill:** Voraussetzungen-Sektion (deklarative Liste + 1 Zeile Verweis auf Skill) + 1 Zeile Optimize-Aufruf am Ende. Alles andere ist Kern-Logik.
+
+---
+
+## 10. Checkliste
 
 - [ ] Description ist spezifisch mit Trigger-Keywords
 - [ ] SKILL.md < 500 Zeilen
@@ -119,4 +211,8 @@ Analyse → Aktion → Validierung → Fix → Repeat
 - [ ] Konsistente Terminologie
 - [ ] Keine redundanten Erklärungen
 - [ ] Frontmatter-Felder mit Bindestrichen (nicht Unterstrichen)
-- [ ] Skills mit Env-Variablen haben Schritt 0 (Validierung mit "Ist eingetragen" / "Abbrechen" / "Direkt eingeben")
+- [ ] Voraussetzungen deklarativ mit Typ-Prefix (`Env`, `Tools`, `Projekt`, `Datei`) + Verweis auf `requirement-checker` Skill
+- [ ] Skill-Optimize-Einzeiler am Ende (außer skill-optimize und skill-create)
+- [ ] Datenbeschaffung und Schreibaktionen getrennt
+- [ ] Datenbeschaffungs-Schritte beschreiben Rückgabeformat (JSON-Beispiel)
+- [ ] Keine Lese-Befehle in Datenbeschaffungs-Schritten

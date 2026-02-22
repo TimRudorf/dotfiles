@@ -8,41 +8,11 @@ argument-hint: [ticket-number | customer-name] [file-path...] [context]
 
 Lädt Dateien in die Nextcloud-basierte Sharecloud (`einsatzleitsoftware.de/nextcloud`) hoch und benachrichtigt den Kunden per Zammad-Ticket.
 
-## Configuration
+## Voraussetzungen
+- Env: `NC_HOST`, `NC_WEBDAV`, `NC_USER`, `NC_PASSWORD`, `ZAMMAD_HOST`, `ZAMMAD_TOKEN`
+- Tools: `curl`, `jq`
 
-Environment variables via `~/.env` (automatisch geladen durch `.zshrc`):
-
-- `NC_HOST` — Nextcloud base URL
-- `NC_WEBDAV` — WebDAV path
-- `NC_USER` — Nextcloud username
-- `NC_PASSWORD` — Nextcloud password (single-quoted wegen Sonderzeichen)
-- `ZAMMAD_HOST` — Zammad base URL
-- `ZAMMAD_TOKEN` — Zammad API token
-
-## Schritt 0: Env-Variablen prüfen
-
-Vor dem Start per Bash prüfen, ob die Pflicht-Variablen gesetzt und nicht leer sind:
-
-```bash
-echo "ZAMMAD_HOST=${ZAMMAD_HOST:-NICHT_GESETZT}"
-echo "ZAMMAD_TOKEN=${ZAMMAD_TOKEN:-NICHT_GESETZT}"
-echo "NC_HOST=${NC_HOST:-NICHT_GESETZT}"
-echo "NC_WEBDAV=${NC_WEBDAV:-NICHT_GESETZT}"
-echo "NC_USER=${NC_USER:-NICHT_GESETZT}"
-echo "NC_PASSWORD=${NC_PASSWORD:-NICHT_GESETZT}"
-```
-
-Falls eine Variable `NICHT_GESETZT` oder leer ist → dem User mitteilen welche Variable(n) fehlen und per `AskUserQuestion` fragen:
-
-> Fehlende Env-Variablen: `NC_HOST`, `NC_PASSWORD`
-> Diese müssen in `~/.env` eingetragen sein. Die Datei wird automatisch via `.zshrc` geladen.
-
-Optionen:
-- **"Ist eingetragen"** → Schritt 0 wiederholen (erneut prüfen)
-- **"Abbrechen"** → Skill beenden
-- **"Direkt eingeben"** → User gibt Wert ein, per `Bash` an `~/.env` anhängen (`echo 'VAR=wert' >> ~/.env`), dann `source ~/.env` und erneut prüfen
-
-Wenn der User "Direkt eingeben" wählt: Per `AskUserQuestion` den Wert für jede fehlende Variable einzeln abfragen, mit `echo 'VARNAME=wert' >> ~/.env` anhängen (single quotes um Sonderzeichen zu schützen), dann erneut prüfen.
+Voraussetzungen gemäß `requirement-checker` Skill validieren. Bei Fehlschlag abbrechen.
 
 ## Workflow
 
@@ -210,20 +180,4 @@ curl -s -u "$NC_USER:$NC_PASSWORD" \
 - **OCS-APIRequest Header**: Pflicht bei OCS-Endpunkten (`-H "OCS-APIRequest: true"`).
 - Bei Fehlern: HTTP Status Code und Response Body anzeigen.
 
----
-
-## Skill-Optimierung
-
-Nach Abschluss dieses Skills kurz bewerten, ob Optimierungsbedarf besteht:
-
-- **Empfehlung "ja"**: Fehler aufgetreten, Workarounds nötig, Befehle wiederholt, User-Korrekturen
-- **Empfehlung "nein"**: Reibungsloser Lauf wie dokumentiert
-
-Per `AskUserQuestion` fragen:
-
-> Skill abgeschlossen. Soll die Skill-Dokumentation optimiert werden?
-> Empfehlung: {ja — [kurzer Grund] | nein — Lauf war reibungslos}
-
-Optionen: **"Ja, optimieren"**, **"Nein"**
-
-Bei "Ja": `skill-optimize` mit Skill-Name `edp-share` ausführen.
+Abschließend `skill-optimize` mit `edp-share` aufrufen.

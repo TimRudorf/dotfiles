@@ -6,98 +6,73 @@ argument-hint: [ticket-number]
 
 # Zammad → GitHub Issue
 
-Erstellt aus einem Zammad-Ticket ein strukturiertes GitHub Issue auf `einsatzleitsoftware.ghe.com`.
+Erstellt aus einem Zammad-Ticket ein strukturiertes GitHub Issue auf der GHE-Instanz.
 
-## Configuration
+## Voraussetzungen
+- Env: `ZAMMAD_HOST`, `ZAMMAD_TOKEN`
+- Tools: `curl`, `jq`, `gh`
 
-Environment variables via `~/.env` (automatisch geladen durch `.zshrc`):
-
-- `ZAMMAD_HOST` — Base URL of the Zammad instance
-- `ZAMMAD_TOKEN` — API token for authentication
-
-## Schritt 0: Env-Variablen prüfen
-
-Vor dem Start per Bash prüfen, ob die Pflicht-Variablen gesetzt und nicht leer sind:
-
-```bash
-echo "ZAMMAD_HOST=${ZAMMAD_HOST:-NICHT_GESETZT}"
-echo "ZAMMAD_TOKEN=${ZAMMAD_TOKEN:-NICHT_GESETZT}"
-```
-
-Falls eine Variable `NICHT_GESETZT` oder leer ist → dem User mitteilen welche Variable(n) fehlen und per `AskUserQuestion` fragen:
-
-> Fehlende Env-Variablen: `ZAMMAD_TOKEN`
-> Diese müssen in `~/.env` eingetragen sein. Die Datei wird automatisch via `.zshrc` geladen.
-
-Optionen:
-- **"Ist eingetragen"** → Schritt 0 wiederholen (erneut prüfen)
-- **"Abbrechen"** → Skill beenden
-- **"Direkt eingeben"** → User gibt Wert ein, per `Bash` an `~/.env` anhängen (`echo 'VAR=wert' >> ~/.env`), dann `source ~/.env` und erneut prüfen
-
-Wenn der User "Direkt eingeben" wählt: Per `AskUserQuestion` den Wert für jede fehlende Variable einzeln abfragen, mit `echo 'VARNAME=wert' >> ~/.env` anhängen (single quotes um Sonderzeichen zu schützen), dann erneut prüfen.
+Voraussetzungen gemäß `requirement-checker` Skill validieren. Bei Fehlschlag abbrechen.
 
 ## Workflow
 
-### Schritt 1: Zammad-Ticket auslesen
+### Schritt 1: Zammad-Ticket auslesen (Subagent-Delegation)
 
-Lies das Zammad-Ticket gemäß `~/.claude/skills/zammad-read/SKILL.md` aus. Analysiere den Inhalt und bestimme die Kategorie:
+Einen **Subagent** (`zammad-expert`) starten, der das Zammad-Ticket ausließt und fachlich aufbereitet.
 
-- **Bug**: Fehlerbeschreibung, unerwartetes Verhalten, Absturz
-- **Feature**: Neue Funktionalität, Erweiterung
-- **Verbesserung**: Optimierung bestehender Funktionen
+**Was wird gebraucht:**
+Ticket-Daten für Ticketnummer `$ARGUMENTS`, inklusive AI-aufbereiteter Zusammenfassung und Kategorisierung.
+
+**Rückgabeformat:**
+```json
+{
+  "ticket_id": 123,
+  "ticket_number": "76200123",
+  "titel": "...",
+  "organisation": "Musterfirma GmbH",
+  "customer": {"name": "Max Mustermann", "email": "max@example.com"},
+  "kategorie": "Bug",
+  "zusammenfassung": "Fachlich aufbereitete Zusammenfassung des Ticket-Inhalts in 2-4 Sätzen.",
+  "schritte_nachstellung": ["Schritt 1", "Schritt 2"],
+  "erwartetes_verhalten": "Was sollte passieren",
+  "tatsaechliches_verhalten": "Was passiert stattdessen"
+}
+```
+
+**Details:**
+- `kategorie`: AI-bestimmt aus Inhalt — `Bug`, `Feature` oder `Verbesserung`
+- `zusammenfassung`: Fachlich aufbereitete Zusammenfassung (2-4 Sätze), keine Copy-Paste von Kunden-Mails
+- `schritte_nachstellung`: Falls Bug, extrahierte Schritte zur Nachstellung (oder `null`)
+- `erwartetes_verhalten`, `tatsaechliches_verhalten`: Falls Bug (oder `null`)
+
+**Nicht benötigt:** Rohe Artikel-Bodies, HTML, interne Notizen, Ticket-History.
 
 #### Internes vs. externes Ticket bestimmen
 
-Prüfe das Feld `organization` des Tickets:
+Prüfe das Feld `organisation` des Ergebnisses:
 
 - **Intern**: Organisation ist `"Eifert Systems GmbH"` → Ticket stammt von einem eigenen Mitarbeiter
 - **Extern**: Jede andere Organisation → Ticket stammt von einem Kunden
 
-Merke dir den Wert von `customer` (Name des Erstellers) — dieser wird bei internen Tickets in der Referenz verwendet.
+### Schritt 2a: GitHub-Metadaten ermitteln (Subagent-Delegation)
+
+Einen **Subagent** (`git-expert`) starten, der die GitHub-Metadaten beschafft.
+
+**Was wird gebraucht:**
+Repos, Issue-Types und Org-Mitglieder der GitHub-Org `edp`.
+
+**Rückgabeformat:**
+```json
+{
+  "repos": [{"name": "edpweb", "description": "EDP Web Client"}],
+  "issue_types": [{"id": "...", "name": "Bug", "description": "..."}],
+  "members": [{"login": "tim-rudorf"}, {"login": "patrick-vogel"}]
+}
+```
 
 #### GitHub-Account des Erstellers prüfen (nur bei internen Tickets)
 
-Bei internen Tickets prüfen, ob der Ersteller einen GitHub-Account auf der GHE-Instanz hat. Dazu die Mitgliederliste der Organisation abfragen:
-
-```bash
-GH_HOST=einsatzleitsoftware.ghe.com gh api '/orgs/edp/members' --jq '.[].login'
-```
-
-Den Login anhand des Namens aus dem Zammad-Ticket zuordnen (z.B. "hendrik.eifert@..." → `hendrik-eifert`). Falls ein passender Account gefunden wird, diesen für die Referenz im Issue-Body verwenden (siehe Referenz-Varianten).
-
-### Schritt 2a: Daten vom Server abrufen
-
-**Parallel** alle Metadaten prefetchen (bevor der User gefragt wird):
-
-**Repos** (MCP):
-```tool
-mcp__github__search_repositories(query: "org:edp", perPage: 50)
-```
-
-**Issue Types** (MCP):
-```tool
-mcp__github__list_issue_types(owner: "edp")
-```
-
-**Assignees** (Bash — kein MCP-Äquivalent):
-```bash
-GH_HOST=einsatzleitsoftware.ghe.com gh api '/orgs/edp/members' --jq '.[].login'
-```
-
-**Projects** (Bash — kein MCP-Äquivalent):
-```bash
-GH_HOST=einsatzleitsoftware.ghe.com gh api graphql -f query='
-  query {
-    organization(login: "edp") {
-      projectsV2(first: 20) {
-        nodes { id number title }
-      }
-    }
-  }
-' --jq '.data.organization.projectsV2.nodes[] | "\(.number): \(.title)"'
-```
-
-**Labels werden hier NICHT abgefragt** — sie hängen vom gewählten Repo ab (→ Schritt 2c).
+Bei internen Tickets den Login anhand des Namens aus dem Zammad-Ticket in der `members`-Liste zuordnen (z.B. "hendrik.eifert@..." → `hendrik-eifert`). Falls ein passender Account gefunden wird, diesen für die Referenz im Issue-Body verwenden (siehe Referenz-Varianten).
 
 ### Schritt 2b: Repo auswählen
 
@@ -112,19 +87,19 @@ Bei "Abbruch": Skill bricht sofort ab mit Meldung "Skill abgebrochen."
 
 ### Schritt 2c: Labels abrufen und pro Kategorie auswählen
 
-1. Labels für gewähltes Repo fetchen:
+Labels für gewähltes Repo fetchen:
 
 ```bash
-GH_HOST=einsatzleitsoftware.ghe.com gh label list -R edp/<repo> --json name,description --limit 100
+gh label list -R edp/<repo> --json name,description --limit 100
 ```
 
-2. Labels am `:` aufteilen → `kategorie:wert`
-3. **`merge:*` Labels ausschließen** (werden automatisch vom Server gesetzt)
-4. Pro Kategorie eine `AskUserQuestion`:
-   - Vorschlag `(Empfohlen)` falls einer sinnvoll, sonst ohne
-   - Alle Werte der Kategorie als Optionen
-   - `Kein Wert setzen`
-   - Bei >4 Optionen: die wahrscheinlichsten 2-3 + "Kein Wert setzen", Rest via "Other"
+→ `merge:*` Labels herausfiltern.
+
+Labels am `:` aufteilen → `kategorie:wert`. Pro Kategorie eine `AskUserQuestion`:
+- Vorschlag `(Empfohlen)` falls einer sinnvoll, sonst ohne
+- Alle Werte der Kategorie als Optionen
+- `Kein Wert setzen`
+- Bei >4 Optionen: die wahrscheinlichsten 2-3 + "Kein Wert setzen", Rest via "Other"
 
 Beispiel für `priority`-Kategorie (3 Labels):
 1. `priority:prioritized (Empfohlen)`
@@ -157,6 +132,20 @@ Bei "Abbruch" (via "Other"): Skill bricht sofort ab mit Meldung "Skill abgebroch
 Bei "Abbruch" (via "Other"): Skill bricht sofort ab mit Meldung "Skill abgebrochen."
 
 ### Schritt 2f: Project auswählen
+
+Projects abfragen:
+
+```bash
+gh api graphql -f query='
+  query {
+    organization(login: "edp") {
+      projectsV2(first: 20) {
+        nodes { id number title }
+      }
+    }
+  }
+' --jq '.data.organization.projectsV2.nodes[] | "\(.number): \(.title)"'
+```
 
 `AskUserQuestion` mit verfügbaren Projects:
 1. Vorschlag `(Empfohlen)` basierend auf Inhalt
@@ -199,29 +188,20 @@ Bei "Ändern": User gibt an welches Feld → nur diese Frage erneut stellen (Sch
 
 Nach Bestätigung das Issue erstellen:
 
-#### 4a: Issue erstellen (MCP)
+#### 4a: Issue erstellen
 
-Issue per MCP-Tool erstellen. Der `type`-Parameter setzt den Issue-Type direkt — kein separater GraphQL-Schritt nötig. Felder mit "Kein Wert setzen" weglassen:
+Felder mit "Kein Wert setzen" weglassen:
 
-```tool
-mcp__github__issue_write(
-  method: "create",
-  owner: "edp",
-  repo: <repo>,
-  title: <titel>,
-  body: <body>,
-  labels: [<label1>, <label2>],
-  assignees: [<assignee>],
-  type: <type>
-)
+```bash
+gh issue create -R edp/<repo> --title "<titel>" --body "<body>" --label "l1,l2" --assignee <assignee> --type <type>
 ```
 
-#### 4b: Project zuordnen (Bash — kein MCP-Äquivalent)
+#### 4b: Project zuordnen
 
 Falls ein Project gewählt wurde:
 
 ```bash
-GH_HOST=einsatzleitsoftware.ghe.com gh issue edit <nr> -R edp/<repo> --add-project "<project>"
+gh issue edit <nr> -R edp/<repo> --add-project "<project>"
 ```
 
 Nach dem Erstellen die Issue-URL dem User anzeigen.
@@ -347,26 +327,10 @@ Je nach Herkunft des Tickets unterschiedliche Formulierung:
 
 ## GHE-Spezifika
 
-- **GitHub-Abfragen** bevorzugt über MCP-Tools (`mcp__github__*`)
-- **Nur** `GH_HOST=einsatzleitsoftware.ghe.com` vor verbleibenden `gh`-Befehlen setzen (org members, projects, labels, project assign)
+- **GitHub-Leseabfragen** über Subagent-Delegation — kein MCP
+- **GitHub-Schreibaktionen** über `gh` CLI
 - User-Login: `tim-rudorf`
 - Org: `edp`
 - Alle Metadaten (Repos, Types, Projects, Labels) werden **live abgefragt**, nie hardcoded
 
----
-
-## Skill-Optimierung
-
-Nach Abschluss dieses Skills kurz bewerten, ob Optimierungsbedarf besteht:
-
-- **Empfehlung "ja"**: Fehler aufgetreten, Workarounds nötig, Befehle wiederholt, User-Korrekturen
-- **Empfehlung "nein"**: Reibungsloser Lauf wie dokumentiert
-
-Per `AskUserQuestion` fragen:
-
-> Skill abgeschlossen. Soll die Skill-Dokumentation optimiert werden?
-> Empfehlung: {ja — [kurzer Grund] | nein — Lauf war reibungslos}
-
-Optionen: **"Ja, optimieren"**, **"Nein"**
-
-Bei "Ja": `skill-optimize` mit Skill-Name `zammad-to-issue` ausführen.
+Abschließend `skill-optimize` mit `zammad-to-issue` aufrufen.

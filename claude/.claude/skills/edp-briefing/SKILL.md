@@ -7,129 +7,68 @@ description: This skill should be used when the user asks for a "daily briefing"
 
 Zeigt einen Überblick über alle offenen Aufgaben: Zammad-Tickets, GitHub Issues und PRs.
 
-## Configuration
+## Voraussetzungen
+- Env: `ZAMMAD_HOST`, `ZAMMAD_TOKEN`
+- Tools: `gh`
 
-- Zammad: Environment variables via `~/.env` (`ZAMMAD_HOST`, `ZAMMAD_TOKEN`) — automatisch geladen durch `.zshrc`
-- GitHub: MCP-Server `github` (konfiguriert für `einsatzleitsoftware.ghe.com`)
-
-## Schritt 0: Env-Variablen prüfen
-
-Vor dem Start per Bash prüfen, ob die Pflicht-Variablen gesetzt und nicht leer sind:
-
-```bash
-echo "ZAMMAD_HOST=${ZAMMAD_HOST:-NICHT_GESETZT}"
-echo "ZAMMAD_TOKEN=${ZAMMAD_TOKEN:-NICHT_GESETZT}"
-```
-
-Falls eine Variable `NICHT_GESETZT` oder leer ist → dem User mitteilen welche Variable(n) fehlen und per `AskUserQuestion` fragen:
-
-> Fehlende Env-Variablen: `ZAMMAD_TOKEN`
-> Diese müssen in `~/.env` eingetragen sein. Die Datei wird automatisch via `.zshrc` geladen.
-
-Optionen:
-- **"Ist eingetragen"** → Schritt 0 wiederholen (erneut prüfen)
-- **"Abbrechen"** → Skill beenden
-- **"Direkt eingeben"** → User gibt Wert ein, per `Bash` an `~/.env` anhängen (`echo 'VAR=wert' >> ~/.env`), dann `source ~/.env` und erneut prüfen
-
-Wenn der User "Direkt eingeben" wählt: Per `AskUserQuestion` den Wert für jede fehlende Variable einzeln abfragen, mit `echo 'VARNAME=wert' >> ~/.env` anhängen (single quotes um Sonderzeichen zu schützen), dann erneut prüfen.
+Voraussetzungen gemäß `requirement-checker` Skill validieren. Bei Fehlschlag abbrechen.
 
 ## Workflow
 
-### Schritt 1: Daten parallel sammeln
+### Schritt 1: Daten parallel sammeln (Subagent-Delegation)
 
-Alle folgenden Abfragen **parallel** ausführen (separate Bash-Aufrufe):
+Zwei Subagents **parallel** starten, um die Rohdaten zu beschaffen, filtern und zusammenfassen. Jeder Subagent liefert **nur** die unten beschriebenen Felder zurück — keine Rohdaten, kein HTML, keine unnötigen Felder.
 
-**1a) Offene Zammad-Tickets** (Status `new` oder `open`, Owner = Tim):
+#### 1a) Zammad-Daten (Subagent: `zammad-expert`)
 
-```bash
-BASE="${ZAMMAD_HOST%/}"
-AUTH="Authorization: Token token=${ZAMMAD_TOKEN}"
+**Was wird gebraucht:**
+Alle Zammad-Tickets von Owner `tim.rudorf@einsatzleitsoftware.de`, aufgeteilt in 3 Kategorien. Für jedes Ticket den letzten Kundenartikel lesen und auf 1 Satz AI-zusammenfassen.
 
-curl -s -H "$AUTH" "$BASE/api/v1/tickets/search?query=owner.email:tim.rudorf@einsatzleitsoftware.de+AND+(state.name:new+OR+state.name:open)&expand=true&limit=50" > /tmp/z_briefing_open.json \
-  && jq '[.[] | {id, number, title, state, customer, organization, updated_at}]' /tmp/z_briefing_open.json
+**Rückgabeformat** — pro Ticket:
+```json
+{"nummer": 762, "titel": "...", "status": "open", "kunde": "...", "organisation": "...", "updated_at": "...", "zusammenfassung": "Ein-Satz-Zusammenfassung"}
 ```
 
-**1b) Zammad-Tickets "Warten auf Rückmeldung"** (`pending close` oder `warten auf Rückmeldung -extern`):
+**Kategorie 1 — Offene Tickets**: Status `new` oder `open`
+→ Alle Treffer zurückgeben.
 
-```bash
-BASE="${ZAMMAD_HOST%/}"
-AUTH="Authorization: Token token=${ZAMMAD_TOKEN}"
+**Kategorie 2 — Warten auf Rückmeldung**: Status `pending close` oder `warten auf Rückmeldung -extern`
+→ **Nur** Tickets mit `updated_at` älter als 14 Tage. Tickets mit jüngeren Updates: weglassen.
 
-curl -s -H "$AUTH" "$BASE/api/v1/tickets/search?query=owner.email:tim.rudorf@einsatzleitsoftware.de+AND+(state.name:%22pending+close%22+OR+state.name:%22warten+auf+Rückmeldung+-extern%22)&expand=true&limit=50" > /tmp/z_briefing_pending_close.json \
-  && jq '[.[] | {id, number, title, customer, organization, updated_at}]' /tmp/z_briefing_pending_close.json
+**Kategorie 3 — Erinnerung abgelaufen**: Status `pending reminder`
+→ **Nur** Tickets mit `pending_time` in der Vergangenheit. Zusatzfeld `pending_time` im Ergebnis. Tickets mit zukünftiger pending_time: weglassen.
+
+#### 1b) GitHub-Daten (Subagent: `git-expert`)
+
+**Was wird gebraucht:**
+Offene Issues und PRs aus der GitHub-Org `edp`, die `tim-rudorf` betreffen.
+
+**Issues — Rückgabeformat** — pro Issue:
+```json
+{"nummer": 5, "titel": "...", "repo": "edpweb", "labels": ["bug"], "zusammenfassung": "Ein-Satz-Zusammenfassung", "updated_at": "..."}
 ```
+→ Nur offene Issues assigned to `tim-rudorf` in Org `edp`.
+→ Issues die einen zugehörigen **offenen PR** haben (PR-Titel enthält `#<nummer>` oder Branch verweist auf Issue): **weglassen**.
 
-→ Danach filtern: nur Tickets mit `updated_at` **älter als 14 Tage** anzeigen.
-
-**1c) Zammad-Tickets "Warten auf Erinnerung"** (`pending reminder`):
-
-```bash
-BASE="${ZAMMAD_HOST%/}"
-AUTH="Authorization: Token token=${ZAMMAD_TOKEN}"
-
-curl -s -H "$AUTH" "$BASE/api/v1/tickets/search?query=owner.email:tim.rudorf@einsatzleitsoftware.de+AND+state.name:%22pending+reminder%22&expand=true&limit=50" > /tmp/z_briefing_pending_reminder.json \
-  && jq '[.[] | {id, number, title, customer, organization, updated_at, pending_time}]' /tmp/z_briefing_pending_reminder.json
+**PRs — Rückgabeformat** — pro PR:
+```json
+{"nummer": 42, "titel": "...", "repo": "edpweb", "autor": "...", "zusammenfassung": "Ein-Satz-Zusammenfassung", "updated_at": "...", "kategorie": "Review ausstehend"}
 ```
+→ `kategorie` bereits bestimmt als einer von:
+  - **"Review ausstehend"** — `tim-rudorf` ist Reviewer und hat noch kein Review abgegeben
+  - **"Wartet auf Review (>3 Tage)"** — `tim-rudorf` ist Autor, mindestens ein angefordertes Review seit >= 3 Tagen ausstehend
+  - **"Merge bereit"** — `tim-rudorf` ist Autor, alle Reviews approved
+  - **"Änderungen nötig"** — Changes requested an `tim-rudorf`, oder CI failed
 
-→ Danach filtern: nur Tickets mit `pending_time` **in der Vergangenheit** (Erinnerung abgelaufen).
+→ PRs ohne Handlungsbedarf (Wartet auf Review < 3 Tage, keine Kategorie zutreffend): **weglassen**.
 
-**1d) GitHub Issues** (assigned to me):
+### Schritt 2: Daten aufbereiten & filtern
 
-```tool
-mcp__github__search_issues(query: "assignee:tim-rudorf state:open", owner: "edp")
-```
-
-**1e) GitHub PRs** (die mich betreffen):
-
-```tool
-mcp__github__search_pull_requests(query: "state:open involves:tim-rudorf", owner: "edp")
-```
-
-Danach für jeden gefundenen PR den Review-Status separat abfragen (parallel):
-
-```tool
-mcp__github__pull_request_read(method: "get_reviews", owner: "edp", repo: <repo>, pullNumber: <nr>)
-```
-
-### Schritt 2: Zusammenfassungen generieren
-
-Für jedes Ticket/Issue/PR eine **kurze Zusammenfassung** (1 Satz oder wenige Stichpunkte) erstellen:
-
-**Zammad-Tickets**: Für jedes Ticket den letzten Kundenartikel laden:
-
-```bash
-BASE="${ZAMMAD_HOST%/}"
-AUTH="Authorization: Token token=${ZAMMAD_TOKEN}"
-
-curl -s -H "$AUTH" "$BASE/api/v1/ticket_articles/by_ticket/{TICKET_ID}" > /tmp/z_articles_{TICKET_ID}.json \
-  && jq -r '[.[] | select(.sender == "Customer")] | last | .body | gsub("<[^>]*>"; " ") | gsub("&gt;"; ">") | gsub("&lt;"; "<") | gsub("&amp;"; "&") | gsub("\\s+"; " ") | ltrimstr(" ")' /tmp/z_articles_{TICKET_ID}.json
-```
-
-Den Body-Text auf max. 1-2 Sätze **AI-zusammenfassen** (keine bloße Textabschneidung).
-
-**GitHub Issues & PRs**: Das `body`-Feld aus den JSON-Ergebnissen von Schritt 1d/1e verwenden und AI-zusammenfassen.
-
-**Parallelisierung**: Alle Artikel-Abrufe für Zammad-Tickets können parallel erfolgen. Die Zusammenfassungen selbst werden vom AI-Modell inline generiert.
-
-### Schritt 3: Daten aufbereiten & filtern
-
-Folgende Logik anwenden:
-
-**Issues mit zugehörigem PR entfernen**: Wenn ein offener PR existiert, der eine Issue-Nummer im Title enthält (z.B. `#5`) oder dessen Branch auf ein Issue verweist, dieses Issue aus der "Offene Issues"-Liste entfernen (es ist bereits "in Bearbeitung" via PR).
-
-**PRs kategorisieren**:
-- **"Review ausstehend"** — ich bin Reviewer und habe noch kein Review abgegeben
-- **"Wartet auf Review"** — mir assigned, mindestens ein angefordertes Review seit **>= 3 Tagen** ausstehend (anhand `created_at` des PRs oder des letzten Commits). Wenn < 3 Tage: PR nicht anzeigen.
-- **"Merge bereit"** — mir assigned, alle Reviews approved
-- **"Änderungen nötig"** — Changes requested an mich, oder CI failed
-
-**Zammad "Warten auf Rückmeldung"**: Nur Tickets anzeigen, bei denen `updated_at` > 14 Tage zurückliegt.
-
-**Zammad "Erinnerung abgelaufen"**: Nur Tickets anzeigen, bei denen `pending_time` in der Vergangenheit liegt.
+Folgende Logik im Main-Agent anwenden:
 
 **Verknüpfungen aufzeigen**: Wenn ein Zammad-Ticket eine Issue-Nummer (z.B. `#5` oder `edp/repo#5`) oder ein PR eine Ticket-Nummer (z.B. `EDP#762...`) referenziert, diese Verknüpfung in der Ausgabe anzeigen.
 
-### Schritt 4: Ausgabe formatieren
+### Schritt 3: Ausgabe formatieren
 
 Strukturierte Markdown-Ausgabe direkt an den User (kein `AskUserQuestion`):
 
@@ -194,29 +133,11 @@ Kategorien ohne Einträge **komplett ausblenden** (keine Überschrift, keine Tab
 
 ## Regeln
 
-- **GitHub-Abfragen** über MCP-Tools (`mcp__github__*`) — kein `gh` CLI für GitHub-Daten
+- **GitHub-Abfragen** über `gh` CLI oder Subagent-Delegation — kein MCP
 - Zammad-Credentials (`ZAMMAD_HOST`, `ZAMMAD_TOKEN`) sind via `.zshrc` automatisch verfügbar
-- **Immer** curl-Output in temp files speichern, dann mit `jq` verarbeiten
-- **Immer** `?expand=true` bei der Zammad Tickets API verwenden
 - Alle Datenabfragen in Schritt 1 **maximal parallel** ausführen
 - **Keine** `AskUserQuestion` — reines Informations-Briefing
 - **Relative Zeitangaben** verwenden (z.B. "vor 3 Tagen", "18 Tage")
 - **Deutsche Sprache** in der Ausgabe
 
----
-
-## Skill-Optimierung
-
-Nach Abschluss dieses Skills kurz bewerten, ob Optimierungsbedarf besteht:
-
-- **Empfehlung "ja"**: Fehler aufgetreten, Workarounds nötig, Befehle wiederholt, User-Korrekturen
-- **Empfehlung "nein"**: Reibungsloser Lauf wie dokumentiert
-
-Per `AskUserQuestion` fragen:
-
-> Skill abgeschlossen. Soll die Skill-Dokumentation optimiert werden?
-> Empfehlung: {ja — [kurzer Grund] | nein — Lauf war reibungslos}
-
-Optionen: **"Ja, optimieren"**, **"Nein"**
-
-Bei "Ja": `skill-optimize` mit Skill-Name `edp-briefing` ausführen.
+Abschließend `skill-optimize` mit `edp-briefing` aufrufen.

@@ -1,7 +1,6 @@
 ---
 name: skill-optimize
 description: Analysiert den letzten Skill-Lauf und optimiert die SKILL.md. Wird nach Skill-Ausführungen aufgerufen um Fehler, Workarounds und Verbesserungspotenzial zu erkennen.
-user-invocable: false
 argument-hint: [skill-name]
 ---
 
@@ -44,7 +43,8 @@ Lies `~/.claude/skills/.shared/skill-best-practices.md` und prüfe die SKILL.md 
 - Frontmatter-Korrektheit (Bindestriche, nicht Unterstriche)
 - Token-Effizienz (Dateigröße, Progressive Disclosure)
 - Invocation-Steuerung (disable-model-invocation bei Side-Effects?)
-- Env-Validierung: Falls der Skill Env-Variablen nutzt — gibt es einen Validierungsschritt am Anfang? Pattern: Bash-Check ob Vars gesetzt sind → `AskUserQuestion` mit "Ist eingetragen" / "Abbrechen" / "Direkt eingeben".
+- **Voraussetzungen-Format**: Sind Voraussetzungen deklarativ mit Typ-Prefix gelistet (z.B. `- Env: \`VAR\``, `- Tools: \`cmd\``)? Falls nicht → Migration vorschlagen.
+- **Datenbeschaffung vs. Schreibaktionen**: Mischt der Skill Lese-Befehle (curl-Abfragen, API-Reads) und Schreib-Befehle in denselben Schritten? Falls ja → vorschlagen, Datenbeschaffung als eigene Schritte auszulagern mit Rückgabeformat-Beschreibung (was wird gebraucht, JSON-Format, was weglassen).
 
 **Nur Verbesserungen vorschlagen die durch den Lauf oder offensichtliche Mängel motiviert sind** — keine spekulativen Optimierungen.
 
@@ -112,6 +112,5 @@ Die gesamte SKILL.md mit den bestätigten Änderungen schreiben. Danach Kontroll
 
 - **Nur konkrete Probleme** aus dem tatsächlichen Lauf beheben — keine spekulativen oder präventiven Änderungen
 - **Bestehende Konventionen beibehalten**: Schritt-Nummerierung, Codeblock-Format, Sprache (deutsch/englisch), Markdown-Struktur
-- **Keine rekursive Selbst-Optimierung**: Dieser Skill (skill-optimize) hat keinen Skill-Optimierung-Footer
+- **Keine rekursive Selbst-Optimierung**: Dieser Skill (skill-optimize) wird nicht selbst optimiert
 - **Keine strukturellen Umbauten** ohne konkreten Anlass — wenn der Aufbau funktioniert, bleibt er bestehen
-- **Skill-Optimierung-Footer nicht verändern** — der Footer-Abschnitt am Ende anderer Skills wird nicht modifiziert
