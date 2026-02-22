@@ -15,19 +15,20 @@ Erstellt eine strukturierte Lernzusammenfassung zu einem Übungsblatt. Der Benut
 
 ## Schritt 1: Projektstruktur erkennen
 
-1. Lies die `CLAUDE.md` im aktuellen Projektverzeichnis, um die Verzeichnisstruktur und das Fach zu verstehen.
-2. Identifiziere:
-   - Das Aufgabenblatt: `docs/Übungen/Aufgaben/Aufgaben{Nr}.pdf`
-   - Die Musterlösung: `docs/Übungen/Lösungen/Loesungen{Nr}.pdf`
-   - Das Vorlesungsskript: `docs/Skript/Skript.pdf` (oder ähnlich)
-   - Zusatzmaterial: `docs/Übungen/Weiteres/` und `docs/Sonstiges/`
+1. Lies die `CLAUDE.md` im aktuellen Projektverzeichnis, um die Verzeichnisstruktur und das Fach zu verstehen. **Prüfe insbesondere, ob eine Sektion `## Skill-Anpassungen` → `### uni-study-summary` existiert.** Falls ja, gelten die dort definierten Overrides für Quellenstruktur, Fokus, Ausschlüsse und Abschnitt-Anpassungen für diesen gesamten Lauf.
+2. Identifiziere anhand der CLAUDE.md (Dateitypen-Tabelle und Themenindex):
+   - Das Aufgabenblatt: `docs/Übungen/Aufgaben/Übung-{Nr}.pdf`
+   - Die Musterlösung: `docs/Übungen/Lösungen/Lösung-{Nr}.pdf`
+   - Die Vorlesung: `docs/Vorlesung/Vorlesung-{Nr}.pdf` (oder `Vorlesung-Skript.pdf` bei Einzelskript)
+   - Zusatzmaterial: `docs/Übungen/Weiteres/` und `docs/Zusatz/`
+   - **Fallback** (alte Konvention): `docs/Skript/`, `docs/Sonstiges/`, `Aufgaben{Nr}.pdf`, `Loesungen{Nr}.pdf`
 3. Falls Dateien nicht am erwarteten Ort liegen, suche mit Glob nach passenden Dateien.
 
 ## Schritt 2: Inhalte lesen und analysieren
 
-1. Lies das **Aufgabenblatt** und die **Musterlösung** vollständig.
+1. Lies das **Aufgabenblatt** und die **Musterlösung** vollständig. Falls laut CLAUDE.md/Skill-Anpassungen keine separaten Aufgaben-/Lösungs-PDFs existieren, lies stattdessen das **relevante Skript-Kapitel vollständig** (Theorie + eingebettete Vorbereitungsaufgaben + "Zur Kontrolle"-Boxen).
 2. Identifiziere die behandelten **Themen und Methoden** (z.B. Ljapunov-Stabilität, Popov-Kriterium, Zustandsregler, etc.).
-3. Lies die **relevanten Kapitel des Skripts** zu diesen Themen. Orientiere dich am Inhaltsverzeichnis des Skripts, um die richtigen Seiten zu finden.
+3. Lies die **relevanten Vorlesungen** zu diesen Themen. Nutze den **Themenindex** in der CLAUDE.md, um die richtigen Vorlesungsdateien anhand der Stichworte zu finden. Bei Einzelskripten orientiere dich am Inhaltsverzeichnis.
 4. Prüfe, ob unter `docs/Übungen/Weiteres/` **Zusatzmaterial** zu den identifizierten Themen existiert (z.B. `Kochrezept_Popov.pdf`). Falls ja, lies es ebenfalls.
 
 ## Schritt 3: Formatentscheidung
@@ -108,7 +109,7 @@ Zeige dem Benutzer:
 - **Sprache**: Deutsch mit echten Umlauten (ä, ö, ü, ß)
 - **Format-Standard**: LaTeX → PDF, Markdown nur als Ausnahme
 - **Ausgabepfad**: `sum/Zusammenfassung{Nr}.tex` / `.md`
-- **Quellen-Pflicht**: Immer Aufgabenblatt, Musterlösung und Skript lesen — nie nur aus einer Quelle arbeiten
+- **Quellen-Pflicht**: Immer Aufgabenblatt, Musterlösung und Skript lesen — nie nur aus einer Quelle arbeiten. Falls Skill-Anpassungen eine abweichende Quellenstruktur definieren, dieser folgen.
 - **Context7**: Maximal 3 Aufrufe pro Zusammenfassung, nur bei konkretem Bedarf (LaTeX-Paket-Syntax, unbekannte Befehle)
 - **tlmgr**: Ohne `sudo` aufrufen; bei Berechtigungsfehler den User bitten
 - **Iterationslimit**: Maximal 3 Kompilier-/Prüf-Zyklen
