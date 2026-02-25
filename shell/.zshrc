@@ -24,13 +24,6 @@ export NVM_DIR="$HOME/.nvm"
 [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
 [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"
 
-# Wayland / screen sharing
-export XDG_CURRENT_DESKTOP=Hyprland
-export MOZ_ENABLE_WAYLAND=1
-
-# libvirt — always use system connection
-export LIBVIRT_DEFAULT_URI="qemu:///system"
-
 # zoxide
 eval "$(zoxide init zsh)"
 
@@ -52,5 +45,5 @@ export PATH="$HOME/.local/bin:$PATH"
 # LSP for Claude Code
 export ENABLE_LSP_TOOL=1
 
-# sudo askpass (graphical password prompt for non-interactive sudo)
-export SUDO_ASKPASS=/usr/lib/ssh/x11-ssh-askpass
+# OS-specific config
+[[ -f ~/.zshrc.$(uname | tr '[:upper:]' '[:lower:]') ]] && source ~/.zshrc.$(uname | tr '[:upper:]' '[:lower:]')
