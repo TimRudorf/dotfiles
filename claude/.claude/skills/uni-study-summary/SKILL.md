@@ -4,7 +4,7 @@ description: This skill should be used when the user asks to create a learning s
   Lernzusammenfassung, or Zusammenfassung for a Uebungsblatt or exercise sheet.
   It reads the exercise PDF, solution PDF, and lecture notes, then writes a structured
   LaTeX PDF (or Markdown) summary with theory, step-by-step recipes, and exam tips.
-allowed-tools: Bash, Read, Write, Edit, Glob, Grep, AskUserQuestion, mcp__context7__resolve-library-id, mcp__context7__query-docs
+allowed-tools: Bash, Read, Write, Edit, Glob, Grep, AskUserQuestion, Task, mcp__context7__resolve-library-id, mcp__context7__query-docs
 argument-hint: "[Übungsnummer, z.B. 03]"
 disable-model-invocation: true
 ---
@@ -24,12 +24,69 @@ Erstellt eine strukturierte Lernzusammenfassung zu einem Übungsblatt. Der Benut
    - **Fallback** (alte Konvention): `docs/Skript/`, `docs/Sonstiges/`, `Aufgaben{Nr}.pdf`, `Loesungen{Nr}.pdf`
 3. Falls Dateien nicht am erwarteten Ort liegen, suche mit Glob nach passenden Dateien.
 
-## Schritt 2: Inhalte lesen und analysieren
+## Schritt 2: Inhalte extrahieren (Context-optimiert)
 
-1. Lies das **Aufgabenblatt** und die **Musterlösung** vollständig. Falls laut CLAUDE.md/Skill-Anpassungen keine separaten Aufgaben-/Lösungs-PDFs existieren, lies stattdessen das **relevante Skript-Kapitel vollständig** (Theorie + eingebettete Vorbereitungsaufgaben + "Zur Kontrolle"-Boxen).
-2. Identifiziere die behandelten **Themen und Methoden** (z.B. Ljapunov-Stabilität, Popov-Kriterium, Zustandsregler, etc.).
-3. Lies die **relevanten Vorlesungen** zu diesen Themen. Nutze den **Themenindex** in der CLAUDE.md, um die richtigen Vorlesungsdateien anhand der Stichworte zu finden. Bei Einzelskripten orientiere dich am Inhaltsverzeichnis.
-4. Prüfe, ob unter `docs/Übungen/Weiteres/` **Zusatzmaterial** zu den identifizierten Themen existiert (z.B. `Kochrezept_Popov.pdf`). Falls ja, lies es ebenfalls.
+Die Quell-PDFs werden **nicht** direkt im Main-Context gelesen. Stattdessen werden strukturierte Extrakte erstellt, die nur die klausurrelevanten Informationen enthalten. Der Main-Agent entscheidet autonom, ob er die Extraktion an Subagents (Task-Tool) delegiert oder selbst durchführt.
+
+### Phase A — Aufgaben + Lösungen
+
+**Quellen:** Übung-{Nr}.pdf + Lösung-{Nr}.pdf (bzw. bei Skill-Anpassungen die dort definierte Quellenstruktur; bei fehlenden separaten PDFs das relevante Skript-Kapitel mit eingebetteten Aufgaben).
+
+**Extrahieren:**
+- Aufgabenstellungen (kompakt, vollständig)
+- Verwendete Methoden und Lösungsschritte
+- Alle Formeln exakt in LaTeX-Notation
+- Ergebnisse (Zahlenwerte, Ausdrücke)
+- Fehlerhinweise und Besonderheiten aus der Musterlösung
+
+**Weglassen:** Layout, Kopfzeilen, Seitennummern, redundante Standardformulierungen.
+
+**Rückgabeformat (JSON):**
+```json
+{
+  "themen": ["Thema 1", "Thema 2"],
+  "skript_stichworte": ["Stichwort für Vorlesungszuordnung", "..."],
+  "aufgaben": [
+    {
+      "nr": "1a",
+      "aufgabe": "Kompakte Aufgabenstellung",
+      "methode": "Verwendete Methode",
+      "schritte": ["Schritt 1", "Schritt 2"],
+      "formeln": ["\\LaTeX-Formel"],
+      "ergebnis": "Endergebnis",
+      "fehlerhinweise": ["Typischer Fehler"]
+    }
+  ]
+}
+```
+
+### Phase B — Vorlesungstheorie (abhängig von Phase A)
+
+**Quellen:** Relevante Vorlesungskapitel (ermittelt über Themenindex in CLAUDE.md + `skript_stichworte` aus Phase A), Zusatzmaterial aus `docs/Übungen/Weiteres/` und `docs/Zusatz/`.
+
+**Extrahieren:**
+- Definitionen und Sätze (exakter Wortlaut + LaTeX-Formeln)
+- Methodenschritte und Algorithmen
+- Voraussetzungen und Anwendbarkeitsbedingungen
+- Zusammenhänge zwischen Konzepten
+- Vorhandene Kochrezepte aus Zusatzmaterial
+
+**Weglassen:** Historische Einordnungen, nicht-klausurrelevante Beweise, bereits durch Aufgaben abgedeckte Beispiele.
+
+**Rückgabeformat (JSON):**
+```json
+{
+  "definitionen": [
+    {"name": "Name", "inhalt": "Exakter Wortlaut", "formel": "\\LaTeX"}
+  ],
+  "methoden": [
+    {"name": "Methode", "schritte": ["Schritt 1", "..."], "voraussetzungen": "..."}
+  ],
+  "zusammenhaenge": "Freitext: Wie hängen die Konzepte zusammen?",
+  "zusatzmaterial_kochrezepte": ["Kochrezept-Inhalt falls vorhanden"],
+  "klausur_hinweise": ["Relevante Hinweise"]
+}
+```
 
 ## Schritt 3: Formatentscheidung
 
@@ -37,7 +94,7 @@ Standard ist **LaTeX → PDF** (`sum/Zusammenfassung{Nr}.pdf`). Markdown (`sum/Z
 
 ## Schritt 4: Zusammenfassung erstellen
 
-Erstelle die Zusammenfassung auf **Deutsch** mit folgenden Abschnitten:
+Erstelle die Zusammenfassung auf **Deutsch** basierend auf den strukturierten Extrakten aus Schritt 2 — kein erneutes Lesen der Quell-PDFs nötig. Folgende Abschnitte:
 
 ### 1. Themenübersicht
 - Kurze Auflistung aller behandelten Themen des Übungsblatts
@@ -71,7 +128,7 @@ Erstelle die Zusammenfassung auf **Deutsch** mit folgenden Abschnitten:
 Speichere die Zusammenfassung als `sum/Zusammenfassung{Nr}.md`.
 
 ### Bei LaTeX → PDF:
-1. Erstelle die LaTeX-Datei `sum/Zusammenfassung{Nr}.tex`. Lies `reference.md` (im Skill-Verzeichnis) für die vollständige Preamble, Farb-Definitionen und mdframed-Umgebungen.
+1. Erstelle die LaTeX-Datei `sum/Zusammenfassung{Nr}.tex`. Lies `reference.md` (im Skill-Verzeichnis) für die vollständige Preamble, Farb-Definitionen und mdframed-Umgebungen. **Verwende ausschließlich die in `reference.md` gelisteten Pakete.** Falls ein zusätzliches Paket die Qualität verbessern würde, den User bitten es zu installieren — Qualität steht an erster Stelle.
 
 > **Wichtig:** Verwende **nicht** `tcolorbox` — Tagging-Inkompatibilität mit dem LaTeX 2024+ Kernel erzeugt Debug-Output auf Seite 1.
 
@@ -82,7 +139,7 @@ Speichere die Zusammenfassung als `sum/Zusammenfassung{Nr}.md`.
    Zweimal ausführen für korrekte Referenzen.
 3. Räume Hilfsdateien auf (`.aux`, `.log`, `.out`, `.toc`), behalte aber die `.tex`-Datei.
 4. Falls die Kompilierung fehlschlägt, analysiere die `.log`-Datei:
-   - **Fehlendes Paket** (`File '...' not found`): Mit `/Library/TeX/texbin/tlmgr install <paketname>` nachinstallieren. Falls Berechtigungsfehler, den User bitten den Befehl manuell auszuführen.
+   - **Fehlendes Paket** (`File '...' not found`): **Immer den User bitten** das Paket zu installieren (`/Library/TeX/texbin/tlmgr install <paketname>`). Niemals das Paket eigenmächtig entfernen oder die .tex-Datei umschreiben um das Paket zu umgehen.
    - **Syntaxfehler**: In der `.tex`-Datei beheben und erneut kompilieren
 
 ## Schritt 6: Qualitätsprüfung
