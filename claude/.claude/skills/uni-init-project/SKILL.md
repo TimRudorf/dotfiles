@@ -14,6 +14,13 @@ disable-model-invocation: true
 
 Initialisiert ein Uni-Lernprojekt mit standardisierter Ordnerstruktur. Optional Moodle-Kurs-URL als Argument — dann werden Kursmaterialien automatisch heruntergeladen und Kursinfos aus der Moodle API bezogen.
 
+## Voraussetzungen
+- Tools: `curl`, `python3`
+- Tools: `playwright-cli` (nur Modus A, bei Token-Ersteinrichtung)
+- Datei: `~/.config/moodle-dl/token.json` (optional, wird bei Bedarf erstellt)
+
+Voraussetzungen gemäß `requirement-checker` Skill validieren. Bei Fehlschlag abbrechen.
+
 ## Schritt 0: Moodle-Token validieren (nur Modus A)
 
 Nur ausführen wenn `$ARGUMENTS` eine URL enthält (beginnt mit `https://`).
@@ -39,7 +46,7 @@ Falls nicht vorhanden → Token via Playwright-SSO einrichten:
         return { status: response.status(), headers: response.headers() };
       }"
       ```
-   e. Aus dem `location`-Header den Token extrahieren: `moodlemobile://token={base64}` → Base64-dekodieren → Format: `{hash}:::{token}` → den Teil nach `:::` ist der wstoken
+   e. Aus dem `location`-Header den Token extrahieren: `moodlemobile://token={base64}` → Base64-dekodieren → Format: `{hash1}:::{wstoken}:::{privatetoken}` (3-teilig, `:::` als Separator) → den **zweiten** Teil (zwischen dem ersten und zweiten `:::`) als wstoken verwenden
    f. Token validieren: `curl -s "https://{domain}/webservice/rest/server.php?wstoken={token}&wsfunction=core_webservice_get_site_info&moodlewsrestformat=json"` — prüfen dass `username` in Response vorhanden
    g. `mkdir -p ~/.config/moodle-dl` und Token speichern: `{"domain": "{domain}", "token": "{token}"}`
    h. `playwright-cli close`
@@ -259,6 +266,7 @@ Zeige dem Benutzer:
 - **Duplikate** (gleicher Dateiname) beim Download überspringen
 - **Python-Pakete** mit `pip3` oder `python3 -m pip` installieren (nicht `pip`)
 - **Absolute Pfade**: Immer `$BASE`-Variable statt `cd` verwenden. `cd` scheitert bei Pfaden mit Umlauten (zoxide-Interferenz). Pattern: `BASE=".../Projektname"` definieren und alle Pfade als `"$BASE/docs/..."` referenzieren.
+- **Unicode-Normalisierung**: Bei Dateinamen-Vergleichen auf macOS immer `unicodedata.normalize('NFC', filename)` verwenden. macOS gibt Dateinamen in NFD zurück (z.B. `ä` = `a` + `̈`), Python-String-Literale sind NFC — ohne Normalisierung schlägt der Vergleich bei Umlauten fehl.
 
 ---
 
