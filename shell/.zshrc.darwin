@@ -1,0 +1,2 @@
+# Homebrew dotnet
+export PATH="/opt/homebrew/opt/dotnet@9/bin:$PATH"

@@ -1,0 +1,6 @@
+# Wayland / Hyprland
+export XDG_CURRENT_DESKTOP=Hyprland
+export MOZ_ENABLE_WAYLAND=1
+
+# libvirt — always use system connection
+export LIBVIRT_DEFAULT_URI="qemu:///system"
