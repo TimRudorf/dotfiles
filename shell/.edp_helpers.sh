@@ -6,6 +6,7 @@ EDP_VM_HOST="${EDP_VM_HOST:-eifert-dev}"
 EDP_VM_DIR_BASE='C:\EDP'
 EDP_PROJECT_ROOT="${EDP_PROJECT_ROOT:-$HOME/Develop/EDP}"
 EDP_VM_NAME="${EDP_VM_NAME:-EifertSystem_Development}"
+EDP_SERVICES=(edpwebservice EDPSrv)
 
 # Fixed VM-side tool paths
 EDP_RSVARS='C:\Program Files (x86)\Embarcadero\Studio\23.0\bin\rsvars.bat'
@@ -20,19 +21,25 @@ _edp_vm_cmd() {
   ssh "$host" "$*" | iconv -f CP850 -t UTF-8 2>/dev/null
 }
 
-# Read a value from a project's compile.config
-_edp_config() {
-  local project="$1" key="$2"
-  local file="$EDP_PROJECT_ROOT/$project/compile.config"
-  grep "^${key}=" "$file" 2>/dev/null | cut -d= -f2
+# Auto-detect .dproj file in project directory
+_edp_detect_dproj() {
+  local project="$1"
+  local dir="$EDP_PROJECT_ROOT/$project"
+  local files=("$dir"/*.dproj)
+  # Use ${files[@]:0:1} for bash/zsh compat (zsh is 1-indexed)
+  local first="${files[1]:-${files[0]}}"
+  if [[ ${#files[@]} -eq 1 && -f "$first" ]]; then
+    basename "$first"
+  else
+    echo "edp: .dproj nicht eindeutig in $dir (${#files[@]} gefunden)" >&2
+    return 1
+  fi
 }
 
-# Target directory on VM: C:\EDP\<TARGET_DIR or project>
+# Target directory on VM: C:\EDP\<project>
 _edp_target_dir() {
   local project="$1"
-  local target_dir
-  target_dir="$(_edp_config "$project" TARGET_DIR)"
-  printf 'C:\\EDP\\%s' "${target_dir:-$project}"
+  printf 'C:\\EDP\\%s' "$project"
 }
 
 # Push files via tar-over-SSH
@@ -76,24 +83,71 @@ _edp_svc_start() {
   ssh "$host" "net start $svc" 2>/dev/null | iconv -f CP850 -t UTF-8 2>/dev/null
 }
 
+# Stop all EDP services
+_edp_svc_stop_all() {
+  local host="$1"
+  local svc
+  for svc in "${EDP_SERVICES[@]}"; do
+    _edp_svc_stop "$host" "$svc"
+  done
+}
+
+# Start all EDP services
+_edp_svc_start_all() {
+  local host="$1"
+  local svc
+  for svc in "${EDP_SERVICES[@]}"; do
+    _edp_svc_start "$host" "$svc"
+  done
+}
+
 # --- Main function ---
 
 edp() {
-  local project="${1:-}"
+  local arg1="${1:-}"
+
+  if [[ -z "$arg1" ]]; then
+    echo "Usage: edp <project> <command> [options]"
+    echo "       edp start|stop|status <service> [host]"
+    echo ""
+    echo "Project commands:"
+    echo "  deploy [host] [--with-exe]    Push files to host"
+    echo "  compile [host] [-b] [-p:...] [-cfg:...]  Deploy + Build + fetch exe"
+    echo "  log [filter] [-l=LEVEL]       Stream live log"
+    echo "  compilelog                    Show compile log"
+    echo ""
+    echo "Service commands:"
+    echo "  start <service> [host]   Start a Windows service"
+    echo "  stop <service> [host]    Stop a Windows service"
+    echo "  status <service> [host]  Query service status"
+    return 1
+  fi
+
+  # Service mode: edp start|stop|status <service> [host]
+  case "$arg1" in
+    start|stop|status)
+      local svc_cmd="$arg1"
+      local svc="${2:-}"
+      if [[ -z "$svc" ]]; then
+        echo "edp $svc_cmd: service name required" >&2
+        return 1
+      fi
+      local host="${3:-$EDP_VM_HOST}"
+      case "$svc_cmd" in
+        start)  _edp_svc_start "$host" "$svc" ;;
+        stop)   _edp_svc_stop "$host" "$svc" ;;
+        status) _edp_vm_cmd "$host" "sc query $svc" ;;
+      esac
+      return
+      ;;
+  esac
+
+  # Project mode: edp <project> <command> [options]
+  local project="$arg1"
   local command="${2:-}"
 
-  if [[ -z "$project" || -z "$command" ]]; then
-    echo "Usage: edp <project> <command> [options]"
-    echo ""
-    echo "Commands:"
-    echo "  deploy [host]    Push files to host (default: \$EDP_VM_HOST)"
-    echo "  compile [host]   Build on host + fetch exe (default: \$EDP_VM_HOST)"
-    echo "    [-b] [-p:Win32|Win64] [-cfg:Debug|Release]"
-    echo "  start [host]     Start service"
-    echo "  stop [host]      Stop service"
-    echo "  status [host]    Query service status"
-    echo "  log [filter] [-l=LEVEL]  Stream live log"
-    echo "  compilelog       Show compile log"
+  if [[ -z "$command" ]]; then
+    echo "edp: command required (deploy, compile, log, compilelog)" >&2
     return 1
   fi
 
@@ -106,36 +160,6 @@ edp() {
     deploy)
       _edp_deploy "$project" "$@"
       ;;
-    start)
-      local svc host
-      svc="$(_edp_config "$project" SERVICE_NAME)"
-      if [[ -z "$svc" ]]; then
-        echo "edp: no SERVICE_NAME in compile.config for $project" >&2
-        return 1
-      fi
-      host="${1:-$EDP_VM_HOST}"
-      _edp_vm_cmd "$host" "net start $svc"
-      ;;
-    stop)
-      local svc host
-      svc="$(_edp_config "$project" SERVICE_NAME)"
-      if [[ -z "$svc" ]]; then
-        echo "edp: no SERVICE_NAME in compile.config for $project" >&2
-        return 1
-      fi
-      host="${1:-$EDP_VM_HOST}"
-      _edp_vm_cmd "$host" "net stop $svc"
-      ;;
-    status)
-      local svc host
-      svc="$(_edp_config "$project" SERVICE_NAME)"
-      if [[ -z "$svc" ]]; then
-        echo "edp: no SERVICE_NAME in compile.config for $project" >&2
-        return 1
-      fi
-      host="${1:-$EDP_VM_HOST}"
-      _edp_vm_cmd "$host" "sc query $svc"
-      ;;
     log)
       _edp_log "$project" "$@"
       ;;
@@ -147,7 +171,8 @@ edp() {
       ;;
     *)
       echo "edp: unknown command '$command'" >&2
-      echo "Commands: compile, deploy, start, stop, status, log, compilelog" >&2
+      echo "Commands: compile, deploy, log, compilelog" >&2
+      echo "Service commands: edp start|stop|status <service> [host]" >&2
       return 1
       ;;
   esac
@@ -158,34 +183,57 @@ edp() {
 _edp_deploy() {
   local project="$1"
   shift
-  local target_host="${1:-$EDP_VM_HOST}"
 
-  local target_dir svc
+  local target_host="$EDP_VM_HOST"
+  local with_exe=false
+  local args=()
+
+  while (($#)); do
+    case "$1" in
+      --with-exe) with_exe=true ;;
+      *)          args+=("$1") ;;
+    esac
+    shift
+  done
+
+  # First positional arg (if any) is the host
+  if [[ ${#args[@]} -gt 0 ]]; then
+    target_host="${args[0]}"
+  fi
+
+  local target_dir
   target_dir="$(_edp_target_dir "$project")"
-  svc="$(_edp_config "$project" SERVICE_NAME)"
 
   echo "=== Deploy $project → $target_host ==="
   printf '  Ziel: %s\n' "$target_dir"
-  [[ -n "$svc" ]] && echo "  Service: $svc"
+  if $with_exe; then
+    echo "  Modus: mit EXE (Services werden gestoppt/gestartet)"
+  else
+    echo "  Modus: ohne EXE (kein Service-Stop)"
+  fi
   echo ""
 
-  # Stop service if configured
-  if [[ -n "$svc" ]]; then
-    _edp_svc_stop "$target_host" "$svc"
+  # With --with-exe: stop all services first
+  if $with_exe; then
+    _edp_svc_stop_all "$target_host"
   fi
 
   # Push files
   echo "Übertrage Dateien..."
-  _edp_push "$EDP_PROJECT_ROOT/$project" "$target_host" "$target_dir"
+  if $with_exe; then
+    _edp_push "$EDP_PROJECT_ROOT/$project" "$target_host" "$target_dir"
+  else
+    _edp_push "$EDP_PROJECT_ROOT/$project" "$target_host" "$target_dir" --exclude='*.exe'
+  fi
   local rc=$?
   if [[ $rc -ne 0 ]]; then
     echo "FEHLER beim Übertragen! (exit code: $rc)" >&2
     return $rc
   fi
 
-  # Start service if configured
-  if [[ -n "$svc" ]]; then
-    _edp_svc_start "$target_host" "$svc"
+  # With --with-exe: start all services
+  if $with_exe; then
+    _edp_svc_start_all "$target_host"
   fi
 
   echo ""
@@ -197,36 +245,34 @@ _edp_deploy() {
 _edp_compile() {
   local project="$1"
   shift
-  local target_host="${1:-$EDP_VM_HOST}"
-  shift 2>/dev/null || true
 
-  local proj_name plat cfg svc target_dir
-  proj_name="$(_edp_config "$project" PROJECT_NAME)"
-  plat="$(_edp_config "$project" PLATFORM)"
-  cfg="$(_edp_config "$project" CONFIG)"
-  svc="$(_edp_config "$project" SERVICE_NAME)"
-  target_dir="$(_edp_target_dir "$project")"
-
-  # Parse optional CLI flags (after hostname)
+  local target_host="$EDP_VM_HOST"
+  local plat="Win64"
+  local cfg="Release"
   local target="Make"
+  local args=()
+
   while (($#)); do
     case "$1" in
       -b)     target="Build" ;;
       -p:*)   plat="${1#-p:}" ;;
       -cfg:*) cfg="${1#-cfg:}" ;;
-      *)      echo "edp compile: unknown option '$1'" >&2; return 1 ;;
+      *)      args+=("$1") ;;
     esac
     shift
   done
 
-  plat="${plat:-Win64}"
-  cfg="${cfg:-Release}"
-
-  if [[ -z "$proj_name" ]]; then
-    echo "edp: no PROJECT_NAME in compile.config for $project" >&2
-    return 1
+  # First positional arg (if any) is the host
+  if [[ ${#args[@]} -gt 0 ]]; then
+    target_host="${args[0]}"
   fi
 
+  # Auto-detect .dproj
+  local proj_name
+  proj_name="$(_edp_detect_dproj "$project")" || return 1
+
+  local target_dir
+  target_dir="$(_edp_target_dir "$project")"
   local exe_name="${proj_name%.dproj}.exe"
 
   echo "=== Kompiliere $project auf $target_host ==="
@@ -236,22 +282,30 @@ _edp_compile() {
   echo "  Config:    $cfg"
   echo ""
 
-  # Stop service before compile
-  if [[ -n "$svc" ]]; then
-    _edp_svc_stop "$target_host" "$svc"
+  # Step 1: Deploy files (without EXE, without service stop)
+  echo "Übertrage Dateien..."
+  _edp_push "$EDP_PROJECT_ROOT/$project" "$target_host" "$target_dir" --exclude='*.exe'
+  local rc=$?
+  if [[ $rc -ne 0 ]]; then
+    echo "FEHLER beim Übertragen! (exit code: $rc)" >&2
+    return $rc
   fi
 
-  # MSBuild via SSH
+  # Step 2: Stop all services
+  _edp_svc_stop_all "$target_host"
+
+  # Step 3: MSBuild via SSH
   echo "Kompiliere..."
   local compile_cmd="call \"${EDP_RSVARS}\" && cd /d ${target_dir} && \"${EDP_MSBUILD}\" ${proj_name} /t:${target} /p:config=${cfg} /p:platform=${plat}"
   ssh "$target_host" "$compile_cmd" > /tmp/edp_compile_$$.log 2>&1
-  local rc=$?
+  rc=$?
 
   if [[ $rc -ne 0 ]]; then
     echo ""
     echo "FEHLER beim Kompilieren! Output:" >&2
     cat /tmp/edp_compile_$$.log >&2
     rm -f /tmp/edp_compile_$$.log
+    _edp_svc_start_all "$target_host"
     return $rc
   fi
 
@@ -260,22 +314,21 @@ _edp_compile() {
     echo "FEHLER: Build nicht erfolgreich. Output:" >&2
     cat /tmp/edp_compile_$$.log >&2
     rm -f /tmp/edp_compile_$$.log
+    _edp_svc_start_all "$target_host"
     return 1
   fi
 
   echo "Kompilierung erfolgreich."
   rm -f /tmp/edp_compile_$$.log
 
-  # Fetch exe back to Linux
-  local remote_dir="C:/EDP/${target_dir##*\\}"
+  # Step 4: Fetch exe back to Linux
+  local remote_dir="C:/EDP/$project"
   echo "Hole ${exe_name} zurück..."
   scp "$target_host:${remote_dir}/${exe_name}" \
     "$EDP_PROJECT_ROOT/$project/${exe_name}"
 
-  # Start service after compile
-  if [[ -n "$svc" ]]; then
-    _edp_svc_start "$target_host" "$svc"
-  fi
+  # Step 5: Start all services
+  _edp_svc_start_all "$target_host"
 
   echo ""
   echo "=== Fertig ==="

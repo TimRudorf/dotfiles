@@ -142,22 +142,7 @@ Analyze the full conversation history and optional user context, then compose a 
 
 ### Schritt 6: Human in the Loop
 
-Present the draft via `AskUserQuestion`:
-
-```
-Antwort-Entwurf (Ticket #{nummer})
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Ticket:  #{nummer} — {titel}
-Kunde:   {customer}
-Kanal:   {E-Mail | Web-Portal}
-An:      {empfänger} (nur bei E-Mail)
-Status:  {aktuell} → {neu} (nur wenn Status-Änderung)
-
-Nachricht:
-──────
-{antworttext}
-──────
-```
+Den Entwurf via `AskUserQuestion` präsentieren. Folgende Infos anzeigen: Ticketnummer + Titel, Kunde, Kanal (E-Mail/Web), Empfänger (bei E-Mail), Status-Änderung (falls vorhanden), und den vollständigen Nachrichtentext. Darstellungsformat frei wählen.
 
 Options: **"Absenden"**, **"Ändern"**, **"Als Entwurf speichern"**, **"Abbrechen"**
 
