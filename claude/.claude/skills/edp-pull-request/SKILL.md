@@ -93,24 +93,7 @@ Die `Closes #<nummer>`-Zeile **nur** einfügen, wenn eine Ticket-Nummer aus dem 
 
 ### Schritt 5: Entwurf präsentieren
 
-Strukturierte Übersicht per `AskUserQuestion` zeigen:
-
-```
-PR-Entwurf (<Create|Edit> #<nummer>)
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Repo:      edp/<repo>
-Branch:    <branch> → dev
-Assignee:  tim-rudorf
-Reviewer:  patrick-vogel, copilot-pull-request-reviewer
-Project:   <project oder "–">
-
-Titel: <titel>
-
-Body:
-──────
-<vollständiger Body>
-──────
-```
+Übersicht per `AskUserQuestion` zeigen. Folgende Infos: Repo, Branch + Ziel-Branch, Assignee, Reviewer, Project, Titel und vollständiger Body. Darstellungsformat frei wählen.
 
 Optionen:
 - **Create-Modus**: "Erstellen", "Ändern", "Abbrechen"

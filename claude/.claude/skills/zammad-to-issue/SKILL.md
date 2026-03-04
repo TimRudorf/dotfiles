@@ -160,25 +160,7 @@ Bei "Abbruch" (via "Other"): Skill bricht sofort ab mit Meldung "Skill abgebroch
 
 ### Schritt 3: Entwurf präsentieren
 
-Vor dem Erstellen eine strukturierte Übersicht mit `AskUserQuestion` anzeigen:
-
-```
-Issue-Entwurf
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Repo:     edp/<repo>
-Type:     <type>
-Assignee: <assignee>
-Labels:   <label1>, <label2>, ...
-Project:  <project>
-Herkunft: intern (<mitarbeiter>) / extern (<organisation>)
-
-Titel: <titel>
-
-Body:
-──────
-<vollständiger Body>
-──────
-```
+Vor dem Erstellen eine Übersicht mit `AskUserQuestion` anzeigen. Folgende Infos: Repo, Type, Assignee, Labels, Project, Herkunft (intern/extern), Titel und vollständiger Body. Darstellungsformat frei wählen.
 
 Optionen: "Erstellen", "Ändern", "Abbrechen".
 

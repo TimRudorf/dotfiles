@@ -74,26 +74,7 @@ Optional: Neue Abschnitte oder Regeln vorschlagen, falls ein ganzer Aspekt fehlt
 - Lesende Befehle (API-Abfragen, `--help`, `--version`) direkt ausführen
 - Schreibende Befehle nur mit `echo` oder `--dry-run` testen
 
-**Vorschlag präsentieren** per `AskUserQuestion`:
-
-```
-Skill-Optimierung: {skill-name}
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-{Für jede Änderung:}
-
-### {Abschnitt}
-**Problem**: {Was im Lauf schiefging}
-**Änderung**: {Kurzbeschreibung}
-
-Vorher:
-> {relevanter Ausschnitt}
-
-Nachher:
-> {neuer Text}
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-```
+**Vorschlag präsentieren** per `AskUserQuestion`. Pro Änderung: betroffener Abschnitt, Problem aus dem Lauf, Vorher/Nachher-Vergleich. Darstellungsformat frei wählen.
 
 Optionen: **"Anwenden"**, **"Anpassen"**, **"Überspringen"**
 
