@@ -60,24 +60,9 @@ The `_id` fields are still present alongside the resolved string fields.
 
 Note: The articles endpoint already returns `type` and `sender` as strings without `expand`.
 
-## Output Format
+## Output
 
-Present the ticket as a markdown table followed by articles:
-
-**Ticket #`number` — `title`**
-
-| Feld | Wert |
-|---|---|
-| **Status** | `state` |
-| **Prioritaet** | `priority` |
-| **Zugewiesen an** | `owner` |
-| **Gruppe** | `group` |
-| **Organisation** | `organization` |
-| **Kunde** | `customer` |
-| **Erstellt** | `created_at` (date only) |
-| **Aktualisiert** | `updated_at` (date only) |
-
-Then list each article with: sender (`from`), date, type/sender-role, internal flag, and body content (HTML stripped).
+Stelle das Ticket übersichtlich dar — Ticketnummer, Titel, Status, Priorität, Zuständiger, Gruppe, Organisation, Kunde, Erstell-/Aktualisierungsdatum. Danach die Artikel chronologisch: Absender, Datum, Typ, intern/öffentlich, Inhalt. Wähle das Darstellungsformat frei (Tabelle, Liste, etc.) — Hauptsache klar und gut lesbar.
 
 ## Notes
 

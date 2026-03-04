@@ -57,20 +57,7 @@ Falls kein Copilot-Review vorhanden → User informieren und abbrechen.
 
 ## Schritt 3: Review-Kommentare aufbereiten
 
-Alle Review-Threads aus dem Copilot-Review strukturiert anzeigen:
-
-```
-Copilot Review für PR #<nr>: <titel>
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-1. [<datei>:<zeile>] <zusammenfassung des Kommentars>
-   → <kurzes Zitat oder Kernaussage>
-
-2. [<datei>:<zeile>] <zusammenfassung des Kommentars>
-   → <kurzes Zitat oder Kernaussage>
-
-...
-```
+Alle Review-Threads aus dem Copilot-Review übersichtlich anzeigen. Pro Kommentar: Datei + Zeile, Zusammenfassung, Kernaussage. Darstellungsformat frei wählen.
 
 ## Schritt 4: User-Entscheidung einholen
 
@@ -90,21 +77,7 @@ Für jeden akzeptierten Vorschlag:
 2. Den Copilot-Vorschlag analysieren
 3. Konkrete Änderungen planen
 
-Den Plan dem User als Übersicht präsentieren:
-
-```
-Umsetzungsplan
-━━━━━━━━━━━━━━
-
-✓ Vorschlag #1: <beschreibung>
-  → <geplante Änderung>
-
-✓ Vorschlag #3: <beschreibung>
-  → <geplante Änderung>
-
-✗ Vorschlag #2: <beschreibung>
-  → Wird nicht umgesetzt (vom User abgelehnt)
-```
+Den Plan dem User als Übersicht präsentieren — pro Vorschlag: Nummer, Beschreibung, geplante Änderung, und ob umgesetzt oder abgelehnt. Darstellungsformat frei wählen.
 
 Per `AskUserQuestion` bestätigen lassen: **"Umsetzen"**, **"Anpassen"**, **"Abbrechen"**
 
@@ -158,20 +131,7 @@ Falls ein Thread-Resolve fehlschlägt → Fehler loggen aber fortfahren.
 
 ## Schritt 8: Zusammenfassung
 
-Dem User eine Zusammenfassung anzeigen:
-
-```
-Copilot Review verarbeitet ✓
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-Umgesetzt:     <n> Vorschläge
-Nicht umgesetzt: <m> Vorschläge
-Threads resolved: <x>/<total>
-
-Geänderte Dateien:
-- <datei1>
-- <datei2>
-```
+Dem User eine Zusammenfassung anzeigen: Anzahl umgesetzter/abgelehnter Vorschläge, resolved Threads, und geänderte Dateien. Darstellungsformat frei wählen.
 
 ## Regeln
 

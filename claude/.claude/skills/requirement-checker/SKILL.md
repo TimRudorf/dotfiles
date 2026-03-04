@@ -25,25 +25,9 @@ Prüfe ob mindestens ein Match für den Glob-Pfad existiert (z.B. `~/Develop/EDP
 ## Ergebnis
 
 ### Alle erfüllt
-Kurze Bestätigung, dann direkt mit dem Skill fortfahren:
-```
-✅ Alle Voraussetzungen erfüllt.
-```
+Kurze Bestätigung, dann direkt mit dem Skill fortfahren.
 
 ### Fehlschlag
-Auflisten was fehlt mit konkreter Angabe (erwartet vs. gefunden) und Hinweis wie es behoben werden kann.
+Auflisten was fehlt mit konkreter Angabe (erwartet vs. gefunden) und Hinweis wie es behoben werden kann. Darstellungsformat frei wählen — Hauptsache klar erkennbar was fehlt und was erfüllt ist.
 
 **WICHTIG: Bei Fehlschlag wird der aufrufende Skill SOFORT und VOLLSTÄNDIG abgebrochen. Keine Teilausführung, keine Workarounds, keine weiteren Schritte. Nur die Fehlermeldung ausgeben und stoppen.**
-
-Beispiel-Ausgabe bei Fehlschlag:
-```
-❌ Voraussetzungen nicht erfüllt:
-- Env: `ZAMMAD_TOKEN` nicht gesetzt → In `.env` oder Shell-Profil setzen
-- Tools: `jq` nicht gefunden → `sudo pacman -S jq`
-
-✅ Erfüllt:
-- Env: `ZAMMAD_HOST`
-- Tools: `curl`
-
-⛔ Skill-Ausführung abgebrochen. Fehlende Voraussetzungen zuerst beheben.
-```
