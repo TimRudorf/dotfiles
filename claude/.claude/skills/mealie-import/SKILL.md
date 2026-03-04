@@ -80,19 +80,7 @@ Jede Zutat in ihre Bestandteile zerlegen:
 4. Adjektive/Qualifier (gefroren, frisch, gehackt) und Klammerzusätze → `note`
 5. Wenn keine klare Trennung möglich → alles in `note`, `food` leer lassen
 
-**Ergebnis dem User als Zusammenfassung zeigen** und per `AskUserQuestion` bestätigen lassen:
-
-> Rezept erkannt:
-> Name: ...
-> Beschreibung: ...
-> Zutaten: X Einträge
-> Schritte: X Einträge
-> Utensilien: [Topf, Schneidebrett, ...]
-> Notizen: X Einträge
-> Tags: [...]
-> Kategorie: [...]
-> Zeiten: Vorbereitung X, Kochen Y, Gesamt Z
-> Bild: wird automatisch gesetzt (KI-generiert / Stockfoto)
+**Ergebnis dem User als Zusammenfassung zeigen** und per `AskUserQuestion` bestätigen lassen. Folgende Infos: Name, Beschreibung, Anzahl Zutaten/Schritte/Notizen, Utensilien, Tags, Kategorien, Zeiten, Bild-Strategie. Darstellungsformat frei wählen.
 
 Optionen: **"Importieren"**, **"Ändern"**, **"Abbrechen"**
 
@@ -457,20 +445,7 @@ rm -f /tmp/mealie_recipe_update.json /tmp/mealie_tags_update.json /tmp/mealie_to
 
 ## Schritt 9: Ergebnis anzeigen
 
-Zusammenfassung ausgeben:
-
-```
-✅ Rezept importiert!
-Name: ...
-URL: https://mealie.timrudorf.de/g/home/r/{slug}
-Portionen: X (skalierbar)
-Bild: ✅ KI-generiert / ✅ Stockfoto / ⚠ kein API-Key / ❌ übersprungen
-Tags: [...]
-Kategorie: [...]
-Utensilien: [...]
-Zutaten: X (davon Y mit Unit, Z mit Food) | Schritte: A | Notizen: B
-Quelldatei: gelöscht / (kein Datei-Input)
-```
+Zusammenfassung ausgeben: Name, URL, Portionen, Bild-Status, Tags, Kategorien, Utensilien, Zutaten-/Schritte-/Notizen-Anzahl, Quelldatei-Status. Darstellungsformat frei wählen.
 
 ---
 
