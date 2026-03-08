@@ -113,7 +113,7 @@ Skills benennen keine Subagents (kein "delegiere an Explore-Agent"). Der Main-Ag
 | Default | Ja | Ja | Allgemeine Skills |
 | `user-invocable: false` | Nein | Ja | Hintergrundwissen |
 
-**Hinweis**: `disable-model-invocation: true` versteckt den Skill komplett aus der Skill-Liste — auch für User-Invocation via `/`. Für Side-Effect-Skills stattdessen Bestätigungsdialoge (`AskUserQuestion`) im Skill selbst einbauen.
+**Hinweis**: `disable-model-invocation: true` versteckt den Skill komplett aus der Skill-Liste — auch für User-Invocation via `/`. Für Side-Effect-Skills stattdessen Bestätigungsdialoge im Skill einbauen (Kommunikationsweg-Pattern gemäß `.shared/communication.md`).
 
 ---
 
@@ -142,6 +142,7 @@ Gemeinsame Patterns sind in `~/.claude/skills/.shared/` ausgelagert:
 | Datei | Inhalt |
 |-------|--------|
 | `skill-best-practices.md` | Diese Datei — Struktur, Konventionen, Checkliste |
+| `communication.md` | Kommunikationsweg-Pattern (`CLAUDE_COMM_CHANNEL`) — Abstrahiert User-Interaktion für verschiedene Umgebungen (Desktop vs. Telegram) |
 
 ### Voraussetzungen-Validierung
 
@@ -206,7 +207,7 @@ Abschließend `skill-optimize` mit `example-skill` aufrufen.
 - [ ] SKILL.md < 500 Zeilen
 - [ ] Details in separate Dateien ausgelagert
 - [ ] Referenzen max. eine Ebene tief
-- [ ] Side-Effect-Skills haben Bestätigungsdialoge (`AskUserQuestion`)
+- [ ] Side-Effect-Skills haben Bestätigungsdialoge (via Kommunikationsweg-Pattern, siehe `.shared/communication.md`)
 - [ ] `allowed-tools` eingeschränkt wo sinnvoll
 - [ ] Konsistente Terminologie
 - [ ] Keine redundanten Erklärungen

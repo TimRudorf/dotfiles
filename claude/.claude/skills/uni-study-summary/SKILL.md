@@ -4,7 +4,7 @@ description: This skill should be used when the user asks to create a learning s
   Lernzusammenfassung, or Zusammenfassung for a Uebungsblatt or exercise sheet.
   It reads the exercise PDF, solution PDF, and lecture notes, then writes a structured
   LaTeX PDF (or Markdown) summary with theory, step-by-step recipes, and exam tips.
-allowed-tools: Bash, Read, Write, Edit, Glob, Grep, AskUserQuestion, Task, mcp__context7__resolve-library-id, mcp__context7__query-docs
+allowed-tools: Bash, Read, Write, Edit, Glob, Grep, AskUserQuestion, Agent, mcp__context7__resolve-library-id, mcp__context7__query-docs
 argument-hint: "[Übungsnummer, z.B. 03]"
 disable-model-invocation: true
 ---
@@ -132,14 +132,15 @@ Speichere die Zusammenfassung als `sum/Zusammenfassung{Nr}.md`.
 
 > **Wichtig:** Verwende **nicht** `tcolorbox` — Tagging-Inkompatibilität mit dem LaTeX 2024+ Kernel erzeugt Debug-Output auf Seite 1.
 
-2. Kompiliere mit `pdflatex` unter Verwendung des **absoluten Pfads** (da `/Library/TeX/texbin/` nicht im PATH ist):
+2. Kompiliere mit `pdflatex`:
    ```bash
-   /Library/TeX/texbin/pdflatex -interaction=nonstopmode -output-directory="<sum-Verzeichnis>" "<tex-Datei>"
+   pdflatex -interaction=nonstopmode -output-directory="<sum-Verzeichnis>" "<tex-Datei>"
    ```
+   Falls `pdflatex` nicht im PATH: absoluten Pfad ermitteln (`which pdflatex` oder plattformspezifisch, z.B. `/Library/TeX/texbin/pdflatex` auf macOS).
    Zweimal ausführen für korrekte Referenzen.
 3. Räume Hilfsdateien auf (`.aux`, `.log`, `.out`, `.toc`), behalte aber die `.tex`-Datei.
 4. Falls die Kompilierung fehlschlägt, analysiere die `.log`-Datei:
-   - **Fehlendes Paket** (`File '...' not found`): **Immer den User bitten** das Paket zu installieren (`/Library/TeX/texbin/tlmgr install <paketname>`). Niemals das Paket eigenmächtig entfernen oder die .tex-Datei umschreiben um das Paket zu umgehen.
+   - **Fehlendes Paket** (`File '...' not found`): **Immer den User bitten** das Paket zu installieren (`tlmgr install <paketname>`). Niemals das Paket eigenmächtig entfernen oder die .tex-Datei umschreiben um das Paket zu umgehen.
    - **Syntaxfehler**: In der `.tex`-Datei beheben und erneut kompilieren
 
 ## Schritt 6: Qualitätsprüfung
