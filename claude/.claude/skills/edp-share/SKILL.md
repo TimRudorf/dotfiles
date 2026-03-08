@@ -37,7 +37,7 @@ curl -s -H "Authorization: Token token=${ZAMMAD_TOKEN}" \
   && jq '[.[] | {id, name, note}]' /tmp/z_org_search.json
 ```
 
-Bei Unsicherheit (mehrere Treffer, kein Treffer) → User per `AskUserQuestion` fragen.
+Bei Unsicherheit (mehrere Treffer, kein Treffer) → User fragen (Kommunikationsweg gemäß `CLAUDE_COMM_CHANNEL`, siehe `.shared/communication.md`).
 
 ### Schritt 3: Nextcloud-Ordner prüfen
 
@@ -58,7 +58,7 @@ curl -s -u "$NC_USER:$NC_PASSWORD" \
 - Ordnernamen sind lowercase mit Bindestrichen und Prefixes (`fw-`, `drk-`, `lk-`, etc.)
 - Vergleich: Organisation enthält Teile des Ordnernamens oder umgekehrt
 
-**Match gefunden** → User per `AskUserQuestion` bestätigen lassen (Sicherheit!):
+**Match gefunden** → User bestätigen lassen (Kommunikationsweg gemäß `CLAUDE_COMM_CHANNEL`, Sicherheit!):
 > Kunde "{organisation}" → Nextcloud-Ordner `{ordnername}` verwenden?
 
 **Kein Match** → Weiter zu Schritt 4 (neuen Ordner erstellen).

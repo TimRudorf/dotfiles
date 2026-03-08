@@ -44,7 +44,7 @@ Prüfe den Compile-Output auf Erfolg. Bei Fehler abbrechen und User informieren.
 Browser öffnen und Login durchführen:
 
 ```bash
-PLAYWRIGHT_MCP_IGNORE_HTTPS_ERRORS=1 playwright-cli open --browser=chromium https://192.168.122.46/
+PLAYWRIGHT_MCP_IGNORE_HTTPS_ERRORS=1 playwright-cli open --browser=chromium https://${EDP_VM_HOST:-192.168.122.46}/
 ```
 
 **Wichtig**: Alle nachfolgenden `playwright-cli`-Befehle ebenfalls mit `PLAYWRIGHT_MCP_IGNORE_HTTPS_ERRORS=1` prefixen.

@@ -201,11 +201,12 @@ with urllib.request.urlopen(req) as resp:
 ## Behavior
 
 - **Default to internal** (`"internal": true`) unless the user explicitly asks for a customer-visible / public comment.
-- Before posting, **confirm with the user** using `AskUserQuestion`:
+- Before posting, **confirm with the user**:
   - Show the ticket number + title
   - Show the comment text
   - Show whether it will be internal or public
   - Options: "Absenden", "Ändern", "Abbrechen"
+  - Kommunikationsweg gemäß `CLAUDE_COMM_CHANNEL` wählen (siehe `.shared/communication.md`)
 - After successful creation, display: Article-ID, Ticket-Nummer, intern/öffentlich, and the body.
 - If the request fails, show the HTTP status and error body.
 
