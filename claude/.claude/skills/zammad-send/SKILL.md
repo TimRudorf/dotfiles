@@ -142,7 +142,9 @@ Analyze the full conversation history and optional user context, then compose a 
 
 ### Schritt 6: Human in the Loop
 
-Den Entwurf via `AskUserQuestion` präsentieren. Folgende Infos anzeigen: Ticketnummer + Titel, Kunde, Kanal (E-Mail/Web), Empfänger (bei E-Mail), Status-Änderung (falls vorhanden), und den vollständigen Nachrichtentext. Darstellungsformat frei wählen.
+Den Entwurf präsentieren. Folgende Infos anzeigen: Ticketnummer + Titel, Kunde, Kanal (E-Mail/Web), Empfänger (bei E-Mail), Status-Änderung (falls vorhanden), und den vollständigen Nachrichtentext. Darstellungsformat frei wählen.
+
+Kommunikationsweg gemäß `CLAUDE_COMM_CHANNEL` wählen (siehe `.shared/communication.md`).
 
 Options: **"Absenden"**, **"Ändern"**, **"Als Entwurf speichern"**, **"Abbrechen"**
 
@@ -303,13 +305,15 @@ Typische Zeiträume: 1 Woche (`+7 Tage`), 2 Wochen (`+14 Tage`), 1 Monat (`+30 T
 
 **Falls kein Status vom User übergeben wurde UND das Ticket noch nicht auf `pending close` oder `closed` steht**, den User fragen, ob das Ticket auf "Warten auf Schließen" gestellt werden soll.
 
-Per `AskUserQuestion`:
+Den User fragen:
 
 ```
 Soll das Ticket auf "Warten auf Schließen" (1 Woche) gestellt werden?
 ```
 
 Options: **"Ja, 1 Woche"**, **"Nein, Status beibehalten"**
+
+Kommunikationsweg gemäß `CLAUDE_COMM_CHANNEL` wählen (siehe `.shared/communication.md`).
 
 - If "Ja, 1 Woche": Status auf `pending close` setzen mit `pending_time` = heute + 7 Tage (siehe Schritt 9).
 - If "Nein": Status nicht ändern.

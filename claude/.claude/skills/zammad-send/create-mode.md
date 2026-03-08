@@ -7,7 +7,6 @@ Erstellt ein neues Zammad-Ticket und sendet die erste E-Mail an den Kunden.
 Organisation und zugehörige User suchen:
 
 ```bash
-source ~/Develop/EDP/.env
 BASE="${ZAMMAD_HOST%/}"
 
 curl -s -H "Authorization: Token token=${ZAMMAD_TOKEN}" \
@@ -18,7 +17,6 @@ curl -s -H "Authorization: Token token=${ZAMMAD_TOKEN}" \
 Dann User der Organisation suchen (für E-Mail-Adresse):
 
 ```bash
-source ~/Develop/EDP/.env
 BASE="${ZAMMAD_HOST%/}"
 
 curl -s -H "Authorization: Token token=${ZAMMAD_TOKEN}" \
@@ -27,7 +25,7 @@ curl -s -H "Authorization: Token token=${ZAMMAD_TOKEN}" \
 ```
 
 - Gefunden → Kunden-ID + E-Mail verwenden
-- Mehrere Treffer → User per `AskUserQuestion` auswählen lassen
+- Mehrere Treffer → User auswählen lassen (Kommunikationsweg gemäß `CLAUDE_COMM_CHANNEL`)
 - Nicht gefunden → User informieren + Abbruch
 
 ## Schritt C2: Titel ableiten
@@ -39,7 +37,6 @@ Aus dem Kontext einen kurzen, aussagekräftigen Ticket-Titel ableiten (z.B. "Ber
 Verfügbare Gruppen laden:
 
 ```bash
-source ~/Develop/EDP/.env
 BASE="${ZAMMAD_HOST%/}"
 
 curl -s -H "Authorization: Token token=${ZAMMAD_TOKEN}" \
@@ -47,14 +44,13 @@ curl -s -H "Authorization: Token token=${ZAMMAD_TOKEN}" \
   && jq '[.[] | select(.active == true) | {id, name}]' /tmp/z_groups.json
 ```
 
-User per `AskUserQuestion` befragen. Default: "Entwicklung".
+User befragen (Kommunikationsweg gemäß `CLAUDE_COMM_CHANNEL`). Default: "Entwicklung".
 
 ## Schritt C4: Besitzer ermitteln
 
 Aktuellen User laden:
 
 ```bash
-source ~/Develop/EDP/.env
 BASE="${ZAMMAD_HOST%/}"
 
 curl -s -H "Authorization: Token token=${ZAMMAD_TOKEN}" \
@@ -66,14 +62,13 @@ Immer den aktuellen User als Owner setzen, außer im Kontext anders angegeben.
 
 ## Schritt C5: Status + Priorität
 
-User per `AskUserQuestion` nach Status fragen. Default: `open`. Priorität: immer `2 normal` (priority_id: 2).
+User nach Status fragen (Kommunikationsweg gemäß `CLAUDE_COMM_CHANNEL`). Default: `open`. Priorität: immer `2 normal` (priority_id: 2).
 
 ## Schritt C6: Signatur laden
 
 Signatur der gewählten Gruppe laden (wie Reply-Modus Schritt 3):
 
 ```bash
-source ~/Develop/EDP/.env
 BASE="${ZAMMAD_HOST%/}"
 GROUP_ID={group_id}
 
@@ -100,7 +95,7 @@ Nachricht nach den gleichen Regeln wie Reply-Modus Schritt 5 verfassen:
 
 ## Schritt C8: Human in the Loop
 
-Entwurf per `AskUserQuestion` vorlegen:
+Entwurf dem User vorlegen (Kommunikationsweg gemäß `CLAUDE_COMM_CHANNEL`):
 
 ```
 Neues Ticket — Entwurf
@@ -124,7 +119,6 @@ Options: **"Erstellen & Senden"**, **"Ändern"**, **"Abbrechen"**
 **WICHTIG — Body-Übergabe**: Gleiche Regeln wie Reply-Modus — Body per `--rawfile`, Payload per Temp-Datei.
 
 ```bash
-source ~/Develop/EDP/.env
 BASE="${ZAMMAD_HOST%/}"
 
 cat > /tmp/z_body.html << 'BODY_EOF'

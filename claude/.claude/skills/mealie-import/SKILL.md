@@ -21,7 +21,7 @@ Voraussetzungen gemäß `requirement-checker` Skill validieren. Bei Fehlschlag a
 
 - `$ARGUMENTS` endet auf `.md` und Datei existiert → Datei mit `Read` lesen, Pfad merken für Löschung in Schritt 8
 - `$ARGUMENTS` ist kein gültiger Dateipfad → als Inline-Markdown behandeln
-- `$ARGUMENTS` leer → per `AskUserQuestion` nach Rezept-Pfad oder -Text fragen
+- `$ARGUMENTS` leer → nach Rezept-Pfad oder -Text fragen (Kommunikationsweg gemäß `CLAUDE_COMM_CHANNEL`, siehe `.shared/communication.md`)
 
 ## Schritt 2: Markdown parsen
 
@@ -80,9 +80,11 @@ Jede Zutat in ihre Bestandteile zerlegen:
 4. Adjektive/Qualifier (gefroren, frisch, gehackt) und Klammerzusätze → `note`
 5. Wenn keine klare Trennung möglich → alles in `note`, `food` leer lassen
 
-**Ergebnis dem User als Zusammenfassung zeigen** und per `AskUserQuestion` bestätigen lassen. Folgende Infos: Name, Beschreibung, Anzahl Zutaten/Schritte/Notizen, Utensilien, Tags, Kategorien, Zeiten, Bild-Strategie. Darstellungsformat frei wählen.
+**Ergebnis dem User als Zusammenfassung zeigen** und bestätigen lassen. Folgende Infos: Name, Beschreibung, Anzahl Zutaten/Schritte/Notizen, Utensilien, Tags, Kategorien, Zeiten, Bild-Strategie. Darstellungsformat frei wählen.
 
 Optionen: **"Importieren"**, **"Ändern"**, **"Abbrechen"**
+
+Kommunikationsweg gemäß `CLAUDE_COMM_CHANNEL` wählen (siehe `.shared/communication.md`).
 
 - **Importieren** → weiter zu Schritt 3
 - **Ändern** → User nach gewünschten Änderungen fragen, erneut bestätigen

@@ -60,7 +60,7 @@ Einen **Subagent** (`git-expert`) starten, der alle benötigten Informationen be
 
 ### Schritt 3: Project-Auswahl
 
-Falls Projects verfügbar, per `AskUserQuestion` anbieten. Optionen: die gefundenen Projects + "Kein Project". Falls Project-Abfrage fehlgeschlagen, diesen Schritt überspringen.
+Falls Projects verfügbar, dem User anbieten (Kommunikationsweg gemäß `CLAUDE_COMM_CHANNEL`, siehe `.shared/communication.md`). Optionen: die gefundenen Projects + "Kein Project". Falls Project-Abfrage fehlgeschlagen, diesen Schritt überspringen.
 
 ### Schritt 4: PR-Entwurf generieren
 
@@ -93,7 +93,7 @@ Die `Closes #<nummer>`-Zeile **nur** einfügen, wenn eine Ticket-Nummer aus dem 
 
 ### Schritt 5: Entwurf präsentieren
 
-Übersicht per `AskUserQuestion` zeigen. Folgende Infos: Repo, Branch + Ziel-Branch, Assignee, Reviewer, Project, Titel und vollständiger Body. Darstellungsformat frei wählen.
+Übersicht dem User zeigen (Kommunikationsweg gemäß `CLAUDE_COMM_CHANNEL`, siehe `.shared/communication.md`). Folgende Infos: Repo, Branch + Ziel-Branch, Assignee, Reviewer, Project, Titel und vollständiger Body. Darstellungsformat frei wählen.
 
 Optionen:
 - **Create-Modus**: "Erstellen", "Ändern", "Abbrechen"
@@ -184,7 +184,7 @@ Gemäß `~/.claude/skills/zammad-write/SKILL.md` einen internen Kommentar in das
 - **Body**: `Bugfix wurde umgesetzt und steht in einem Pull Request bereit: <pr-url> (GitHub Issue #<nummer>)`
 - **Intern**: `true`
 
-Die Bestätigung per `AskUserQuestion` aus dem /zammad-write Skill **überspringen** — der User hat den PR bereits in Schritt 5 bestätigt. Stattdessen den Kommentar direkt absenden und das Ergebnis dem User anzeigen (Zammad-Ticketnummer + Hinweis dass kommentiert wurde).
+Die Bestätigung aus dem /zammad-write Skill **überspringen** — der User hat den PR bereits in Schritt 5 bestätigt. Stattdessen den Kommentar direkt absenden und das Ergebnis dem User anzeigen (Zammad-Ticketnummer + Hinweis dass kommentiert wurde).
 
 **Fehlertoleranz**: Falls das Zammad-Ticket nicht gefunden wird oder die API fehlschlägt, den Fehler dem User anzeigen aber den Skill nicht abbrechen — der PR wurde bereits erfolgreich erstellt.
 

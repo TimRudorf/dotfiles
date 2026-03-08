@@ -23,7 +23,7 @@ Falls kein Argument: Aktuelle Branch und offene PRs prüfen:
 gh pr list --author @me --state open --limit 5
 ```
 
-Falls genau ein PR → diesen verwenden. Falls mehrere → per `AskUserQuestion` auswählen lassen. Falls keiner → User informieren und abbrechen.
+Falls genau ein PR → diesen verwenden. Falls mehrere → User auswählen lassen (Kommunikationsweg gemäß `CLAUDE_COMM_CHANNEL`, siehe `.shared/communication.md`). Falls keiner → User informieren und abbrechen.
 
 ## Schritt 2: Copilot-Review laden (Subagent-Delegation)
 
@@ -61,7 +61,7 @@ Alle Review-Threads aus dem Copilot-Review übersichtlich anzeigen. Pro Kommenta
 
 ## Schritt 4: User-Entscheidung einholen
 
-Per `AskUserQuestion` (multiSelect) fragen:
+Den User fragen (multiSelect, Kommunikationsweg gemäß `CLAUDE_COMM_CHANNEL`, siehe `.shared/communication.md`):
 
 > Welche Copilot-Vorschläge sollen umgesetzt werden?
 
@@ -79,7 +79,7 @@ Für jeden akzeptierten Vorschlag:
 
 Den Plan dem User als Übersicht präsentieren — pro Vorschlag: Nummer, Beschreibung, geplante Änderung, und ob umgesetzt oder abgelehnt. Darstellungsformat frei wählen.
 
-Per `AskUserQuestion` bestätigen lassen: **"Umsetzen"**, **"Anpassen"**, **"Abbrechen"**
+Bestätigen lassen (Kommunikationsweg gemäß `CLAUDE_COMM_CHANNEL`): **"Umsetzen"**, **"Anpassen"**, **"Abbrechen"**
 
 - **Umsetzen** → weiter zu Schritt 6
 - **Anpassen** → User nach Änderungen fragen, Plan überarbeiten

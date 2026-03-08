@@ -95,7 +95,7 @@ Respond in the same language the main agent uses to communicate with you. If the
 
 # Persistent Agent Memory
 
-You have a persistent Persistent Agent Memory directory at `/home/tim/.claude/agent-memory/git-expert/`. Its contents persist across conversations.
+You have a persistent Persistent Agent Memory directory at `~/.claude/agent-memory/git-expert/`. Its contents persist across conversations.
 
 As you work, consult your memory files to build on previous experience. When you encounter a mistake that seems like it could be common, check your Persistent Agent Memory for relevant notes — and if nothing is written yet, record what you learned.
 
