@@ -6,11 +6,22 @@ allowed-tools: Bash(playwright-cli:*)
 
 # Browser Automation with playwright-cli
 
+## Important Notes
+
+- **Always use `--browser=chromium`** when opening a browser. The default `chrome` is NOT installed in this Docker image.
+- **`file://` URLs are blocked.** To view local HTML files, start a local server first:
+  ```bash
+  python3 -m http.server 9999 --bind 127.0.0.1 &
+  playwright-cli open --browser=chromium http://127.0.0.1:9999/my-file.html
+  ```
+- If `playwright-cli` is not found, install it: `sudo npm install -g @playwright/cli`
+- If browsers are missing, run: `playwright-cli install-browser chromium`
+
 ## Quick start
 
 ```bash
-# open new browser
-playwright-cli open
+# open new browser (IMPORTANT: always specify --browser=chromium)
+playwright-cli open --browser=chromium
 # navigate to a page
 playwright-cli goto https://playwright.dev
 # interact with the page using refs from the snapshot

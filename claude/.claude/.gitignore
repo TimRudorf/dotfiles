@@ -5,3 +5,6 @@
 !skills/
 !skills/*/
 !skills/**
+!agents/
+!agents/*/
+!agents/**

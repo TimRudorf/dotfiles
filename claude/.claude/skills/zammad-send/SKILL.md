@@ -103,6 +103,18 @@ curl -s -H "$AUTH" "$BASE/api/v1/groups/$GROUP_ID" > /tmp/z_group.json \
 
 If the signature cannot be loaded (missing permissions, no signature configured): proceed without signature.
 
+Die Signatur enthält ggf. Template-Variablen (`#{user.X}`). Diese mit echten Werten aus `GET /api/v1/users/me` ersetzen:
+
+```bash
+curl -s -H "Authorization: Token token=$ZAMMAD_TOKEN" "$ZAMMAD_HOST/api/v1/users/me" > /tmp/z_me.json
+```
+
+Platzhalter ersetzen:
+- `#{user.firstname}` → `firstname`
+- `#{user.lastname}` → `lastname`
+- `#{user.email}` → `email`
+- `#{user.funktion}` → `funktion`
+
 ### Schritt 4: Status auflösen (falls übergeben)
 
 If the user provided a desired new status, load available states and match:
@@ -278,7 +290,7 @@ curl -s -X PUT \
   -H "Content-Type: application/json" \
   --data @/tmp/z_state_payload.json \
   "$BASE/api/v1/tickets/$TICKET_ID" > /tmp/z_ticket_update.json \
-  && jq '{id, number, state}' /tmp/z_ticket_update.json
+  && jq '{id, number, state_id, pending_time}' /tmp/z_ticket_update.json
 ```
 
 **Pending-Status** (`pending close` oder `pending reminder`) — diese erfordern zusätzlich ein `pending_time` (ISO 8601 Zeitstempel), ab dem die Aktion ausgelöst wird:
