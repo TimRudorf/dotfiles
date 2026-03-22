@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<title>Daily News Digest</title>
+<style>
+  @page { size: A4; margin: 20mm 15mm 20mm 15mm; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Georgia', 'Times New Roman', serif;
+    font-size: 11pt;
+    line-height: 1.55;
+    color: #1a1a1a;
+    max-width: 100%;
+  }
+  h1 {
+    font-size: 24pt;
+    font-weight: 700;
+    border-bottom: 3px solid #222;
+    padding-bottom: 8px;
+    margin-bottom: 4px;
+  }
+  .date {
+    font-size: 10pt;
+    color: #666;
+    margin-bottom: 20px;
+    font-style: italic;
+  }
+  h2 {
+    font-size: 15pt;
+    font-weight: 700;
+    color: #222;
+    margin-top: 22px;
+    margin-bottom: 8px;
+    page-break-after: avoid;
+  }
+  h2.lagebild {
+    font-size: 13pt;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: #444;
+    border-bottom: 1px solid #ccc;
+    padding-bottom: 4px;
+  }
+  p { margin-bottom: 8px; }
+  strong { font-weight: 700; }
+  ul {
+    margin: 6px 0 10px 20px;
+    padding: 0;
+  }
+  li {
+    margin-bottom: 4px;
+    line-height: 1.45;
+  }
+  .quellen {
+    font-size: 9pt;
+    color: #888;
+    margin-top: 6px;
+  }
+  hr {
+    border: none;
+    border-top: 1px solid #ddd;
+    margin: 18px 0;
+  }
+  .termine {
+    background: #f8f8f8;
+    padding: 12px 16px;
+    border-left: 3px solid #444;
+    margin-top: 20px;
+  }
+  .termine h2 {
+    margin-top: 0;
+    font-size: 13pt;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: #444;
+  }
+  @media print {
+    body { font-size: 10.5pt; }
+    h2 { page-break-after: avoid; }
+    .topic-block { page-break-inside: avoid; }
+  }
+</style>
+</head>
+<body>
+{{CONTENT}}
+</body>
+</html>
