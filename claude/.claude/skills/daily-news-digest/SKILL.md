@@ -118,14 +118,26 @@ Direkt als HTML-Fragment schreiben (kein Markdown). Das HTML wird spaeter in `te
 
 CSS-Klassen aus `template.html`: `lagebild` (Lagebild-H2), `quellen` (Quellenzeile), `termine` (Termine-Block).
 
-Speichere das HTML-Fragment als `/tmp/digest_content.html`.
+Vorhandene Temp-Datei loeschen und HTML-Fragment per Bash-Heredoc schreiben:
+
+```bash
+rm -f /tmp/digest_content.html
+cat > /tmp/digest_content.html << 'HTMLEOF'
+[generierter HTML-Inhalt]
+HTMLEOF
+```
 
 ## Schritt 4: PDF generieren
 
-1. Lies das HTML-Template aus `template.html` (relativ zu dieser SKILL.md)
-2. Ersetze den Platzhalter `{{CONTENT}}` mit dem Inhalt von `/tmp/digest_content.html`
-3. Speichere als `/tmp/digest.html`
-4. Generiere PDF:
+Template mit Inhalt zusammenfuehren und als `/tmp/digest.html` speichern:
+
+```bash
+CONTENT=$(cat /tmp/digest_content.html)
+TEMPLATE=$(cat ~/.claude/skills/daily-news-digest/template.html)
+echo "${TEMPLATE/\{\{CONTENT\}\}/$CONTENT}" > /tmp/digest.html
+```
+
+Generiere PDF:
 
 ```bash
 npx playwright pdf "file:///tmp/digest.html" /tmp/Daily-Digest-$(date +%Y-%m-%d).pdf
