@@ -223,7 +223,7 @@ _edp_deploy() {
   if $with_exe; then
     _edp_push "$EDP_PROJECT_ROOT/$project" "$target_host" "$target_dir"
   else
-    _edp_push "$EDP_PROJECT_ROOT/$project" "$target_host" "$target_dir" --exclude='*.exe'
+    _edp_push "$EDP_PROJECT_ROOT/$project" "$target_host" "$target_dir" --exclude='*.exe' --exclude='*.dll'
   fi
   local rc=$?
   if [[ $rc -ne 0 ]]; then
@@ -282,17 +282,18 @@ _edp_compile() {
   echo "  Config:    $cfg"
   echo ""
 
-  # Step 1: Deploy files (without EXE, without service stop)
+  # Step 1: Stop all services
+  _edp_svc_stop_all "$target_host"
+
+  # Step 2: Deploy files (without EXE)
   echo "Übertrage Dateien..."
   _edp_push "$EDP_PROJECT_ROOT/$project" "$target_host" "$target_dir" --exclude='*.exe'
   local rc=$?
   if [[ $rc -ne 0 ]]; then
     echo "FEHLER beim Übertragen! (exit code: $rc)" >&2
+    _edp_svc_start_all "$target_host"
     return $rc
   fi
-
-  # Step 2: Stop all services
-  _edp_svc_stop_all "$target_host"
 
   # Step 3: MSBuild via SSH
   echo "Kompiliere..."
