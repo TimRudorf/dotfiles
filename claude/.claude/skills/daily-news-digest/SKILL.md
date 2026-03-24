@@ -23,6 +23,22 @@ Die Artikeldaten kommen auf einem von zwei Wegen:
 1. `$ARGUMENTS` enthaelt einen Dateipfad (z.B. `/tmp/digest_articles.json`) — Datei lesen
 2. Der Konversationskontext enthaelt die Artikeldaten als JSON (n8n bettet sie direkt im Prompt ein) — JSON nach `/tmp/digest_articles.json` schreiben
 
+JSON nach dem Einlesen validieren:
+
+```bash
+python3 -c "
+import json, sys
+try:
+    data = json.load(open('/tmp/digest_articles.json'))
+    print(f'JSON valide: {len(data[\"articles\"])} Artikel')
+except json.JSONDecodeError as e:
+    print(f'FEHLER: Ungültiges JSON – {e}', file=sys.stderr)
+    sys.exit(1)
+"
+```
+
+Bei Fehlschlag: Den User informieren, dass das JSON-Format ungültig ist. Skill abbrechen.
+
 In beiden Faellen: Weiter zu Schritt 3.
 
 **Modus B — Manuell (ohne Input):**
