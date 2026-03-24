@@ -42,7 +42,7 @@ Individual services can be controlled with `edp start|stop|status <service>`.
 
 | Mode | Behavior |
 |------|----------|
-| `edp <project> deploy [host]` | Push files only (no EXE, no service stop). Fast path for JS/HTML/template changes. |
+| `edp <project> deploy [host]` | Push files only (no EXE, no DLLs, no service stop). Fast path for JS/HTML/template changes. |
 | `edp <project> deploy [host] --with-exe` | Stop all services → push files incl. EXE → start all services |
 
 ### Compile
@@ -50,8 +50,8 @@ Individual services can be controlled with `edp start|stop|status <service>`.
 `edp <project> compile [host] [-b] [-p:Win64] [-cfg:Release]`
 
 1. Auto-detect `.dproj` file in project directory (exactly 1 must exist)
-2. Deploy files to VM (without EXE, without service stop)
-3. Stop all services
+2. Stop all services
+3. Deploy files to VM (without EXE)
 4. MSBuild via SSH
 5. SCP the built exe back to Linux project directory
 6. Start all services
@@ -91,8 +91,8 @@ All projects deploy to `C:\EDP\<project>` (project directory name = target direc
 
 ## VM Configuration
 
-- **SSH alias**: `eifert-dev` (configured in `~/.ssh/config`)
-- **Default host**: `$EDP_VM_HOST` (eifert-dev)
+- **SSH host**: `$EDP_VM_HOST` (gesetzt in `/etc/environment`)
+- **Projektpfad**: `$EDP_PROJECT_ROOT` (gesetzt in `/etc/environment`)
 - **VM host**: KVM/libvirt, name `EifertSystem_Development`
 
 ## Adding a New Project
@@ -100,7 +100,7 @@ All projects deploy to `C:\EDP\<project>` (project directory name = target direc
 1. Ensure exactly one `.dproj` file exists in the project root (auto-detected by the build system)
 2. If the project runs as a Windows service, register it on the VM:
    ```bash
-   ssh eifert-dev 'sc create MyService binPath= "C:\EDP\myproject\MyApp.exe"'
+   ssh "$EDP_VM_HOST" 'sc create MyService binPath= "C:\EDP\myproject\MyApp.exe"'
    ```
 3. Deploy and compile:
    ```bash
