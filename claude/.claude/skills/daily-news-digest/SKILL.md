@@ -74,7 +74,7 @@ Das Script gibt JSON auf stdout aus:
 
 ## Schritt 3: Briefing schreiben
 
-Lies die Artikeldaten (aus Schritt 2 oder `$ARGUMENTS`).
+Lies die Artikeldaten aus `/tmp/digest_articles.json`.
 
 Schreibe das Briefing nach diesen Regeln:
 
@@ -175,7 +175,8 @@ bash ~/.claude/skills/remarkable-upload/scripts/rm_upload.sh \
 curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendDocument" \
   -F "chat_id=${TELEGRAM_CHAT_ID}" \
   -F "document=@/tmp/Daily-Digest-$(date +%Y-%m-%d).pdf" \
-  -F "caption=Daily News Digest $(date +%Y-%m-%d)"
+  -F "caption=Daily News Digest $(date +%Y-%m-%d)" \
+  | python3 -c "import json,sys; d=json.load(sys.stdin); print('OK' if d.get('ok') else f'FEHLER: {d}')"
 ```
 
 ## Schritt 7: Zusammenfassung
