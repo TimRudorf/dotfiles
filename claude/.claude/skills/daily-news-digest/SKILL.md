@@ -21,7 +21,7 @@ Zwei Aufrufmodi:
 **Modus A — Mit Artikeldaten (von n8n):**
 Die Artikeldaten kommen auf einem von zwei Wegen:
 1. `$ARGUMENTS` enthaelt einen Dateipfad (z.B. `/tmp/digest_articles.json`) — Datei lesen
-2. Der Konversationskontext enthaelt die Artikeldaten als JSON (n8n bettet sie direkt im Prompt ein) — JSON nach `/tmp/digest_articles.json` schreiben
+2. Der Konversationskontext enthaelt die Artikeldaten als JSON (n8n bettet sie direkt im Prompt ein) — JSON via `Write`-Tool nach `/tmp/digest_articles.json` schreiben. KEIN Bash-Heredoc — n8n-JSON enthaelt Umlaute, eingebettete Quotes und escaped JSON das Bash-Heredocs korrumpiert. Falls das fehlschlaegt: Python-Script mit bereinigten Daten als Dict in `/tmp/make_digest_json.py` schreiben und ausfuehren.
 
 JSON nach dem Einlesen validieren:
 
