@@ -21,7 +21,17 @@ Zwei Aufrufmodi:
 **Modus A — Mit Artikeldaten (von n8n):**
 Die Artikeldaten kommen auf einem von zwei Wegen:
 1. `$ARGUMENTS` enthaelt einen Dateipfad (z.B. `/tmp/digest_articles.json`) — Datei lesen
-2. Der Konversationskontext enthaelt die Artikeldaten als JSON (n8n bettet sie direkt im Prompt ein) — JSON via `Write`-Tool nach `/tmp/digest_articles.json` schreiben. KEIN Bash-Heredoc — n8n-JSON enthaelt Umlaute, eingebettete Quotes und escaped JSON das Bash-Heredocs korrumpiert. Falls das fehlschlaegt: Python-Script mit bereinigten Daten als Dict in `/tmp/make_digest_json.py` schreiben und ausfuehren.
+2. Der Konversationskontext enthaelt die Artikeldaten als JSON (n8n bettet sie direkt im Prompt ein) — JSON via `Write`-Tool nach `/tmp/digest_articles.json` schreiben. KEIN Bash-Heredoc — n8n-JSON enthaelt Umlaute, eingebettete Quotes und escaped JSON das Bash-Heredocs korrumpiert. Falls das fehlschlaegt: Daten als Python-Dict bereinigen und direkt als Inline-Script ausfuehren:
+
+```bash
+python3 - << 'PYEOF'
+import json
+data = { ... }  # Artikeldaten als Dict
+with open('/tmp/digest_articles.json', 'w', encoding='utf-8') as f:
+    json.dump(data, f, ensure_ascii=False, indent=2)
+print(f"Gespeichert: {len(data['articles'])} Artikel")
+PYEOF
+```
 
 JSON nach dem Einlesen validieren:
 
@@ -134,23 +144,29 @@ Direkt als HTML-Fragment schreiben (kein Markdown). Das HTML wird spaeter in `te
 
 CSS-Klassen aus `template.html`: `lagebild` (Lagebild-H2), `quellen` (Quellenzeile), `termine` (Termine-Block).
 
-Vorhandene Temp-Datei loeschen und HTML-Fragment per Bash-Heredoc schreiben:
+HTML-Fragment via Python schreiben (Bash-Heredoc korrumpiert Umlaute und HTML-Entities):
 
 ```bash
-rm -f /tmp/digest_content.html
-cat > /tmp/digest_content.html << 'HTMLEOF'
-[generierter HTML-Inhalt]
-HTMLEOF
+python3 - << 'PYEOF'
+content = """[generierter HTML-Inhalt]"""
+with open('/tmp/digest_content.html', 'w', encoding='utf-8') as f:
+    f.write(content)
+PYEOF
 ```
 
 ## Schritt 4: PDF generieren
 
-Template mit Inhalt zusammenfuehren und als `/tmp/digest.html` speichern:
+Template mit Inhalt zusammenfuehren und als `/tmp/digest.html` speichern (Python statt Bash — robust bei langen Inhalten und Sonderzeichen):
 
 ```bash
-CONTENT=$(cat /tmp/digest_content.html)
-TEMPLATE=$(cat ~/.claude/skills/daily-news-digest/template.html)
-echo "${TEMPLATE/\{\{CONTENT\}\}/$CONTENT}" > /tmp/digest.html
+python3 - << 'PYEOF'
+with open('/tmp/digest_content.html', 'r', encoding='utf-8') as f:
+    content = f.read()
+with open('/home/claude/.claude/skills/daily-news-digest/template.html', 'r', encoding='utf-8') as f:
+    template = f.read()
+with open('/tmp/digest.html', 'w', encoding='utf-8') as f:
+    f.write(template.replace('{{CONTENT}}', content))
+PYEOF
 ```
 
 Generiere PDF:
