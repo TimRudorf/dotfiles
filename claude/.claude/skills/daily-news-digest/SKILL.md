@@ -169,9 +169,10 @@ with open('/tmp/digest.html', 'w', encoding='utf-8') as f:
 PYEOF
 ```
 
-Generiere PDF:
+Generiere PDF (Chromium automatisch installieren falls nötig):
 
 ```bash
+npx playwright install chromium --with-deps 2>/dev/null || true
 npx playwright pdf "file:///tmp/digest.html" /tmp/Daily-Digest-$(date +%Y-%m-%d).pdf
 ```
 
