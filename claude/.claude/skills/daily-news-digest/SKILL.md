@@ -47,7 +47,9 @@ except json.JSONDecodeError as e:
 "
 ```
 
-Bei Fehlschlag: Den User informieren, dass das JSON-Format ungültig ist. Skill abbrechen.
+Bei Fehlschlag: Sind die Artikeldaten noch im Konversationskontext verfügbar?
+→ Ja: Python-Fallback ausführen (Daten als Python-Dict neu schreiben) und weiterfahren
+→ Nein: User informieren (wahrscheinliche Ursache: Bash-Heredoc beim Schreiben der Datei) und Skill abbrechen
 
 In beiden Faellen: Weiter zu Schritt 3.
 
