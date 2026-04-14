@@ -6,10 +6,9 @@ EDP_VM_HOST="${EDP_VM_HOST:-eifert-dev}"
 EDP_VM_DIR_BASE='C:\EDP'
 EDP_PROJECT_ROOT="${EDP_PROJECT_ROOT:-$HOME/Develop/EDP}"
 EDP_VM_NAME="${EDP_VM_NAME:-EifertSystem_Development}"
-EDP_SERVICES=(edpwebservice EDPSrv)
 
 # Fixed VM-side tool paths
-EDP_RSVARS='C:\Program Files (x86)\Embarcadero\Studio\23.0\bin\rsvars.bat'
+EDP_RSVARS='C:\Program Files (x86)\Embarcadero\Studio\37.0\bin\rsvars.bat'
 EDP_MSBUILD='C:\Windows\Microsoft.NET\Framework\v4.0.30319\MSBuild.exe'
 
 # --- Internal helpers ---
@@ -83,22 +82,37 @@ _edp_svc_start() {
   ssh "$host" "net start $svc" 2>/dev/null | iconv -f CP850 -t UTF-8 2>/dev/null
 }
 
-# Stop all EDP services
-_edp_svc_stop_all() {
-  local host="$1"
-  local svc
-  for svc in "${EDP_SERVICES[@]}"; do
-    _edp_svc_stop "$host" "$svc"
-  done
+# Map project → Windows service name that locks its EXE.
+# Dienste werden NICHT automatisch erstellt — Installation erfolgt manuell.
+# Wenn ein Projekt hier nicht gelistet ist, wird kein Service gestoppt.
+_edp_service_for_project() {
+  local project="$1"
+  case "$project" in
+    edpweb)   echo "edpwebservice" ;;
+    schn_*)   echo "EDPSrv" ;;         # alle EDPServer-Schnittstellen
+    server)   echo "EDPSrv" ;;
+    *)        echo "" ;;
+  esac
 }
 
-# Start all EDP services
-_edp_svc_start_all() {
-  local host="$1"
+# Stop the Windows service (if any) that locks the project's EXE.
+_edp_svc_stop_for_project() {
+  local host="$1" project="$2"
   local svc
-  for svc in "${EDP_SERVICES[@]}"; do
+  svc="$(_edp_service_for_project "$project")"
+  if [[ -n "$svc" ]]; then
+    _edp_svc_stop "$host" "$svc"
+  fi
+}
+
+# Start the Windows service (if any) associated with the project.
+_edp_svc_start_for_project() {
+  local host="$1" project="$2"
+  local svc
+  svc="$(_edp_service_for_project "$project")"
+  if [[ -n "$svc" ]]; then
     _edp_svc_start "$host" "$svc"
-  done
+  fi
 }
 
 # --- Main function ---
@@ -215,7 +229,7 @@ _edp_deploy() {
 
   # With --with-exe: stop all services first
   if $with_exe; then
-    _edp_svc_stop_all "$target_host"
+    _edp_svc_stop_for_project "$target_host" "$project"
   fi
 
   # Push files
@@ -233,11 +247,80 @@ _edp_deploy() {
 
   # With --with-exe: start all services
   if $with_exe; then
-    _edp_svc_start_all "$target_host"
+    _edp_svc_start_for_project "$target_host" "$project"
   fi
 
   echo ""
   echo "=== Deploy fertig ==="
+}
+
+# --- Git helpers ---
+
+# Verify local repo is clean + ahead-only; auto-push ahead commits.
+# Echoes the current branch name on success.
+_edp_git_prepare() {
+  local project_dir="$1"
+
+  if ! git -C "$project_dir" rev-parse --git-dir >/dev/null 2>&1; then
+    echo "FEHLER: $project_dir ist kein Git-Repo" >&2
+    return 1
+  fi
+
+  local branch
+  branch="$(git -C "$project_dir" symbolic-ref --short -q HEAD)" || {
+    echo "FEHLER: detached HEAD in $project_dir — bitte einen Branch auschecken" >&2
+    return 1
+  }
+
+  if [[ -n "$(git -C "$project_dir" status --porcelain)" ]]; then
+    echo "FEHLER: Working tree nicht sauber. Bitte committen (ggf. --amend) oder stashen:" >&2
+    git -C "$project_dir" status --short >&2
+    return 1
+  fi
+
+  # Fetch remote state for this branch
+  git -C "$project_dir" fetch --quiet origin "$branch" 2>/dev/null
+
+  # Refuse if we're behind origin (history divergent)
+  local behind
+  behind="$(git -C "$project_dir" rev-list --count "HEAD..origin/$branch" 2>/dev/null || echo 0)"
+  if [[ "$behind" -gt 0 ]]; then
+    echo "FEHLER: origin/$branch hat $behind Commit(s), die lokal fehlen. Bitte pullen/rebasen." >&2
+    return 1
+  fi
+
+  # Auto-push if we're ahead (or if remote branch doesn't exist yet)
+  local ahead=0
+  if git -C "$project_dir" rev-parse --verify --quiet "origin/$branch" >/dev/null; then
+    ahead="$(git -C "$project_dir" rev-list --count "origin/$branch..HEAD" 2>/dev/null || echo 0)"
+  else
+    ahead=1  # remote branch missing → treat as push-needed
+  fi
+  if [[ "$ahead" -gt 0 ]]; then
+    echo "Push $ahead Commit(s) → origin/$branch..." >&2
+    git -C "$project_dir" push --quiet -u origin "$branch" >&2 || return 1
+  fi
+
+  printf '%s' "$branch"
+}
+
+# Clone repo to VM on first use, else fetch + hard-reset to origin/<branch>.
+# Leaves build outputs (Win64/, *.dcu) intact for incremental builds.
+_edp_git_sync_vm() {
+  local host="$1" target_dir="$2" clone_url="$3" branch="$4"
+  local dir_forward="${target_dir//\\//}"
+
+  local have_git
+  have_git="$(ssh "$host" "if exist \"${target_dir}\\.git\" (echo yes) else (echo no)" 2>/dev/null | tr -d '\r' | tr -d '\n')"
+
+  if [[ "$have_git" != "yes" ]]; then
+    echo "Klone Repo auf VM: ${target_dir}..."
+    ssh "$host" "if exist \"${target_dir}\" rmdir /s /q \"${target_dir}\"" 2>/dev/null
+    ssh "$host" "git clone --quiet --branch ${branch} ${clone_url} \"${target_dir}\"" || return 1
+  else
+    echo "Synchronisiere Repo auf VM (branch ${branch})..."
+    ssh "$host" "cd /d \"${target_dir}\" && git fetch --quiet origin && git checkout --quiet -B ${branch} origin/${branch} && git reset --hard --quiet origin/${branch}" || return 1
+  fi
 }
 
 # --- Compile ---
@@ -267,6 +350,8 @@ _edp_compile() {
     target_host="${args[0]}"
   fi
 
+  local project_dir="$EDP_PROJECT_ROOT/$project"
+
   # Auto-detect .dproj
   local proj_name
   proj_name="$(_edp_detect_dproj "$project")" || return 1
@@ -275,23 +360,33 @@ _edp_compile() {
   target_dir="$(_edp_target_dir "$project")"
   local exe_name="${proj_name%.dproj}.exe"
 
+  # Git prep: clean + push (source of truth = GHE)
+  local branch clone_url
+  branch="$(_edp_git_prepare "$project_dir")" || return 1
+  clone_url="$(git -C "$project_dir" remote get-url origin)" || {
+    echo "FEHLER: origin remote nicht gesetzt" >&2
+    return 1
+  }
+  local sha
+  sha="$(git -C "$project_dir" rev-parse --short HEAD)"
+
   echo "=== Kompiliere $project auf $target_host ==="
   echo "  Projekt:   $proj_name"
+  echo "  Branch:    $branch ($sha)"
   echo "  Target:    $target"
   echo "  Plattform: $plat"
   echo "  Config:    $cfg"
   echo ""
 
-  # Step 1: Stop all services
-  _edp_svc_stop_all "$target_host"
+  # Step 1: Stop the service that locks this project's EXE (if any)
+  _edp_svc_stop_for_project "$target_host" "$project"
 
-  # Step 2: Deploy files (without EXE)
-  echo "Übertrage Dateien..."
-  _edp_push "$EDP_PROJECT_ROOT/$project" "$target_host" "$target_dir" --exclude='*.exe'
+  # Step 2: Git sync on VM
+  _edp_git_sync_vm "$target_host" "$target_dir" "$clone_url" "$branch"
   local rc=$?
   if [[ $rc -ne 0 ]]; then
-    echo "FEHLER beim Übertragen! (exit code: $rc)" >&2
-    _edp_svc_start_all "$target_host"
+    echo "FEHLER beim Git-Sync auf VM! (exit $rc)" >&2
+    _edp_svc_start_for_project "$target_host" "$project"
     return $rc
   fi
 
@@ -306,7 +401,7 @@ _edp_compile() {
     echo "FEHLER beim Kompilieren! Output:" >&2
     cat /tmp/edp_compile_$$.log >&2
     rm -f /tmp/edp_compile_$$.log
-    _edp_svc_start_all "$target_host"
+    _edp_svc_start_for_project "$target_host" "$project"
     return $rc
   fi
 
@@ -315,7 +410,7 @@ _edp_compile() {
     echo "FEHLER: Build nicht erfolgreich. Output:" >&2
     cat /tmp/edp_compile_$$.log >&2
     rm -f /tmp/edp_compile_$$.log
-    _edp_svc_start_all "$target_host"
+    _edp_svc_start_for_project "$target_host" "$project"
     return 1
   fi
 
@@ -326,10 +421,10 @@ _edp_compile() {
   local remote_dir="C:/EDP/$project"
   echo "Hole ${exe_name} zurück..."
   scp "$target_host:${remote_dir}/${exe_name}" \
-    "$EDP_PROJECT_ROOT/$project/${exe_name}"
+    "$project_dir/${exe_name}"
 
-  # Step 5: Start all services
-  _edp_svc_start_all "$target_host"
+  # Step 5: Restart the project's service
+  _edp_svc_start_for_project "$target_host" "$project"
 
   echo ""
   echo "=== Fertig ==="
