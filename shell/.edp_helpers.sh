@@ -5,7 +5,6 @@
 EDP_VM_HOST="${EDP_VM_HOST:-eifert-dev}"
 EDP_VM_DIR_BASE='C:\EDP'
 EDP_PROJECT_ROOT="${EDP_PROJECT_ROOT:-$HOME/Develop/EDP}"
-EDP_VM_NAME="${EDP_VM_NAME:-EifertSystem_Development}"
 
 # Fixed VM-side tool paths
 EDP_RSVARS='C:\Program Files (x86)\Embarcadero\Studio\37.0\bin\rsvars.bat'
@@ -483,21 +482,4 @@ _edp_log() {
         else                        print line
         fflush()
       }'
-}
-
-# --- VM lifecycle ---
-
-devvm() {
-  case "${1:-}" in
-    start)      virsh start "$EDP_VM_NAME" ;;
-    stop)       virsh shutdown "$EDP_VM_NAME" ;;
-    force-stop) virsh destroy "$EDP_VM_NAME" ;;
-    status)     virsh domstate "$EDP_VM_NAME" ;;
-    console)    virt-viewer --attach "$EDP_VM_NAME" & ;;
-    ip)         virsh domifaddr "$EDP_VM_NAME" ;;
-    *)
-      echo "Usage: devvm {start|stop|force-stop|status|console|ip}"
-      return 1
-      ;;
-  esac
 }
