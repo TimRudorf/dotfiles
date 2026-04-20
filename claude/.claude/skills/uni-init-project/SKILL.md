@@ -31,14 +31,14 @@ Falls vorhanden → Token lesen, weiter mit Schritt 1.
 
 Falls nicht vorhanden → Token via Playwright-SSO einrichten:
 
-1. User informieren (Kommunikationsweg gemäß `CLAUDE_COMM_CHANNEL`, siehe `.shared/communication.md`):
+1. User informieren:
    - Frage: "Für den Moodle-Download wird einmalig ein API-Token benötigt. Ein Browser-Fenster wird geöffnet, in dem du dich über SSO anmeldest."
    - Optionen: "Browser öffnen" / "Abbrechen"
 2. Bei "Abbrechen" → Skill abbrechen.
 3. Bei "Browser öffnen":
    a. Domain aus URL extrahieren (z.B. `moodle.tu-darmstadt.de`)
    b. `playwright-cli open https://{domain}/login/index.php --browser=chrome --headed` — öffnet sichtbaren Browser
-   c. User fragen: "Bitte im Browser-Fenster einloggen. Fertig?" → "Ja, eingeloggt" / "Abbrechen" (Kommunikationsweg gemäß `CLAUDE_COMM_CHANNEL`)
+   c. User fragen: "Bitte im Browser-Fenster einloggen. Fertig?" → "Ja, eingeloggt" / "Abbrechen"
    d. Token über Moodle Mobile-API extrahieren:
       ```bash
       playwright-cli run-code "async page => {
@@ -71,7 +71,7 @@ Bei Fehlern (kein Location-Header, Dekodierung fehlgeschlagen, Token-Validierung
    curl -s "https://{domain}/webservice/rest/server.php?wstoken={token}&wsfunction=core_course_get_courses_by_field&field=id&value={id}&moodlewsrestformat=json"
    ```
 4. Kursnamen aus Response extrahieren (`.courses[0].fullname`)
-5. User fragen (Kommunikationsweg gemäß `CLAUDE_COMM_CHANNEL`, siehe `.shared/communication.md`):
+5. User fragen:
    - Kursname bestätigen/anpassen
    - Abschluss (Master/Bachelor)
    - Semester (z.B. WiSe 25/26, SoSe 26)
@@ -149,7 +149,7 @@ docs/
       - Pro unklarer Gruppe 1–2 repräsentative Dateien öffnen (erste Seite des PDFs lesen)
       - Anhand des Inhalts den Typ bestimmen: Vorlesungsfolien, Aufgabenblatt, Formelsammlung, etc.
       - Wenn der Inhalt die Zuordnung eindeutig klärt → direkt zuordnen, **keine Rückfrage nötig**
-   d. **Nur bei verbleibender Unsicherheit** (Inhalt nicht eindeutig oder Gruppe zu heterogen) den User fragen (Kommunikationsweg gemäß `CLAUDE_COMM_CHANNEL`), z.B.:
+   d. **Nur bei verbleibender Unsicherheit** (Inhalt nicht eindeutig oder Gruppe zu heterogen) den User fragen, z.B.:
       > Ich habe folgende Dateigruppen erkannt:
       > - `STV01.pdf` bis `STV12-*.pdf` (24 Dateien) → **Skript** (Vorlesungsfolien, per Stichprobe bestätigt)
       > - `MTVO4+05.pdf` etc. (6 Dateien) → unklar: Ergänzungs-Vorlesungen eines anderen Fachs? **Skript** oder **Sonstiges**?
@@ -188,7 +188,7 @@ Alle Dateien nach dem universellen Schema `{Typ}-{NN}[-{Variante}].pdf` umbenenn
 ### Vorgehen
 
 1. Rename-Plan als Tabelle erstellen (alter Name → neuer Name)
-2. Den Rename-Plan dem User zur Bestätigung zeigen (Kommunikationsweg gemäß `CLAUDE_COMM_CHANNEL`, siehe `.shared/communication.md`)
+2. Den Rename-Plan dem User zur Bestätigung zeigen
 3. Nach Bestätigung alle Dateien mit direkten `mv`-Befehlen umbenennen. **Keine Shell-Globs** mit `ls` verwenden — `ls` kann durch Aliase (eza) formatierte Ausgabe liefern. Stattdessen explizite Dateinamen oder `"$BASE/datei.pdf"` verwenden.
 
 ## Schritt 5: CLAUDE.md mit Themenindex erstellen
@@ -277,7 +277,7 @@ Nach Abschluss dieses Skills kurz bewerten, ob Optimierungsbedarf besteht:
 - **Empfehlung "ja"**: Fehler aufgetreten, Workarounds nötig, Befehle wiederholt, User-Korrekturen
 - **Empfehlung "nein"**: Reibungsloser Lauf wie dokumentiert
 
-Den User fragen (Kommunikationsweg gemäß `CLAUDE_COMM_CHANNEL`, siehe `.shared/communication.md`):
+Den User fragen:
 
 > Skill abgeschlossen. Soll die Skill-Dokumentation optimiert werden?
 > Empfehlung: {ja — [kurzer Grund] | nein — Lauf war reibungslos}

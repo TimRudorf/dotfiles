@@ -206,7 +206,6 @@ with urllib.request.urlopen(req) as resp:
   - Show the comment text
   - Show whether it will be internal or public
   - Options: "Absenden", "Ändern", "Abbrechen"
-  - Kommunikationsweg gemäß `CLAUDE_COMM_CHANNEL` wählen (siehe `.shared/communication.md`)
 - After successful creation, display: Article-ID, Ticket-Nummer, intern/öffentlich, and the body.
 - If the request fails, show the HTTP status and error body.
 

@@ -25,7 +25,7 @@ curl -s -H "Authorization: Token token=${ZAMMAD_TOKEN}" \
 ```
 
 - Gefunden → Kunden-ID + E-Mail verwenden
-- Mehrere Treffer → User auswählen lassen (Kommunikationsweg gemäß `CLAUDE_COMM_CHANNEL`)
+- Mehrere Treffer → User auswählen lassen
 - Nicht gefunden → User informieren + Abbruch
 
 ## Schritt C2: Titel ableiten
@@ -44,7 +44,7 @@ curl -s -H "Authorization: Token token=${ZAMMAD_TOKEN}" \
   && jq '[.[] | select(.active == true) | {id, name}]' /tmp/z_groups.json
 ```
 
-User befragen (Kommunikationsweg gemäß `CLAUDE_COMM_CHANNEL`). Default: "Entwicklung".
+User befragen. Default: "Entwicklung".
 
 ## Schritt C4: Besitzer ermitteln
 
@@ -62,7 +62,7 @@ Immer den aktuellen User als Owner setzen, außer im Kontext anders angegeben.
 
 ## Schritt C5: Status + Priorität
 
-User nach Status fragen (Kommunikationsweg gemäß `CLAUDE_COMM_CHANNEL`). Default: `open`. Priorität: immer `2 normal` (priority_id: 2).
+User nach Status fragen. Default: `open`. Priorität: immer `2 normal` (priority_id: 2).
 
 ## Schritt C6: Signatur laden
 
@@ -95,7 +95,7 @@ Nachricht nach den gleichen Regeln wie Reply-Modus Schritt 5 verfassen:
 
 ## Schritt C8: Human in the Loop
 
-Entwurf dem User vorlegen (Kommunikationsweg gemäß `CLAUDE_COMM_CHANNEL`):
+Entwurf dem User vorlegen:
 
 ```
 Neues Ticket — Entwurf
