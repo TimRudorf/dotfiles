@@ -5,5 +5,9 @@
   },
   "effortLevel": "xhigh",
   "skipDangerousModePermissionPrompt": true,
-  "model": "sonnet"
+  "model": "sonnet",
+  "env": {
+    "TELEGRAM_BOT_TOKEN": "8310884555:AAFsx0unYWI5ORkNwteG0zVD1F9EMNoCeSA",
+    "TELEGRAM_CHAT_ID": "266706699"
+  }
 }
