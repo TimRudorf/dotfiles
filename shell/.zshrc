@@ -47,3 +47,5 @@ export ENABLE_LSP_TOOL=1
 
 # OS-specific config
 [[ -f ~/.zshrc.$(uname | tr '[:upper:]' '[:lower:]') ]] && source ~/.zshrc.$(uname | tr '[:upper:]' '[:lower:]')
+
+export LC_CTYPE=en_US.UTF-8
