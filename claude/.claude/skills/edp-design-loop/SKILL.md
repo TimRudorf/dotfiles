@@ -3,7 +3,6 @@ name: edp-design-loop
 description: >-
   Diesen Skill verwenden, wenn der User eine UI-/Design-Änderung an einem EDP-Web-Projekt (meist edpweb) in einer autonomen Ralph-Loop umsetzen lassen will. Die Schleife ändert Code → deployed oder kompiliert auf die Dev-VM → prüft das Ergebnis per Browser-Login + Screenshot → iteriert selbstständig, bis das Modell mit dem Ergebnis zufrieden ist oder der Hard-Cap erreicht ist. Trigger-Keywords: "design loop", "ralph loop", "iteriere bis es passt", "design-loop", "/edp-design-loop".
 argument-hint: "[projekt] design-ziel"
-disable-model-invocation: true
 ---
 
 # EDP Design-Loop (Ralph-Loop)
@@ -21,6 +20,7 @@ Voraussetzungen gemäß `requirement-checker` Skill validieren. Bei Fehlschlag a
 ## Schritt 1: Aufgabe parsen und Repo-State prüfen
 
 Aus `$ARGUMENTS`:
+
 - Erstes Wort = Projektname (Default: `edpweb`, wenn das erste Wort kein Verzeichnis unter `$EDP_PROJECT_ROOT` ist oder gar nichts übergeben wurde).
 - Rest = Freitext-Designziel (muss nicht leer sein — sonst User fragen).
 
@@ -84,12 +84,12 @@ Pro Runde `N = 1..5`:
 
 **4a — Analyse.** Aktuellen Snapshot + Designziel gegenüberstellen. Entscheiden, welche Dateien zu ändern sind:
 
-| Bereich        | Typische Pfade                              |
-|----------------|---------------------------------------------|
-| HTML-Templates | `templates/**/*.html`                       |
-| SCSS / CSS     | `development/scss/**/*.scss`                |
-| JS             | `public/js/**/*.js`                         |
-| Delphi Backend | `*.pas`, `*.dproj`, `*.dfm`                 |
+| Bereich        | Typische Pfade               |
+| -------------- | ---------------------------- |
+| HTML-Templates | `templates/**/*.html`        |
+| SCSS / CSS     | `development/scss/**/*.scss` |
+| JS             | `public/js/**/*.js`          |
+| Delphi Backend | `*.pas`, `*.dproj`, `*.dfm`  |
 
 **4b — Edit + WIP-Commit.**
 
@@ -132,9 +132,10 @@ Dem User zeigen:
 - Liste der WIP-Commits (`git log --oneline main..HEAD`).
 - Kurze textuelle Bewertung: was wurde erreicht, was blieb offen.
 
-Dann eine Entscheidung einholen (Kommunikationsweg gemäß `CLAUDE_COMM_CHANNEL`, siehe `.shared/communication.md`):
+Dann eine Entscheidung einholen:
 
 Optionen:
+
 - **Passt — WIP-Commits squashen** (Hinweis: User führt `git rebase -i` selbst aus; Skill committet nicht automatisch).
 - **Weiter iterieren** (neues Ziel oder Feinjustierung als Freitext; optional Runden-Limit erhöhen).
 - **Verwerfen** (`git reset --hard <startpunkt>` — nur nach expliziter Bestätigung).

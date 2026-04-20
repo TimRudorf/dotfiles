@@ -60,7 +60,7 @@ Einen **Subagent** (`git-expert`) starten, der alle benötigten Informationen be
 
 ### Schritt 3: Project-Auswahl
 
-Falls Projects verfügbar, dem User anbieten (Kommunikationsweg gemäß `CLAUDE_COMM_CHANNEL`, siehe `.shared/communication.md`). Optionen: die gefundenen Projects + "Kein Project". Falls Project-Abfrage fehlgeschlagen, diesen Schritt überspringen.
+Falls Projects verfügbar, dem User anbieten. Optionen: die gefundenen Projects + "Kein Project". Falls Project-Abfrage fehlgeschlagen, diesen Schritt überspringen.
 
 ### Schritt 4: PR-Entwurf generieren
 
@@ -93,7 +93,7 @@ Die `Closes #<nummer>`-Zeile **nur** einfügen, wenn eine Ticket-Nummer aus dem 
 
 ### Schritt 5: Entwurf präsentieren
 
-Übersicht dem User zeigen (Kommunikationsweg gemäß `CLAUDE_COMM_CHANNEL`, siehe `.shared/communication.md`). Folgende Infos: Repo, Branch + Ziel-Branch, Assignee, Reviewer, Project, Titel und vollständiger Body. Darstellungsformat frei wählen.
+Übersicht dem User zeigen. Folgende Infos: Repo, Branch + Ziel-Branch, Assignee, Reviewer, Project, Titel und vollständiger Body. Darstellungsformat frei wählen.
 
 Optionen:
 - **Create-Modus**: "Erstellen", "Ändern", "Abbrechen"

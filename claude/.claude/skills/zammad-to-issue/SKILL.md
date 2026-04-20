@@ -14,8 +14,6 @@ Erstellt aus einem Zammad-Ticket ein strukturiertes GitHub Issue auf der GHE-Ins
 
 Voraussetzungen gemäß `requirement-checker` Skill validieren. Bei Fehlschlag abbrechen.
 
-Alle User-Rückfragen gemäß `CLAUDE_COMM_CHANNEL` (siehe `.shared/communication.md`).
-
 ## Workflow
 
 ### Schritt 1: Zammad-Ticket auslesen (Subagent-Delegation)
@@ -78,7 +76,7 @@ Bei internen Tickets den Login anhand des Namens aus dem Zammad-Ticket in der `m
 
 ### Schritt 2b: Repo auswählen
 
-User-Rückfrage (Kommunikationsweg gemäß `CLAUDE_COMM_CHANNEL`) mit:
+User-Rückfrage mit:
 1. Vorgeschlagenes Repo `(Empfohlen)` — basierend auf Ticket-Inhalt
 2. 2 weitere wahrscheinliche Repos
 3. `Abbruch`
@@ -97,7 +95,7 @@ gh label list -R edp/<repo> --json name,description --limit 100
 
 → `merge:*` Labels herausfiltern.
 
-Labels am `:` aufteilen → `kategorie:wert`. Pro Kategorie eine User-Rückfrage (Kommunikationsweg gemäß `CLAUDE_COMM_CHANNEL`):
+Labels am `:` aufteilen → `kategorie:wert`. Pro Kategorie eine User-Rückfrage:
 - Vorschlag `(Empfohlen)` falls einer sinnvoll, sonst ohne
 - Alle Werte der Kategorie als Optionen
 - `Kein Wert setzen`
@@ -117,7 +115,7 @@ Bei "Abbruch" (via "Other"): Skill bricht sofort ab mit Meldung "Skill abgebroch
 
 Falls der User einen Type als Argument mitgegeben hat → diesen Schritt überspringen.
 
-User-Rückfrage (Kommunikationsweg gemäß `CLAUDE_COMM_CHANNEL`) mit verfügbaren Types:
+User-Rückfrage mit verfügbaren Types:
 1. Vorschlag `(Empfohlen)` basierend auf Ticket-Analyse (Bug/Feature/Verbesserung)
 2. Weitere Types
 3. `Kein Wert setzen`
@@ -126,7 +124,7 @@ Bei "Abbruch" (via "Other"): Skill bricht sofort ab mit Meldung "Skill abgebroch
 
 ### Schritt 2e: Assignee auswählen
 
-User-Rückfrage (Kommunikationsweg gemäß `CLAUDE_COMM_CHANNEL`):
+User-Rückfrage:
 1. `tim-rudorf (Empfohlen)` — immer Default
 2. 2 weitere Org-Mitglieder
 3. `Kein Wert setzen`
@@ -149,7 +147,7 @@ gh api graphql -f query='
 ' --jq '.data.organization.projectsV2.nodes[] | "\(.number): \(.title)"'
 ```
 
-User-Rückfrage (Kommunikationsweg gemäß `CLAUDE_COMM_CHANNEL`) mit verfügbaren Projects:
+User-Rückfrage mit verfügbaren Projects:
 1. Vorschlag `(Empfohlen)` basierend auf Inhalt
 2. Weitere Projects
 3. `Kein Wert setzen`
@@ -162,7 +160,7 @@ Bei "Abbruch" (via "Other"): Skill bricht sofort ab mit Meldung "Skill abgebroch
 
 ### Schritt 3: Entwurf präsentieren
 
-Vor dem Erstellen eine Übersicht mit User-Rückfrage (Kommunikationsweg gemäß `CLAUDE_COMM_CHANNEL`) anzeigen. Folgende Infos: Repo, Type, Assignee, Labels, Project, Herkunft (intern/extern), Titel und vollständiger Body. Darstellungsformat frei wählen.
+Vor dem Erstellen eine Übersicht mit User-Rückfrage anzeigen. Folgende Infos: Repo, Type, Assignee, Labels, Project, Herkunft (intern/extern), Titel und vollständiger Body. Darstellungsformat frei wählen.
 
 Optionen: "Erstellen", "Ändern", "Abbrechen".
 

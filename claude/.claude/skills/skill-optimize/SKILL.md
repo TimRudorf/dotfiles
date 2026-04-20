@@ -78,8 +78,6 @@ Optional: Neue Abschnitte oder Regeln vorschlagen, falls ein ganzer Aspekt fehlt
 
 Optionen: **"Anwenden"**, **"Anpassen"**, **"Überspringen"**
 
-Kommunikationsweg gemäß `CLAUDE_COMM_CHANNEL` wählen (siehe `.shared/communication.md`).
-
 - **Anwenden** → weiter zu Schritt 7
 - **Anpassen** → User nach gewünschten Änderungen fragen, Vorschlag überarbeiten, erneut präsentieren
 - **Überspringen** → Skill beenden ohne Änderungen

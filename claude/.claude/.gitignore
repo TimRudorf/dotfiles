@@ -1,7 +1,8 @@
-# Track only settings and skills — ignore all runtime data
+# Track only settings, skills, agents, and CLAUDE.md — ignore all runtime data
 *
 !.gitignore
 !settings.json
+!CLAUDE.md
 !skills/
 !skills/*/
 !skills/**

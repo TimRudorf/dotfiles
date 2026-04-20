@@ -15,11 +15,11 @@ Aus `$ARGUMENTS` extrahieren:
 - **Skill-Name**: Erstes Wort (lowercase, Bindestriche erlaubt)
 - **Beschreibung**: Alles nach dem ersten Wort
 
-Falls `$ARGUMENTS` leer oder unvollständig: Nach Name und Beschreibung fragen. Kommunikationsweg gemäß `CLAUDE_COMM_CHANNEL` wählen (siehe `.shared/communication.md`).
+Falls `$ARGUMENTS` leer oder unvollständig: Nach Name und Beschreibung fragen.
 
 ## Schritt 2: Scope abfragen
 
-Den Scope bestimmen (Kommunikationsweg gemäß `CLAUDE_COMM_CHANNEL`, siehe `.shared/communication.md`):
+Den Scope bestimmen:
 
 | Option            | Pfad                               | Wann                                         |
 | ----------------- | ---------------------------------- | -------------------------------------------- |
