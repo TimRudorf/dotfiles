@@ -1,10 +1,14 @@
 # Machine-specific overrides
 *.local.conf
 local.conf
+*.local.json
 
 # Generated files
 *.lock.json
 *-generated.conf
+
+# Auto-generated nested Claude Code working-dir artifacts
+claude/.claude/skills/.claude/
 
 # OS artifacts
 .DS_Store
