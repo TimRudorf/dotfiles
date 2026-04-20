@@ -87,10 +87,14 @@ For production targets or hosts that don't pull from GHE.
 4. Git sync on VM:
    - First time: wipe `C:\EDP\<project>\` and `git clone --branch <branch> <origin-url>`
    - Subsequent: `git fetch && git checkout -B <branch> origin/<branch> && git reset --hard origin/<branch>`
-   - Untracked build outputs (e.g. `Win64/`, `*.dcu`) are kept → incremental rebuilds stay fast
-5. MSBuild via SSH (direct invocation — **no per-project `compile.cmd`**)
-6. SCP the built exe back to the local project directory
-7. Start all services
+   - Untracked build outputs (e.g. `Win64/`, `*.dcu`, `node_modules/`) are kept → incremental rebuilds stay fast
+5. SCSS build on VM (only if `package.json` is present in project root):
+   - If `node_modules\` doesn't exist yet: `npm install` (once, persists across builds)
+   - `npm run scss:build` → compiles all SCSS to `public/css/**/*.min.css`
+   - `edpweb` uses this step; projects without `package.json` skip it transparently
+6. MSBuild via SSH (direct invocation — **no per-project `compile.cmd`**)
+7. SCP the built exe back to the local project directory
+8. Start all services
 
 The MSBuild command executed on the VM:
 
@@ -159,6 +163,7 @@ All projects deploy to `C:\EDP\<project>` (project directory name = target direc
 - **Delphi**: RAD Studio 13.1 Florence (BDS `37.0`) at `C:\Program Files (x86)\Embarcadero\Studio\37.0\`
 - **rsvars.bat**: `C:\Program Files (x86)\Embarcadero\Studio\37.0\bin\rsvars.bat`
 - **MSBuild**: `C:\Windows\Microsoft.NET\Framework\v4.0.30319\MSBuild.exe` (.NET Framework v4.5)
+- **Node.js / npm**: `C:\Program Files\nodejs\` — vorhanden auf VM, wird für SCSS-Build (Dart Sass) genutzt
 - **Project root on VM**: `C:\EDP\<project>` (one directory per project; shared libraries like `jvcl`, `jcl`, `DelphiComponents`, `Image32`, `komponenten_delphi`, `HtmlViewer`, `ComPort-Library`, `StyleControls`, `SVGIconImageList`, `SynPDF`, `ELP`, `tzgenerator` also live directly under `C:\EDP\`)
 
 ## Adding a New Project

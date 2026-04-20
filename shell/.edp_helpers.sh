@@ -322,6 +322,48 @@ _edp_git_sync_vm() {
   fi
 }
 
+# --- SCSS build on VM ---
+
+# Kompiliert SCSS auf der VM via npm, falls package.json vorhanden ist.
+_edp_scss_build_vm() {
+  local host="$1" target_dir="$2"
+
+  local has_pkg
+  has_pkg="$(ssh "$host" "if exist \"${target_dir}\\package.json\" (echo yes) else (echo no)" 2>/dev/null | tr -d '\r\n')"
+  if [[ "$has_pkg" != "yes" ]]; then
+    return 0
+  fi
+
+  echo "SCSS kompilieren..."
+
+  # node_modules nur installieren wenn noch nicht vorhanden
+  local has_nm
+  has_nm="$(ssh "$host" "if exist \"${target_dir}\\node_modules\" (echo yes) else (echo no)" 2>/dev/null | tr -d '\r\n')"
+  if [[ "$has_nm" != "yes" ]]; then
+    echo "  npm install (erstmalig)..."
+    ssh "$host" "cd /d \"${target_dir}\" && npm install" > /tmp/edp_npm_$$.log 2>&1
+    local rc=$?
+    if [[ $rc -ne 0 ]]; then
+      echo "FEHLER beim npm install! Output:" >&2
+      cat /tmp/edp_npm_$$.log >&2
+      rm -f /tmp/edp_npm_$$.log
+      return $rc
+    fi
+    rm -f /tmp/edp_npm_$$.log
+  fi
+
+  ssh "$host" "cd /d \"${target_dir}\" && npm run scss:build" > /tmp/edp_scss_$$.log 2>&1
+  local rc=$?
+  if [[ $rc -ne 0 ]]; then
+    echo "FEHLER beim SCSS-Build! Output:" >&2
+    cat /tmp/edp_scss_$$.log >&2
+    rm -f /tmp/edp_scss_$$.log
+    return $rc
+  fi
+  rm -f /tmp/edp_scss_$$.log
+  echo "SCSS erfolgreich kompiliert."
+}
+
 # --- Compile ---
 
 _edp_compile() {
@@ -385,6 +427,15 @@ _edp_compile() {
   local rc=$?
   if [[ $rc -ne 0 ]]; then
     echo "FEHLER beim Git-Sync auf VM! (exit $rc)" >&2
+    _edp_svc_start_for_project "$target_host" "$project"
+    return $rc
+  fi
+
+  # Step 2b: SCSS bauen (falls package.json vorhanden)
+  _edp_scss_build_vm "$target_host" "$target_dir"
+  rc=$?
+  if [[ $rc -ne 0 ]]; then
+    echo "FEHLER beim SCSS-Build auf VM! (exit $rc)" >&2
     _edp_svc_start_for_project "$target_host" "$project"
     return $rc
   fi
