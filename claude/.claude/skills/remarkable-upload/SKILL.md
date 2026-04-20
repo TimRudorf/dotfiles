@@ -20,7 +20,7 @@ Aus `$ARGUMENTS` extrahieren:
 - **Dateipfad(e)**: Einzelne Datei oder Verzeichnis (dann alle PDFs/EPUBs darin)
 - **Zielordner** (optional): Name eines Ordners auf dem reMarkable. Default: Root-Ebene.
 
-Falls Argumente unvollständig (kein Dateipfad): Nachfragen. Kommunikationsweg gemäß `CLAUDE_COMM_CHANNEL` wählen (siehe `.shared/communication.md`).
+Falls Argumente unvollständig (kein Dateipfad): Nachfragen.
 
 ## Schritt 2: Dateien validieren
 
