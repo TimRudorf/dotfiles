@@ -40,26 +40,6 @@ _edp_target_dir() {
   printf 'C:\\EDP\\%s' "$project"
 }
 
-# Push files via tar-over-SSH
-_edp_push() {
-  local project_dir="$1" target_host="$2" target_dir="$3"
-  shift 3
-  # $@ = additional --exclude= arguments from caller
-
-  ssh "$target_host" "if not exist \"${target_dir}\" mkdir \"${target_dir}\"" 2>/dev/null
-
-  tar cf - -C "$project_dir" \
-    --exclude='.git' \
-    --exclude='.claude' \
-    --exclude='__history' \
-    --exclude='__recovery' \
-    --exclude='Win64' \
-    --exclude='*.log' \
-    --exclude='*.ini' \
-    "$@" \
-    . | ssh "$target_host" "tar xf - --options=hdrcharset=UTF-8 -C \"${target_dir}\""
-}
-
 # Stop a Windows service and wait for STOPPED state
 _edp_svc_stop() {
   local host="$1" svc="$2"
@@ -124,8 +104,7 @@ edp() {
     echo "       edp start|stop|status <service> [host]"
     echo ""
     echo "Project commands:"
-    echo "  deploy [host] [--with-exe]    Push files to host"
-    echo "  compile [host] [-b] [-p:...] [-cfg:...]  Deploy + Build + fetch exe"
+    echo "  compile [host] [-b] [-p:...] [-cfg:...]  Git-sync + Build + fetch exe"
     echo "  log [filter] [-l=LEVEL]       Stream live log"
     echo "  compilelog                    Show compile log"
     echo ""
@@ -160,7 +139,7 @@ edp() {
   local command="${2:-}"
 
   if [[ -z "$command" ]]; then
-    echo "edp: command required (deploy, compile, log, compilelog)" >&2
+    echo "edp: command required (compile, log, compilelog)" >&2
     return 1
   fi
 
@@ -171,7 +150,8 @@ edp() {
       _edp_compile "$project" "$@"
       ;;
     deploy)
-      _edp_deploy "$project" "$@"
+      echo "edp: 'deploy' wurde entfernt. Git ist source of truth — benutze 'edp $project compile'." >&2
+      return 1
       ;;
     log)
       _edp_log "$project" "$@"
@@ -184,73 +164,11 @@ edp() {
       ;;
     *)
       echo "edp: unknown command '$command'" >&2
-      echo "Commands: compile, deploy, log, compilelog" >&2
+      echo "Commands: compile, log, compilelog" >&2
       echo "Service commands: edp start|stop|status <service> [host]" >&2
       return 1
       ;;
   esac
-}
-
-# --- Deploy ---
-
-_edp_deploy() {
-  local project="$1"
-  shift
-
-  local target_host="$EDP_VM_HOST"
-  local with_exe=false
-  local args=()
-
-  while (($#)); do
-    case "$1" in
-      --with-exe) with_exe=true ;;
-      *)          args+=("$1") ;;
-    esac
-    shift
-  done
-
-  # First positional arg (if any) is the host
-  if [[ ${#args[@]} -gt 0 ]]; then
-    target_host="${args[0]}"
-  fi
-
-  local target_dir
-  target_dir="$(_edp_target_dir "$project")"
-
-  echo "=== Deploy $project → $target_host ==="
-  printf '  Ziel: %s\n' "$target_dir"
-  if $with_exe; then
-    echo "  Modus: mit EXE (Services werden gestoppt/gestartet)"
-  else
-    echo "  Modus: ohne EXE (kein Service-Stop)"
-  fi
-  echo ""
-
-  # With --with-exe: stop all services first
-  if $with_exe; then
-    _edp_svc_stop_for_project "$target_host" "$project"
-  fi
-
-  # Push files
-  echo "Übertrage Dateien..."
-  if $with_exe; then
-    _edp_push "$EDP_PROJECT_ROOT/$project" "$target_host" "$target_dir"
-  else
-    _edp_push "$EDP_PROJECT_ROOT/$project" "$target_host" "$target_dir" --exclude='*.exe' --exclude='*.dll'
-  fi
-  local rc=$?
-  if [[ $rc -ne 0 ]]; then
-    echo "FEHLER beim Übertragen! (exit code: $rc)" >&2
-    return $rc
-  fi
-
-  # With --with-exe: start all services
-  if $with_exe; then
-    _edp_svc_start_for_project "$target_host" "$project"
-  fi
-
-  echo ""
-  echo "=== Deploy fertig ==="
 }
 
 # --- Git helpers ---

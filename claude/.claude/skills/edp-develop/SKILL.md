@@ -1,45 +1,44 @@
 ---
 name: edp-develop
-description: This skill should be used when the user asks to deploy, compile, or build an EDP project, start/stop/status a Windows service, stream logs, manage the dev VM, or mentions the edp() or devvm() shell functions.
+description: This skill should be used when the user asks to compile or build an EDP project, start/stop/status a Windows service, stream logs, or mentions the edp() shell function.
 user-invocable: false
 ---
 
 # EDP Development Tools
 
-Documentation for the `edp()` and `devvm()` shell functions (`~/.edp_helpers.sh`) — central tools for building, deploying, and managing all EDP projects on the Windows dev VM.
+Documentation for the `edp()` shell function (`~/.edp_helpers.sh`) — central tool for building and managing all EDP projects on the Windows dev VM.
 
 ## Architecture
 
-- **`compile`** uses **Git as transport** (GHE is source of truth). Local commits are auto-pushed; the VM pulls `origin/<current-branch>` before building.
-- **`deploy`** still uses **tar-over-SSH** (legacy path for non-git / production targets that don't pull from GHE).
-- Services are managed globally (not per-project).
+- **Git ist die einzige Source of Truth.** Der einzige Transportweg zur VM ist `edp <project> compile`: lokale Commits werden auto-gepusht, die VM pullt `origin/<current-branch>` und baut daraus.
+- **`deploy` wurde entfernt.** Der frühere tar-over-SSH-Pfad existiert nicht mehr — er erlaubte nicht-committeten lokalen Stand auf der VM und hat Drift zwischen Arbeitskopie und EXE ermöglicht. Jeder Build ist jetzt reproduzierbar an einen Commit-SHA gebunden. Ruft jemand `edp <project> deploy` auf, gibt `edp()` eine Fehlermeldung aus und verweist auf `compile`.
+- Services werden pro Projekt gestoppt/gestartet (Mapping in `_edp_service_for_project`).
 
-### Why git-transport for compile
+### Warum nur noch git-transport
 
-- Every built EXE is bound to a specific commit (reproducibility).
-- "What's on the VM right now?" is always a known SHA.
-- Works naturally with feature-branch workflow: iterate with WIP commits (use `git commit --amend` between tries), squash-merge at the end.
-- No silent drift between local working tree and what was built.
+- Jede gebaute EXE ist an einen konkreten Commit gebunden (Reproduzierbarkeit).
+- "Was läuft gerade auf der VM?" ist immer ein bekannter SHA — `git log -1` auf der VM genügt.
+- Passt natürlich zum Feature-Branch-Workflow: iterieren mit WIP-Commits (`git commit --amend` zwischen Versuchen), am Ende squash-mergen.
+- Kein stummes Auseinanderlaufen zwischen lokalem Working Tree und gebauter EXE.
 
 ### Compile prerequisites
 
-- Local project directory must be a git repo with an `origin` remote.
-- Working tree must be clean (uncommitted changes → `edp compile` refuses).
-- Branch must not be behind `origin/<branch>` (divergent history → refuses).
-- Branch ahead of remote → auto-pushed.
-- VM must be able to authenticate against `origin`. For GHE over HTTPS, configure once per VM:
+- Lokales Projektverzeichnis muss ein Git-Repo mit `origin`-Remote sein.
+- Working tree muss sauber sein (uncommittete Änderungen → `edp compile` verweigert).
+- Branch darf nicht hinter `origin/<branch>` sein (divergente History → verweigert).
+- Branch ahead of remote → wird auto-gepusht.
+- VM muss gegen `origin` authentifizieren können. Für GHE über HTTPS, einmal pro VM konfigurieren:
   ```cmd
   git config --global --unset-all credential.helper
   git config --global --add credential.helper ""
   git config --global --add credential.helper store
   ```
-  Then put a line like `https://<user>:<token>@einsatzleitsoftware.ghe.com` into `%USERPROFILE%\.git-credentials` (UTF-8, no BOM — PowerShell's default `Set-Content` writes UTF-16 BOM; use `[IO.File]::WriteAllText(...)` or `Out-File -Encoding utf8NoBOM` instead).
+  Dann eine Zeile wie `https://<user>:<token>@einsatzleitsoftware.ghe.com` in `%USERPROFILE%\.git-credentials` schreiben (UTF-8, no BOM — PowerShells default `Set-Content` schreibt UTF-16 BOM; stattdessen `[IO.File]::WriteAllText(...)` oder `Out-File -Encoding utf8NoBOM`).
 
 ## Usage
 
 ```bash
 # Project commands
-edp <project> deploy [host] [--with-exe]
 edp <project> compile [host] [-b] [-p:...] [-cfg:...]
 edp <project> log [filter] [-l=LEVEL]
 edp <project> compilelog
@@ -48,16 +47,13 @@ edp <project> compilelog
 edp start <service> [host]
 edp stop <service> [host]
 edp status <service> [host]
-
-# VM lifecycle
-devvm start|stop|force-stop|status|console|ip
 ```
 
 ### Services
 
 Windows services are **installed manually** by the user — the build system **never creates services** via `sc create` or similar.
 
-Each project is mapped to the single Windows service that holds its EXE open; that service (and only that service) is stopped before compile/deploy and restarted afterwards. The mapping lives in `_edp_service_for_project` in `~/.edp_helpers.sh`:
+Each project is mapped to the single Windows service that holds its EXE open; that service (and only that service) is stopped before compile and restarted afterwards. The mapping lives in `_edp_service_for_project` in `~/.edp_helpers.sh`:
 
 | Project name               | Service         |
 |----------------------------|-----------------|
@@ -68,22 +64,13 @@ Each project is mapped to the single Windows service that holds its EXE open; th
 
 Individual services can also be controlled manually with `edp start|stop|status <service>`.
 
-### Deploy (legacy, tar-based)
-
-For production targets or hosts that don't pull from GHE.
-
-| Mode | Behavior |
-|------|----------|
-| `edp <project> deploy [host]` | Push files only (no EXE, no DLLs, no service stop). Fast path for JS/HTML/template changes. |
-| `edp <project> deploy [host] --with-exe` | Stop all services → push files incl. EXE → start all services |
-
 ### Compile (git-transport)
 
 `edp <project> compile [host] [-b] [-p:Win64] [-cfg:Release]`
 
 1. Auto-detect `.dproj` file in project directory (exactly 1 must exist)
 2. Git prep (local): refuse if dirty / behind; auto-push if ahead
-3. Stop all services
+3. Stop the project's service (if mapped)
 4. Git sync on VM:
    - First time: wipe `C:\EDP\<project>\` and `git clone --branch <branch> <origin-url>`
    - Subsequent: `git fetch && git checkout -B <branch> origin/<branch> && git reset --hard origin/<branch>`
@@ -94,7 +81,7 @@ For production targets or hosts that don't pull from GHE.
    - `edpweb` uses this step; projects without `package.json` skip it transparently
 6. MSBuild via SSH (direct invocation — **no per-project `compile.cmd`**)
 7. SCP the built exe back to the local project directory
-8. Start all services
+8. Start the project's service (if mapped)
 
 The MSBuild command executed on the VM:
 
@@ -135,30 +122,24 @@ edp schn_foo compile
 
 `edp <project> compilelog` — Tail the compile output log on the VM.
 
-### VM Lifecycle
-
-`devvm start|stop|force-stop|status|console|ip` — Manage the KVM/libvirt development VM (`EifertSystem_Development`).
-
 ## Typical Workflow
 
 ```bash
-edp edpweb deploy                    # Push source files (fast, no service restart)
-edp edpweb compile                   # Build + fetch exe (auto-deploys first)
-edp edpweb deploy prod-host --with-exe  # Full deploy to production
-edp start edpwebservice              # Start a specific service
-edp stop EDPSrv                      # Stop a specific service
+git commit -am "wip"                 # jede Änderung muss committet sein
+edp edpweb compile                   # push + VM pullt + Build + fetch exe + Service-Restart
+edp start edpwebservice              # Service manuell starten (falls nötig)
+edp stop EDPSrv                      # Service manuell stoppen
 edp edpweb log                       # Stream live log
 ```
 
 ## Target Directory
 
-All projects deploy to `C:\EDP\<project>` (project directory name = target directory).
+Alle Projekte landen in `C:\EDP\<project>` (Projekt-Verzeichnisname = Zielverzeichnis; wird per `git clone` dort angelegt).
 
 ## VM Configuration
 
 - **SSH host**: `$EDP_VM_HOST` (gesetzt in `/etc/environment`)
 - **Projektpfad**: `$EDP_PROJECT_ROOT` (gesetzt in `/etc/environment`)
-- **VM host**: KVM/libvirt, name `EifertSystem_Development`
 - **VM OS**: Windows 11 24H2
 - **Delphi**: RAD Studio 13.1 Florence (BDS `37.0`) at `C:\Program Files (x86)\Embarcadero\Studio\37.0\`
 - **rsvars.bat**: `C:\Program Files (x86)\Embarcadero\Studio\37.0\bin\rsvars.bat`
