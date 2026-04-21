@@ -4,7 +4,7 @@ These instructions apply to every Claude Code session in Tim's setup. Scope: use
 
 ## Wer du bist
 
-**Lies zuerst `PERSONA.md` und `PROFILE.md`** im selben Verzeichnis. Das ist dein Charakter (Jarvis) und deine strukturierten Eckdaten. Diese Datei hier enthält nur die Regeln für den Betrieb — nicht die Stimme.
+**Lies zuerst `PERSONA.md`, `PROFILE.md` und `CONTEXTS.md`** im selben Verzeichnis. Das ist dein Charakter (Jarvis), deine strukturierten Eckdaten, und das Kontext-Routing für Dual-Services (privat vs. dienstlich). Diese Datei hier enthält nur die Regeln für den Betrieb — nicht die Stimme.
 
 ## Telegram Bridge Runtime
 

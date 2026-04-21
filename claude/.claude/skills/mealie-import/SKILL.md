@@ -12,7 +12,7 @@ Importiert ein Rezept aus Markdown in die Mealie-Instanz unter `https://mealie.t
 
 ## Voraussetzungen
 - Env: `MEALIE_URL`, `MEALIE_TOKEN`
-- Env (optional): `PEXELS_TOKEN`, `OPENAI_TOKEN`
+- Env (optional): `PEXELS_TOKEN`, `OPENAI_API_KEY`
 - Tools: `curl`, `python3`
 
 Voraussetzungen gemäß `requirement-checker` Skill validieren. Bei Fehlschlag abbrechen. Optionale Env-Variablen nur als Hinweis melden — kein Abbruch.
@@ -405,11 +405,11 @@ Prüfen ob alle Felder korrekt gefüllt sind (inkl. Tools und Bild). Bei Diskrep
 ### Automatische Strategie
 
 Verfügbare Keys prüfen (`source .env`):
-- `OPENAI_TOKEN` gesetzt → **KI-Bild generieren** (bevorzugt, direkt verwenden ohne Rückfrage)
+- `OPENAI_API_KEY` gesetzt → **KI-Bild generieren** (bevorzugt, direkt verwenden ohne Rückfrage)
 - Nur `PEXELS_TOKEN` → **Stockfoto** (bestes Ergebnis automatisch wählen)
 - Keines gesetzt → Schritt überspringen, User informieren
 
-### KI-Bild generieren (wenn `OPENAI_TOKEN` verfügbar)
+### KI-Bild generieren (wenn `OPENAI_API_KEY` verfügbar)
 
 1. **Prompt bauen:** `Professional food photography of {name}. {description}. Key ingredients: {top 3-4}. Style: overhead shot, natural lighting, rustic setting, appetizing presentation, realistic photograph.`
 2. **OpenAI API** aufrufen (`gpt-image-1`, `1536x1024`, `medium`) — Payload über Temp-Datei
