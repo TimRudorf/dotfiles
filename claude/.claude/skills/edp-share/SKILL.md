@@ -9,7 +9,7 @@ argument-hint: [ticket-number | customer-name] [file-path...] [context]
 Lädt Dateien in die Nextcloud-basierte Sharecloud (`einsatzleitsoftware.de/nextcloud`) hoch und benachrichtigt den Kunden per Zammad-Ticket.
 
 ## Voraussetzungen
-- Env: `NC_HOST`, `NC_WEBDAV`, `NC_USER`, `NC_PASSWORD`, `ZAMMAD_HOST`, `ZAMMAD_TOKEN`
+- Env: `NC_WORK_HOST`, `NC_WORK_WEBDAV`, `NC_WORK_USER`, `NC_WORK_PASSWORD`, `ZAMMAD_HOST`, `ZAMMAD_TOKEN`
 - Tools: `curl`, `jq`
 
 Voraussetzungen gemäß `requirement-checker` Skill validieren. Bei Fehlschlag abbrechen.
@@ -45,12 +45,12 @@ Ordnerliste unter `/Kunden/` laden:
 
 ```bash
 
-curl -s -u "$NC_USER:$NC_PASSWORD" \
+curl -s -u "$NC_WORK_USER:$NC_WORK_PASSWORD" \
   -X PROPFIND \
   -H "Depth: 1" \
   -H "Content-Type: application/xml" \
   -d '<?xml version="1.0"?><d:propfind xmlns:d="DAV:"><d:prop><d:displayname/></d:prop></d:propfind>' \
-  "$NC_HOST$NC_WEBDAV/Kunden/" > /tmp/nc_kunden.xml \
+  "$NC_WORK_HOST$NC_WORK_WEBDAV/Kunden/" > /tmp/nc_kunden.xml \
   && grep -oP '<d:displayname>\K[^<]+' /tmp/nc_kunden.xml | sort
 ```
 
@@ -73,9 +73,9 @@ Nur wenn kein passender Ordner gefunden wurde.
 
 ORDNER="{ordnername}"  # lowercase, Bindestriche, passender Prefix
 curl -s -o /dev/null -w "%{http_code}" \
-  -u "$NC_USER:$NC_PASSWORD" \
+  -u "$NC_WORK_USER:$NC_WORK_PASSWORD" \
   -X MKCOL \
-  "$NC_HOST$NC_WEBDAV/Kunden/$ORDNER/"
+  "$NC_WORK_HOST$NC_WORK_WEBDAV/Kunden/$ORDNER/"
 ```
 
 HTTP 201 = Erfolg. Den Ordnernamen mit bestehendem Namensschema konsistent wählen (User bestätigen lassen).
@@ -85,12 +85,12 @@ HTTP 201 = Erfolg. Den Ordnernamen mit bestehendem Namensschema konsistent wähl
 ```bash
 
 PASSWORD=$(openssl rand -base64 12 | tr -dc 'A-Za-z0-9' | head -c 12)
-curl -s -u "$NC_USER:$NC_PASSWORD" \
+curl -s -u "$NC_WORK_USER:$NC_WORK_PASSWORD" \
   -X POST \
   -H "OCS-APIRequest: true" \
   -H "Content-Type: application/x-www-form-urlencoded" \
   -d "path=/Kunden/$ORDNER&shareType=3&permissions=1&password=$PASSWORD" \
-  "$NC_HOST/ocs/v2.php/apps/files_sharing/api/v1/shares?format=json" > /tmp/nc_share.json \
+  "$NC_WORK_HOST/ocs/v2.php/apps/files_sharing/api/v1/shares?format=json" > /tmp/nc_share.json \
   && jq '.ocs.data | {id, url, token}' /tmp/nc_share.json \
   && echo "PASSWORD: $PASSWORD"
 ```
@@ -109,9 +109,9 @@ Passend zum Anlass einen Unterordner erstellen (z.B. `Setup_2026-02`, `Testlizen
 ORDNER="{ordnername}"
 UNTERORDNER="{unterordner}"
 curl -s -o /dev/null -w "%{http_code}" \
-  -u "$NC_USER:$NC_PASSWORD" \
+  -u "$NC_WORK_USER:$NC_WORK_PASSWORD" \
   -X MKCOL \
-  "$NC_HOST$NC_WEBDAV/Kunden/$ORDNER/$UNTERORDNER/"
+  "$NC_WORK_HOST$NC_WORK_WEBDAV/Kunden/$ORDNER/$UNTERORDNER/"
 ```
 
 ### Schritt 6: Dateien hochladen
@@ -124,10 +124,10 @@ ORDNER="{ordnername}"
 UNTERORDNER="{unterordner}"
 DATEI="{dateiname}"
 curl -s -o /dev/null -w "%{http_code}" \
-  -u "$NC_USER:$NC_PASSWORD" \
+  -u "$NC_WORK_USER:$NC_WORK_PASSWORD" \
   -X PUT \
   --upload-file "{lokaler_pfad}" \
-  "$NC_HOST$NC_WEBDAV/Kunden/$ORDNER/$UNTERORDNER/$DATEI"
+  "$NC_WORK_HOST$NC_WORK_WEBDAV/Kunden/$ORDNER/$UNTERORDNER/$DATEI"
 ```
 
 HTTP 201 oder 204 = Erfolg. Bei mehreren Dateien einzeln hochladen und Ergebnis prüfen.
@@ -165,18 +165,18 @@ Falls unklar, ob ein Ordner bereits freigegeben ist:
 ```bash
 
 ORDNER="{ordnername}"
-curl -s -u "$NC_USER:$NC_PASSWORD" \
+curl -s -u "$NC_WORK_USER:$NC_WORK_PASSWORD" \
   -H "OCS-APIRequest: true" \
-  "$NC_HOST/ocs/v2.php/apps/files_sharing/api/v1/shares?path=/Kunden/$ORDNER&format=json" > /tmp/nc_shares.json \
+  "$NC_WORK_HOST/ocs/v2.php/apps/files_sharing/api/v1/shares?path=/Kunden/$ORDNER&format=json" > /tmp/nc_shares.json \
   && jq '.ocs.data[] | {id, share_type, url, permissions, password_set: (.password != null)}' /tmp/nc_shares.json
 ```
 
 ## Notes
 
 - **Jeder Bash-Aufruf ist eine eigene Shell** — Env-Variablen sind via `.zshrc` automatisch verfügbar.
-- **Nextcloud-Passwort enthält Sonderzeichen** — immer in Anführungszeichen verwenden, `$NC_PASSWORD` nie unquoted.
-- **WebDAV-URLs**: Immer `$NC_HOST$NC_WEBDAV/Kunden/...` für Dateioperationen.
-- **OCS-API-URLs**: Immer `$NC_HOST/ocs/v2.php/apps/files_sharing/...` für Freigaben.
+- **Nextcloud-Passwort enthält Sonderzeichen** — immer in Anführungszeichen verwenden, `$NC_WORK_PASSWORD` nie unquoted.
+- **WebDAV-URLs**: Immer `$NC_WORK_HOST$NC_WORK_WEBDAV/Kunden/...` für Dateioperationen.
+- **OCS-API-URLs**: Immer `$NC_WORK_HOST/ocs/v2.php/apps/files_sharing/...` für Freigaben.
 - **OCS-APIRequest Header**: Pflicht bei OCS-Endpunkten (`-H "OCS-APIRequest: true"`).
 - Bei Fehlern: HTTP Status Code und Response Body anzeigen.
 

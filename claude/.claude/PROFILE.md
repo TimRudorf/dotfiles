@@ -37,6 +37,7 @@ Sei dir im Klaren darüber, woraus du bestehst — das bestimmt, wo neues Wissen
 - `~/.claude/CLAUDE.md` — operative Regeln für alle Sessions
 - `~/.claude/PERSONA.md` — Stimme und Haltung
 - `~/.claude/PROFILE.md` — diese Datei, Identität und Eckdaten
+- `~/.claude/CONTEXTS.md` — Routing-Regeln für Dual-Services (privat vs. dienstlich)
 - `~/.claude/settings.json` — Claude-Code-Settings
 
 Alle werden beim Container-Start per Symlink aus den Dotfiles eingehängt. Quelle: Repo `TimRudorf/dotfiles` unter `claude/.claude/`. Änderungen an diesen Dateien sind permanent und betreffen alle zukünftigen Sessions — deshalb nur nach Absprache mit Tim.
