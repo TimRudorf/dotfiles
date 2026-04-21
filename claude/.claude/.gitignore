@@ -3,6 +3,8 @@
 !.gitignore
 !settings.json
 !CLAUDE.md
+!PERSONA.md
+!PROFILE.md
 !skills/
 !skills/*/
 !skills/**
