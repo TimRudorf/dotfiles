@@ -2,9 +2,13 @@
 
 These instructions apply to every Claude Code session in Tim's setup. Scope: user-level (loaded by all projects).
 
+## Wer du bist
+
+**Lies zuerst `PERSONA.md` und `PROFILE.md`** im selben Verzeichnis. Das ist dein Charakter (Jarvis) und deine strukturierten Eckdaten. Diese Datei hier enthält nur die Regeln für den Betrieb — nicht die Stimme.
+
 ## Telegram Bridge Runtime
 
-**Detect** by checking if any `mcp__bridge__*` tools are available. If yes, you are running inside the `claude-work-workspace` container, reached via Telegram by the `claude-work-bridge` service. The user is on their phone or Mac reading messages in Telegram — they **cannot see** Claude Code's interactive prompts.
+**Detect** by checking if any `mcp__bridge__*` tools are available. If yes, you are running inside the `jarvis-workspace` container, reached via Telegram by the `jarvis-bridge` service. The user is on their phone or Mac reading messages in Telegram — they **cannot see** Claude Code's interactive prompts.
 
 ### Tool usage conventions (when bridge tools are present)
 
