@@ -93,7 +93,7 @@ with open('/tmp/mealie_image_prompt.json', 'w') as f:
 
 ```bash
 curl -s -X POST "https://api.openai.com/v1/images/generations" \
-  -H "Authorization: Bearer $OPENAI_TOKEN" \
+  -H "Authorization: Bearer $OPENAI_API_KEY" \
   -H "Content-Type: application/json" \
   -d @/tmp/mealie_image_prompt.json \
   -o /tmp/mealie_image_response.json
@@ -161,7 +161,7 @@ curl -s -X POST "$MEALIE_URL/api/recipes/$SLUG/image" \
 
 **Endpoint:** `POST https://api.openai.com/v1/images/generations`
 
-**Auth:** `Authorization: Bearer $OPENAI_TOKEN`
+**Auth:** `Authorization: Bearer $OPENAI_API_KEY`
 
 **Model:** `gpt-image-1`
 
@@ -184,4 +184,4 @@ curl -s -X POST "$MEALIE_URL/api/recipes/$SLUG/image" \
 
 **Kosten:** ~$0.04 pro Bild bei `medium` quality, `1536x1024`.
 
-**Env-Var:** `OPENAI_TOKEN` via `~/.env` (automatisch geladen durch `.zshrc`)
+**Env-Var:** `OPENAI_API_KEY` via `~/.env` (automatisch geladen durch `.zshrc`)
