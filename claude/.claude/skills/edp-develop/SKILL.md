@@ -66,7 +66,15 @@ Individual services can also be controlled manually with `edp start|stop|status 
 
 ### Compile (git-transport)
 
-`edp <project> compile [host] [-b] [-p:Win64] [-cfg:Release]`
+`edp <project> compile [host] [-b] [-p:Win64] [-cfg:Release]`  (Delphi)
+`edp <project> compile [host] [-skip-tests]`  (Go)
+
+**Projekttyp wird automatisch erkannt** (`_edp_detect_project_type`):
+- `.dproj` im Projekt-Root → Delphi-Pfad (MSBuild, siehe unten)
+- `go.mod` im Projekt-Root → Go-Pfad (`go build`/`go test`, siehe Abschnitt „Go-Pipeline")
+- Weder noch → Fehler
+
+#### Delphi-Pipeline
 
 1. Auto-detect `.dproj` file in project directory (exactly 1 must exist)
 2. Git prep (local): refuse if dirty / behind; auto-push if ahead
@@ -90,6 +98,28 @@ call "C:\Program Files (x86)\Embarcadero\Studio\37.0\bin\rsvars.bat" && ^
 cd /d C:\EDP\<project> && ^
 C:\Windows\Microsoft.NET\Framework\v4.0.30319\MSBuild.exe <Project>.dproj /t:Make /p:config=Release /p:platform=Win64
 ```
+
+#### Go-Pipeline
+
+Für Projekte mit `go.mod` im Root:
+
+1. Git prep (gleich wie Delphi: clean + auto-push)
+2. Service-Stop (über das gleiche Mapping — Libraries ohne Service-Zuordnung überspringen den Schritt)
+3. Git-Sync auf VM (`C:\EDP\<project>\`)
+4. Falls eine Datei `//go:generate` enthält: `go generate ./...`
+5. `go build ./...` — muss fehlerfrei durchlaufen
+6. `go test ./...` — läuft standardmäßig, via `-skip-tests` abschaltbar
+7. Wenn `main.go` im Repo-Root existiert (= Schnittstelle, nicht reine Library):
+   - `go build -ldflags="-s -w" -o <project>.exe .`
+   - SCP `<project>.exe` zurück ins lokale Projektverzeichnis
+8. Service-Start (falls gemappt)
+
+Reine Library-Projekte (keine `main.go`) überspringen Schritt 7 — kein EXE-Artefakt wird erzeugt oder deployed.
+
+Go-Options:
+- `-skip-tests` — `go test` auslassen (z.B. bei Integration-Tests, die echte externe Dienste brauchen)
+
+Voraussetzung auf der VM: Go installiert, `go` im `PATH` der SSH-Session (Standard nach `winget install GoLang.Go`).
 
 ### Branch protection
 
