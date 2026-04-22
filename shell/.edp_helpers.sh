@@ -34,6 +34,21 @@ _edp_detect_dproj() {
   fi
 }
 
+# Detect project type: "delphi" (wenn .dproj vorhanden) oder "go" (wenn go.mod
+# vorhanden). Echo den Typ auf stdout, oder leer + Rückgabe 1 wenn nichts passt.
+_edp_detect_project_type() {
+  local project="$1"
+  local dir="$EDP_PROJECT_ROOT/$project"
+  if ls "$dir"/*.dproj >/dev/null 2>&1; then
+    echo "delphi"
+  elif [[ -f "$dir/go.mod" ]]; then
+    echo "go"
+  else
+    echo "edp: Kein bekannter Projekttyp in $dir (weder .dproj noch go.mod)" >&2
+    return 1
+  fi
+}
+
 # Target directory on VM: C:\EDP\<project>
 _edp_target_dir() {
   local project="$1"
@@ -284,9 +299,134 @@ _edp_scss_build_vm() {
 
 # --- Compile ---
 
+_edp_compile_go() {
+  local project="$1"
+  shift
+
+  local target_host="$EDP_VM_HOST"
+  local do_test=1       # Tests laufen standardmäßig mit; via -skip-tests abschaltbar
+  local do_build_exe=0  # EXE-Output nur wenn main.go im Repo-Root
+  local args=()
+
+  while (($#)); do
+    case "$1" in
+      -skip-tests) do_test=0 ;;
+      *)           args+=("$1") ;;
+    esac
+    shift
+  done
+
+  if [[ ${#args[@]} -gt 0 ]]; then
+    target_host="${args[0]}"
+  fi
+
+  local project_dir="$EDP_PROJECT_ROOT/$project"
+  local target_dir
+  target_dir="$(_edp_target_dir "$project")"
+
+  # Executable vs. Library: main.go im Root → Schnittstelle, sonst reine Library
+  if [[ -f "$project_dir/main.go" ]]; then
+    do_build_exe=1
+  fi
+  local exe_name="${project}.exe"
+
+  # Git-Prep identisch zum Delphi-Pfad (clean + push)
+  local branch clone_url
+  branch="$(_edp_git_prepare "$project_dir")" || return 1
+  clone_url="$(git -C "$project_dir" remote get-url origin)" || {
+    echo "FEHLER: origin remote nicht gesetzt" >&2
+    return 1
+  }
+  local sha
+  sha="$(git -C "$project_dir" rev-parse --short HEAD)"
+
+  echo "=== Kompiliere $project (Go) auf $target_host ==="
+  echo "  Branch:  $branch ($sha)"
+  echo "  Tests:   $([ $do_test -eq 1 ] && echo an || echo aus)"
+  echo "  EXE:     $([ $do_build_exe -eq 1 ] && echo "ja ($exe_name)" || echo "nein (Library)")"
+  echo ""
+
+  _edp_svc_stop_for_project "$target_host" "$project"
+
+  _edp_git_sync_vm "$target_host" "$target_dir" "$clone_url" "$branch"
+  local rc=$?
+  if [[ $rc -ne 0 ]]; then
+    echo "FEHLER beim Git-Sync auf VM! (exit $rc)" >&2
+    _edp_svc_start_for_project "$target_host" "$project"
+    return $rc
+  fi
+
+  if ssh "$target_host" "findstr /S /C:\"//go:generate\" ${target_dir}\\*.go" >/dev/null 2>&1; then
+    echo "go generate..."
+    ssh "$target_host" "cd /d ${target_dir} && go generate ./..." > /tmp/edp_go_$$.log 2>&1
+    rc=$?
+    if [[ $rc -ne 0 ]]; then
+      echo "FEHLER bei go generate:" >&2
+      cat /tmp/edp_go_$$.log >&2
+      rm -f /tmp/edp_go_$$.log
+      _edp_svc_start_for_project "$target_host" "$project"
+      return $rc
+    fi
+  fi
+
+  echo "go build..."
+  ssh "$target_host" "cd /d ${target_dir} && go build ./..." > /tmp/edp_go_$$.log 2>&1
+  rc=$?
+  if [[ $rc -ne 0 ]]; then
+    echo "FEHLER bei go build:" >&2
+    cat /tmp/edp_go_$$.log >&2
+    rm -f /tmp/edp_go_$$.log
+    _edp_svc_start_for_project "$target_host" "$project"
+    return $rc
+  fi
+
+  if [[ $do_test -eq 1 ]]; then
+    echo "go test..."
+    ssh "$target_host" "cd /d ${target_dir} && go test ./..." > /tmp/edp_go_$$.log 2>&1
+    rc=$?
+    if [[ $rc -ne 0 ]]; then
+      echo "FEHLER bei go test:" >&2
+      cat /tmp/edp_go_$$.log >&2
+      rm -f /tmp/edp_go_$$.log
+      _edp_svc_start_for_project "$target_host" "$project"
+      return $rc
+    fi
+  fi
+
+  if [[ $do_build_exe -eq 1 ]]; then
+    echo "go build -o ${exe_name}..."
+    ssh "$target_host" "cd /d ${target_dir} && go build -ldflags=\"-s -w\" -o ${exe_name} ." > /tmp/edp_go_$$.log 2>&1
+    rc=$?
+    if [[ $rc -ne 0 ]]; then
+      echo "FEHLER beim EXE-Build:" >&2
+      cat /tmp/edp_go_$$.log >&2
+      rm -f /tmp/edp_go_$$.log
+      _edp_svc_start_for_project "$target_host" "$project"
+      return $rc
+    fi
+
+    echo "Hole ${exe_name} zurück..."
+    scp "$target_host:${target_dir}/${exe_name}" "$project_dir/${exe_name}"
+  fi
+
+  echo "Go-Build erfolgreich."
+  rm -f /tmp/edp_go_$$.log
+
+  _edp_svc_start_for_project "$target_host" "$project"
+}
+
 _edp_compile() {
   local project="$1"
   shift
+
+  local project_dir="$EDP_PROJECT_ROOT/$project"
+  local ptype
+  ptype="$(_edp_detect_project_type "$project")" || return 1
+
+  if [[ "$ptype" == "go" ]]; then
+    _edp_compile_go "$project" "$@"
+    return $?
+  fi
 
   local target_host="$EDP_VM_HOST"
   local plat="Win64"
@@ -308,8 +448,6 @@ _edp_compile() {
   if [[ ${#args[@]} -gt 0 ]]; then
     target_host="${args[0]}"
   fi
-
-  local project_dir="$EDP_PROJECT_ROOT/$project"
 
   # Auto-detect .dproj
   local proj_name
