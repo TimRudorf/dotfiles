@@ -110,7 +110,7 @@ Für Projekte mit `go.mod` im Root:
 5. `go build ./...` — muss fehlerfrei durchlaufen
 6. `go test ./...` — läuft standardmäßig, via `-skip-tests` abschaltbar
 7. Wenn `main.go` im Repo-Root existiert (= Schnittstelle, nicht reine Library):
-   - `go build -ldflags="-s -w" -o <project>.exe .`
+   - `go build -ldflags="-s -w -H=windowsgui" -o <project>.exe .` — `-H=windowsgui` unterdrückt das CMD-Fenster beim EXE-Start, so dass sich Go-Schnittstellen wie die Delphi-GUI-Apps verhalten (Service-Modus ohnehin ohne Interactive-Session).
    - SCP `<project>.exe` zurück ins lokale Projektverzeichnis
 8. Service-Start (falls gemappt)
 
