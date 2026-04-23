@@ -395,7 +395,10 @@ _edp_compile_go() {
 
   if [[ $do_build_exe -eq 1 ]]; then
     echo "go build -o ${exe_name}..."
-    ssh "$target_host" "cd /d ${target_dir} && go build -ldflags=\"-s -w\" -o ${exe_name} ." > /tmp/edp_go_$$.log 2>&1
+    # -H=windowsgui: kein CMD-Fenster beim Start der EXE — gleiches Verhalten wie
+    # die Delphi-GUI-Schnittstellen. Relevant nur für den Konfig-UI-Modus; als
+    # Windows-Service gibt's ohnehin keine Interactive-Session.
+    ssh "$target_host" "cd /d ${target_dir} && go build -ldflags=\"-s -w -H=windowsgui\" -o ${exe_name} ." > /tmp/edp_go_$$.log 2>&1
     rc=$?
     if [[ $rc -ne 0 ]]; then
       echo "FEHLER beim EXE-Build:" >&2
