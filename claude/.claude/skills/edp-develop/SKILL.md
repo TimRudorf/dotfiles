@@ -187,5 +187,20 @@ Alle Projekte landen in `C:\EDP\<project>` (Projekt-Verzeichnisname = Zielverzei
    ```bash
    edp myproject compile
    ```
+6. **Nur bei Migration Delphi → Go**: ggf. alte `<ProjektCased>.exe` auf der VM einmal entfernen (siehe Troubleshooting), sonst scheitert der erste Go-Build.
+
+## Troubleshooting
+
+### Go-Build: "build output <exe> already exists and is not an object file"
+
+Tritt auf, wenn auf der VM noch eine EXE aus einer früheren Build-Ära (typisch: Delphi vor Migration zu Go) liegt und sich der Case des Dateinamens vom Go-Output unterscheidet. Windows ist case-insensitive, Go erkennt die Datei nicht als eigenen Build-Output und verweigert das Überschreiben.
+
+Einmalig entfernen:
+
+```bash
+ssh "$EDP_VM_HOST" "del C:\\EDP\\<project>\\<AlterName>.exe"
+```
+
+Beispiel (beim `schn_ollama`-Delphi→Go-Wechsel): `del C:\EDP\schn_ollama\Schn_Ollama.exe`.
 
 Abschließend `skill-optimize` mit `edp-develop` aufrufen.
