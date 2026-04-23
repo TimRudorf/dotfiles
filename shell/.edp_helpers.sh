@@ -4,7 +4,7 @@
 # --- Configuration ---
 EDP_VM_HOST="${EDP_VM_HOST:-eifert-dev}"
 EDP_VM_DIR_BASE='C:\EDP'
-EDP_PROJECT_ROOT="${EDP_PROJECT_ROOT:-$HOME/Develop/EDP}"
+EDP_PROJECT_ROOT="${EDP_PROJECT_ROOT:-$HOME/dev/EDP}"
 
 # Fixed VM-side tool paths
 EDP_RSVARS='C:\Program Files (x86)\Embarcadero\Studio\37.0\bin\rsvars.bat'
