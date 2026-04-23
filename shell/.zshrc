@@ -24,9 +24,6 @@ export NVM_DIR="$HOME/.nvm"
 [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
 [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"
 
-# zoxide
-eval "$(zoxide init zsh)"
-
 # fzf
 source <(fzf --zsh)
 
@@ -49,3 +46,6 @@ export ENABLE_LSP_TOOL=1
 [[ -f ~/.zshrc.$(uname | tr '[:upper:]' '[:lower:]') ]] && source ~/.zshrc.$(uname | tr '[:upper:]' '[:lower:]')
 
 export LC_CTYPE=en_US.UTF-8
+
+# zoxide — muss laut eigener Prüfung als letztes initialisiert werden
+eval "$(zoxide init zsh)"
