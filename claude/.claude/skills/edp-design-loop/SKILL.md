@@ -7,7 +7,7 @@ argument-hint: "[projekt] design-ziel"
 
 # EDP Design-Loop (Ralph-Loop)
 
-Autonome Iterations-Schleife für UI-/Design-Änderungen an EDP-Web-Projekten. Ändert Code, deployed/kompiliert via `edp-develop`, verifiziert das Ergebnis per `playwright-cli` und iteriert eigenständig.
+Autonome Iterations-Schleife für UI-/Design-Änderungen an EDP-Web-Projekten. Ändert Code, kompiliert via `edp compile`, verifiziert das Ergebnis per `playwright-cli` und iteriert eigenständig.
 
 ## Voraussetzungen
 
@@ -35,7 +35,7 @@ git rev-parse --abbrev-ref HEAD   # darf nicht "main" sein
 - Arbeitsbereich dirty → User informieren und abbrechen.
 - Branch = `main` → User informieren und abbrechen (oder nach Schritt 4 des Kommunikationswegs einen neuen Feature-Branch vorschlagen).
 
-## Schritt 2: Playwright-Config sicherstellen
+## Schritt 2: Playwright-Config + VM-IP auflösen
 
 edpweb nutzt ein selbst signiertes Zertifikat. Ohne Ignorieren schlägt jede Navigation fehl (`ERR_CERT_AUTHORITY_INVALID`).
 
@@ -54,6 +54,15 @@ cat > .playwright/cli.config.json <<'EOF'
 EOF
 ```
 
+`playwright-cli` macht eigene DNS-Resolution — SSH-Aliase aus `~/.ssh/config` werden **nicht** aufgelöst. `EDP_VM_HOST` kann ein Alias (`vm-eifert-develop`) oder eine IP sein. Einmal vorab die IP ermitteln:
+
+```bash
+VM_IP=$(ssh -G "${EDP_VM_HOST:-vm-eifert-develop}" 2>/dev/null | awk '/^hostname /{print $2}')
+VM_IP="${VM_IP:-172.16.0.2}"
+```
+
+`$VM_IP` wird in allen Playwright-URLs unten verwendet.
+
 ## Schritt 3: Baseline-Login + Screenshot
 
 Arbeitsverzeichnis bleibt im Projekt-Root — `playwright-cli` erlaubt Datei-Zugriff **nur** innerhalb des Projekt-Roots und dessen `.playwright-cli/` Unterordners. Pfade wie `/tmp/...` schlagen mit `outside allowed roots` fehl.
@@ -61,7 +70,7 @@ Arbeitsverzeichnis bleibt im Projekt-Root — `playwright-cli` erlaubt Datei-Zug
 ```bash
 playwright-cli -s=edpdesign open --browser=chromium \
   --config=.playwright/cli.config.json \
-  "https://${EDP_VM_HOST:-172.16.0.2}/"
+  "https://$VM_IP/"
 playwright-cli -s=edpdesign snapshot
 ```
 
@@ -72,8 +81,8 @@ playwright-cli -s=edpdesign fill   <benutzer-ref> "${EDP_DESIGN_USER:-demo}"
 playwright-cli -s=edpdesign fill   <passwort-ref> "${EDP_DESIGN_PASS:-demo}"
 playwright-cli -s=edpdesign select <funktion-ref> "${EDP_DESIGN_FUNKTION:-EL}"
 playwright-cli -s=edpdesign click  <anmelden-ref>
-playwright-cli -s=edpdesign snapshot --filename=baseline.yml
-playwright-cli -s=edpdesign screenshot --filename=baseline.png
+playwright-cli -s=edpdesign snapshot   --filename=.playwright-cli/baseline.yml
+playwright-cli -s=edpdesign screenshot --filename=.playwright-cli/baseline.png
 ```
 
 Verifikation: Nach Login ist oben rechts ein Button mit dem Muster `"<user> (<funktion>)"` sichtbar (z.B. `"demo (EL)"`) und die Startseite mit Kacheln (Einsätze, Disposition, etc.) wird angezeigt. Falls nicht → Login ist fehlgeschlagen, User informieren und abbrechen.
@@ -98,23 +107,23 @@ Pro Runde `N = 1..5`:
 git commit -am "wip: design-loop round N"
 ```
 
-**4c — Transport wählen.** Anhand der geänderten Dateitypen:
+**4c — Deploy via `edp compile`.** `edp deploy` wurde entfernt; `edp compile` ist der einzige Transport (Git-Push + SCSS-Build + MSBuild + Service-Restart; bei Template-/SCSS-/JS-only-Änderungen bleibt MSBuild effektiv ein No-Op).
+
+Die `edp`-Shellfunktion ist in Tims Zsh-Profil definiert und braucht eine interaktive Zsh-Shell — sonst schlägt sie mit `_edp_compile: command not found` fehl. In Claude-Sessions deshalb immer so:
 
 ```bash
-# Nur templates/ | public/ | development/scss/ → deploy (schnell, kein Service-Bounce)
-edp <projekt> deploy
-
-# .pas, .dproj, .dfm mit dabei → compile (pusht Branch, MSBuild, Service-Restart)
-edp <projekt> compile
+zsh -i -c 'edp <projekt> compile'
 ```
+
+**Hinweis:** `edp compile` startet den Delphi-Service neu — die Browser-Session geht dabei verloren. In 4d steht ggf. wieder der Login-Screen an. Dann vor dem Re-Check einmal per `snapshot` die neuen refs holen und identisch zu Schritt 3 einloggen, bevor mit der Cache-Buster-URL die Zielseite aufgerufen wird.
 
 **4d — Re-Check im Browser.** Gleiche Session weiterverwenden. Cache-Buster anhängen, weil edpweb statische Assets aggressiv cached:
 
 ```bash
 TS=$(date +%s)
-playwright-cli -s=edpdesign goto "https://${EDP_VM_HOST:-172.16.0.2}/<relevante-seite>?v=$TS"
-playwright-cli -s=edpdesign snapshot --filename=round-N.yml
-playwright-cli -s=edpdesign screenshot --filename=round-N.png
+playwright-cli -s=edpdesign goto "https://$VM_IP/<relevante-seite>?v=$TS"
+playwright-cli -s=edpdesign snapshot   --filename=.playwright-cli/round-$N.yml
+playwright-cli -s=edpdesign screenshot --filename=.playwright-cli/round-$N.png
 ```
 
 **4e — Urteil.** Screenshot und DOM-Snapshot gegen das Designziel prüfen. Drei Kategorien:
@@ -123,11 +132,30 @@ playwright-cli -s=edpdesign screenshot --filename=round-N.png
 - **Nächster Schritt klar** — kurz notieren, was noch fehlt, und Runde `N+1` starten.
 - **Festgefahren** — Zwei Runden in Folge ohne sichtbare Verbesserung **oder** Hard-Cap von 5 Runden erreicht → Loop abbrechen und in Schritt 5 User fragen.
 
+## Verifikations-Helfer
+
+Zusätzlich zu `snapshot` und `screenshot` nützlich, wenn Screenshots nicht reichen:
+
+- **Backend/API direkt testen** via `playwright-cli eval` (nicht `evaluate`!) — nutzt die laufende Browser-Session inkl. Cookies, liefert den echten Backend-Response:
+
+  ```bash
+  playwright-cli -s=edpdesign eval "async () => {
+    const r = await fetch('/action/...', { method: 'POST', credentials: 'same-origin',
+      headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+      body: new URLSearchParams({...}) });
+    return JSON.stringify({ status: r.status, text: (await r.text()).slice(0, 500) });
+  }"
+  ```
+
+  Unverzichtbar, wenn ein UI-Klick keinen sichtbaren Effekt zeigt und man wissen muss, ob der Fehler im Backend, in der Auth oder in der UI-Aktualisierung liegt.
+
+- **Browser-Errors auslesen** — Playwright schreibt Browser-Konsolen-Events in `.playwright-cli/console-*.log`. Die neueste Datei (per Dateiname-Timestamp erkennbar) enthält den aktuellen Request-Lauf.
+
 ## Schritt 5: Ergebnis präsentieren
 
 Dem User zeigen:
 
-- Baseline-Screenshot (`baseline.png`) und finalen Screenshot (`round-<N>.png`) nebeneinander.
+- Baseline-Screenshot (`.playwright-cli/baseline.png`) und finalen Screenshot (`.playwright-cli/round-<N>.png`) nebeneinander.
 - Liste der geänderten Dateien (`git diff --stat main...HEAD`).
 - Liste der WIP-Commits (`git log --oneline main..HEAD`).
 - Kurze textuelle Bewertung: was wurde erreicht, was blieb offen.
@@ -155,8 +183,9 @@ Screenshots und Snapshots bleiben unter `.playwright-cli/` im Projekt liegen (f�
 - **Keine manuellen `git push`.** Implizite Pushes durch `edp compile` auf dem Feature-Branch sind OK.
 - **Hard-Cap 5 Runden.** Danach fragt der Skill den User, ob weiter iteriert werden soll.
 - **2× keine Verbesserung** → abbrechen und User fragen.
-- **Nur relative Pfade** für `screenshot`, `state-save`, `snapshot --filename=...` (absoluter Pfad außerhalb des Projekt-Roots wird von `playwright-cli` blockiert).
-- **Transport-Ökonomie**: Template-/SCSS-/JS-only → `deploy` (Sekunden). `.pas`/`.dproj`/`.dfm` → `compile` (Minuten).
+- **Screenshots + Snapshots immer nach `.playwright-cli/`** — dieser Ordner ist projektweit gitignored. Nackte Dateinamen (z.B. `--filename=baseline.png`) landen im Projekt-Root und verschmutzen das Working Tree, was den nächsten `edp compile` blockiert. Absolute Pfade außerhalb des Projekt-Roots werden von `playwright-cli` mit `outside allowed roots` verweigert.
+- **Für Inputs `fill` benutzen, nicht `type`** — `type` schreibt Zeichen ohne input-Event auszulösen, Live-Such-Handler und Formulare reagieren nicht. `fill` ist der verlässliche Weg.
+- **`eval` statt `evaluate`** — der playwright-cli-Subcommand heißt `eval`; `evaluate` wirft einen Help-Screen-Error.
 - **Deutsche User-Kommunikation** mit echten Umlauten, kein AI-Hinweis.
 
 Abschließend `skill-optimize` mit `edp-design-loop` aufrufen.
