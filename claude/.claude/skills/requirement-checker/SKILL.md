@@ -20,7 +20,7 @@ Prüfe ob jedes Tool im PATH verfügbar ist (`command -v tool`).
 Prüfe ob der Pfad existiert (`test -e path`). Tilde (`~`) zu `$HOME` auflösen.
 
 ### Projekt: Projektpfade
-Prüfe ob mindestens ein Match für den Glob-Pfad existiert (z.B. `~/Develop/EDP/*`).
+Prüfe ob mindestens ein Match für den Glob-Pfad existiert (z.B. `~/dev/EDP/*`).
 
 ## Ergebnis
 
