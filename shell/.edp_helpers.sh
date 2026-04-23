@@ -406,7 +406,11 @@ _edp_compile_go() {
     fi
 
     echo "Hole ${exe_name} zurück..."
-    scp "$target_host:${target_dir}/${exe_name}" "$project_dir/${exe_name}"
+    # scp mag den mit ssh-cmd üblichen Backslash-Pfad nicht. Forward-Slash-
+    # Form (wie im Delphi-Zweig mit remote_dir) nutzen — OpenSSH normalisiert
+    # das auf der Remote-Seite korrekt.
+    local remote_dir="C:/EDP/${project}"
+    scp "$target_host:${remote_dir}/${exe_name}" "$project_dir/${exe_name}"
   fi
 
   echo "Go-Build erfolgreich."
