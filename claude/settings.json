@@ -19,6 +19,17 @@
           }
         ]
       }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "$HOME/dotfiles/claude/scripts/jarvis-memory-autosync.sh"
+          }
+        ]
+      }
     ]
   }
 }
