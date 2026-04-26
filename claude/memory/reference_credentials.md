@@ -10,7 +10,7 @@ originSessionId: cbd92e98-dddc-4e6e-99bd-eabdf2cb30ad
 - Mac: `~/dotfiles/scripts/decrypt-env.sh` → schreibt `~/.env` (mode 0600), wird von `.zshrc` ge-`source`-d.
 - VM: `~/dotfiles/scripts/decrypt-env.sh --restart-jarvis` → schreibt `/opt/stacks/jarvis/.env` und `docker compose up -d jarvis-workspace`.
 
-**Editieren:** `sops ~/dotfiles/secrets/env.sops` → öffnet $EDITOR mit Klartext, beim Speichern wieder verschlüsselt. Danach commit + push, beide Hosts pullen + decrypten. Niemals `~/.env` oder `/opt/stacks/jarvis/.env` direkt editieren — wird beim nächsten decrypt überschrieben.
+**Editieren:** `sops ~/dotfiles/secrets/env.sops` → öffnet $EDITOR mit Klartext, beim Speichern wieder verschlüsselt. Danach commit + push — **beide Hosts pullen + decrypten automatisch** via cron (`*/2 * * * * ~/dotfiles/scripts/sync-from-remote.sh`). Mac aktualisiert `~/.env`, VM aktualisiert `/opt/stacks/jarvis/.env` und recreated den jarvis-Stack nur wenn sich Werte tatsächlich geändert haben. Logs unter `~/.cache/dotfiles-sync.log` (nur bei Aktivität geschrieben). Niemals `~/.env` oder `/opt/stacks/jarvis/.env` direkt editieren — wird beim nächsten Auto-Sync überschrieben.
 
 **Host-spezifische Werte** (z.B. Pfade) gehören NICHT in die sops-Datei. Mac-Overrides: `~/dotfiles/shell/.zshrc.darwin`. Aktuell dort: `EDP_PROJECT_ROOT="$HOME/dev/EDP"` (auf VM ist es `/workspace/EDP`).
 
