@@ -7,8 +7,8 @@ local.conf
 *.lock.json
 *-generated.conf
 
-# Auto-generated nested Claude Code working-dir artifacts
-claude/.claude/skills/.claude/
+# Auto-generated nested Claude Code working-dir artifacts (post-flatten leftover)
+claude/.claude/
 
 # OS artifacts
 .DS_Store
