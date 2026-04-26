@@ -1,0 +1,16 @@
+- [Persönliche Eckdaten Tim](user_personal.md) — Geburtsdatum, Frankfurt/Berger Straße, Single, kein Auto, LKW-Führerschein
+- [Studium Tim](user_studium.md) — TU Darmstadt, Master Wing E-Technik, Thesis Ende 2026 geplant, ein Semester Verzug
+- [Berufliche Situation Tim](user_arbeit.md) — EDP Werkstudent 20h, Rettungssanitäter nebenbei, ~2k€ netto
+- [Familie Tim](user_familie.md) — Geburtstage Eltern (Martina 02.12.63, Ralf 10.05.63) und Schwestern (Laura 01.02.95, Nina 21.12.01)
+- [Enger Freundeskreis](user_freunde.md) — Tilman Scherer, bester Freund in Frankfurt, Sport-Partner
+- [Sport und Hobbys Tim](user_sport.md) — täglich Sport, Kraftsport+Laufen mit Tilman, Klettern/Golf/Ski, technisch nerdy
+- [Finanzen und Reise-Strategie Tim](user_finanzen.md) — Amex Platinum, ~400k MR Points, Lufthansa-Lounge-Thema offen
+- [Nicht bestandene Klausuren WS 25/26](project_uni_pruefungen.md) — Nachholtermine SS 26, Roadmap auf Tims Initiative
+- [Jarvis Unified Identity Plan](project_jarvis_unified_identity.md) — Big-Bang-Refactor Mac+Container vereint, Stand 2026-04-26: Phase 0 ✅, Phase 1 läuft
+- [Echte Umlaute verwenden](feedback_umlauts.md) — generell überall ä/ö/ü/ß statt ae/oe/ue/ss
+- [Jarvis-Deploy-Workflow](feedback_jarvis_deploy_workflow.md) — Git statt scp + Feature-Branch + Test-First — Tim merged erst nach OK
+- [Credentials / .env Standorte](reference_credentials.md) — ~/.env (Mac) + /opt/stacks/jarvis/.env (VM); PRIVATE/WORK-Schema; GitHub-Tokens + Nextcloud-Endpoints
+- [Docker Compose Stacks Standort](reference_docker_stacks.md) — /opt/stacks auf Debian-VM 172.16.0.3 (Proxmox) + Repo TimRudorf/docker-compose
+- [Jarvis Repo lokal](reference_jarvis_repo.md) — Klon von TimRudorf/docker-compose unter ~/dev/docker-compose/, Bridge-Code in jarvis/bridge/src/
+- [Claude Code Sensitive-Path-Schutz](reference_claude_code_sensitive_paths.md) — .claude/.git/.vscode/.idea/.husky hardcoded geblockt auch mit --dangerously-skip-permissions, Bash-Tool inkl., Real-Path mitgeprüft
+- [openclaw als Jarvis-Vorbild](reference_openclaw_inspiration.md) — bei neuen Jarvis-Features dort nach Konzepten schauen, Terminologie aber eigen halten
