@@ -4,12 +4,17 @@ description: Wo Jarvis die Zugangsdaten findet; Schema-Konvention PRIVATE/WORK; 
 type: reference
 originSessionId: cbd92e98-dddc-4e6e-99bd-eabdf2cb30ad
 ---
-Tim pflegt zwei strukturgleiche `.env`-Dateien:
+**Single Source of Truth:** `~/dotfiles/secrets/env.sops` — sops-verschlüsselt mit age, im Public-Repo `TimRudorf/dotfiles` committet. Drei Recipients: Mac-Key (`~/.config/sops/age/keys.txt`), VM-Key (auf 172.16.0.3, dito), Backup-Key (Vaultwarden-Eintrag "SOPS age backup key (dotfiles)").
 
-- **Mac (lokal):** `~/.env` (mode 0600) — wird von der Shell automatisch geladen (via `.zshrc`)
-- **Debian-VM:** `/opt/stacks/jarvis/.env` — wird von Docker Compose beim Container-Start eingelesen
+**Decrypt-Workflow:**
+- Mac: `~/dotfiles/scripts/decrypt-env.sh` → schreibt `~/.env` (mode 0600), wird von `.zshrc` ge-`source`-d.
+- VM: `~/dotfiles/scripts/decrypt-env.sh --restart-jarvis` → schreibt `/opt/stacks/jarvis/.env` und `docker compose up -d jarvis-workspace`.
 
-Beide haben die **gleichen Keys in gleicher Reihenfolge**. Werte dürfen divergieren (z.B. wenn nur eine Seite einen Token hat), die Struktur ist synchron.
+**Editieren:** `sops ~/dotfiles/secrets/env.sops` → öffnet $EDITOR mit Klartext, beim Speichern wieder verschlüsselt. Danach commit + push, beide Hosts pullen + decrypten. Niemals `~/.env` oder `/opt/stacks/jarvis/.env` direkt editieren — wird beim nächsten decrypt überschrieben.
+
+**Host-spezifische Werte** (z.B. Pfade) gehören NICHT in die sops-Datei. Mac-Overrides: `~/dotfiles/shell/.zshrc.darwin`. Aktuell dort: `EDP_PROJECT_ROOT="$HOME/dev/EDP"` (auf VM ist es `/workspace/EDP`).
+
+**SOPS_AGE_KEY_FILE** muss auf macOS explizit gesetzt sein (Default-Pfad ist dort `~/Library/Application Support/sops/age/keys.txt`, nicht `~/.config/...`). In `~/dotfiles/shell/.zshrc` exportiert.
 
 ## Konvention
 
