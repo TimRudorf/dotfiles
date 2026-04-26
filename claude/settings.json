@@ -8,5 +8,17 @@
     "frontend-design@claude-plugins-official": true
   },
   "effortLevel": "xhigh",
-  "skipDangerousModePermissionPrompt": true
+  "skipDangerousModePermissionPrompt": true,
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "$HOME/dotfiles/claude/scripts/jarvis-session-start.sh"
+          }
+        ]
+      }
+    ]
+  }
 }
