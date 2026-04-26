@@ -33,7 +33,10 @@ source ~/.alias.sh
 # Work helpers (optional, skip if missing)
 [[ -f ~/.edp_helpers.sh ]] && source ~/.edp_helpers.sh
 
-# Secrets & API tokens (Claude Code Skills)
+# sops + age (where to find the age private key — macOS default is elsewhere)
+export SOPS_AGE_KEY_FILE="$HOME/.config/sops/age/keys.txt"
+
+# Secrets & API tokens (Claude Code Skills) — managed via sops, decrypted by scripts/decrypt-env.sh
 [[ -f ~/.env ]] && source ~/.env
 
 # Local bin
