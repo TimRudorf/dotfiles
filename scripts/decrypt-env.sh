@@ -56,6 +56,6 @@ if [[ "${1:-}" == "--restart-jarvis" ]]; then
     exit 4
   fi
   cd /opt/stacks/jarvis
-  docker compose up -d jarvis-workspace
-  echo "jarvis-workspace recreated with new env"
+  docker compose up -d
+  echo "jarvis stack recreated with new env (all services)"
 fi
