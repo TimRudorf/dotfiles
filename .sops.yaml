@@ -1,0 +1,7 @@
+creation_rules:
+  - path_regex: secrets/.*\.sops$
+    key_groups:
+      - age:
+          - age1dnfe482dqec053wdyee6mptapdt570ntuhcy2qjgc3ex660644dq6qzfe8  # mac (Tim)
+          - age1rv80uvc70c9sdt8ncgtw4m9agkx76mhc9jhr4zx8dqdpal9hvckqe7tw6s  # vm (debian 172.16.0.3, jarvis-stacks-host)
+          - age1s0tkj3llgxer2tfau4fq3dw92t9afdhye3tl9gds932uettsua5q09237s  # backup (Vaultwarden)
