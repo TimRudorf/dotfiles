@@ -126,6 +126,24 @@ playwright-cli -s=edpdesign snapshot   --filename=.playwright-cli/round-$N.yml
 playwright-cli -s=edpdesign screenshot --filename=.playwright-cli/round-$N.png
 ```
 
+**Cache-Falle bei reinen JS/CSS-Änderungen.** Script- und CSS-Tags im Template tragen einen eigenen `?v={VERSION}`-Cache-Buster, der an die Delphi-exe-Version gebunden ist. Ohne Versions-Bump (reine JS/SCSS-Commits) lädt der Browser trotz URL-Cache-Buster die alten Assets aus dem HTTP-Cache — auch `location.reload()` hilft nicht. Wenn das neue Verhalten ausbleibt, erst per `fetch` prüfen, ob die Änderung überhaupt auf dem Server liegt:
+
+```bash
+playwright-cli -s=edpdesign eval "async () => {
+  const r = await fetch('/public/js/<pfad>/<datei>.js?v=' + Date.now(), { cache: 'no-store' });
+  return (await r.text()).includes('<marker-aus-deiner-änderung>');
+}"
+```
+
+Kommt `true` zurück, der Browser zeigt aber weiter das alte Verhalten → Browser-Session neu starten (geht schneller als jede Cache-Akrobatik):
+
+```bash
+playwright-cli -s=edpdesign close
+playwright-cli -s=edpdesign open --browser=chromium \
+  --config=.playwright/cli.config.json "https://$VM_IP/"
+# danach erneut einloggen (Schritt 3) und zur Zielseite navigieren
+```
+
 **4e — Urteil.** Screenshot und DOM-Snapshot gegen das Designziel prüfen. Drei Kategorien:
 
 - **Fertig** — Ziel erreicht → Loop verlassen, weiter zu Schritt 5.
