@@ -11,7 +11,13 @@
 
 set -u
 
-DOTFILES_MEMORY="$HOME/dotfiles/claude/memory"
+DOTFILES_DIR="$HOME/dotfiles"
+DOTFILES_MEMORY="$DOTFILES_DIR/claude/memory"
+
+# --- Pull dotfiles (fail-safe) — holt Memory-Updates vom Peer-Host ---
+if [ -d "$DOTFILES_DIR/.git" ]; then
+  git -C "$DOTFILES_DIR" pull --rebase --autostash --quiet 2>/dev/null || true
+fi
 
 # --- Stdin lesen (Hook-Input-JSON) ---
 INPUT=""
