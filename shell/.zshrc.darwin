@@ -1,2 +1,5 @@
 # Homebrew dotnet
 export PATH="/opt/homebrew/opt/dotnet@9/bin:$PATH"
+
+# Mac-specific overrides for shared sops-managed .env (paths differ from VM)
+export EDP_PROJECT_ROOT="$HOME/dev/EDP"

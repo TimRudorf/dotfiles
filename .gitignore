@@ -10,6 +10,15 @@ local.conf
 # Auto-generated nested Claude Code working-dir artifacts (post-flatten leftover)
 claude/.claude/
 
+# Secrets — never commit decrypted values
+.env
+.env.bak-*
+secrets/*.env
+!secrets/*.sops
+# age private keys — must never leave the host
+keys.txt
+*.age-key
+
 # OS artifacts
 .DS_Store
 Thumbs.db
