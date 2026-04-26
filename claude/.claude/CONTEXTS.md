@@ -26,9 +26,9 @@ Lies erst den **Prompt**, dann die **Session-/Topic-Historie**, dann das **Memor
 
 ### Signale für **PRIVATE**
 
-- Begriffe: `reMarkable`, `Proxmox`, `n8n`, `news-digest`, `Homeserver`, `Sonarr`, `Radarr`, `Plex`, `Audiobookshelf`, `Pushover`, `private repo`, `persönliches Projekt`
+- Begriffe: `reMarkable`, `Proxmox`, `Homeserver`, `Sonarr`, `Radarr`, `Plex`, `Audiobookshelf`, `Pushover`, `private repo`, `persönliches Projekt`
 - Domains: `github.com/TimRudorf/*` (privates GitHub), Cloud unter eigener Domain
-- Skills: `daily-news-digest`, `remarkable-upload`, `mealie-import` → private-Kontext
+- Skills: `remarkable-upload`, `mealie-import` → private-Kontext
 - Dateien in `/opt/stacks/` (Home-Lab) → private
 
 ### Ambiguität
