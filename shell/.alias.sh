@@ -11,7 +11,14 @@ alias cat="bat"
 # up the change via the cron-based auto-sync within ~2 min.
 senv() {
   local file="${1:-$HOME/dotfiles/secrets/env.sops}"
-  sops --input-type=dotenv --output-type=dotenv "$file" || return $?
+  local rc
+  sops --input-type=dotenv --output-type=dotenv "$file"
+  rc=$?
+  # sops returns 200 when content didn't change in the editor — not an error;
+  # an earlier-staged change to the file may still need to be pushed.
+  if (( rc != 0 && rc != 200 )); then
+    return $rc
+  fi
 
   # Only auto-push for the canonical secrets file
   [[ "$file" == "$HOME/dotfiles/secrets/env.sops" ]] || return 0
