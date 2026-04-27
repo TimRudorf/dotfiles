@@ -31,3 +31,4 @@
 - [AHE-Daten haben Lücken](feedback_ahe_datenluecken.md) — Active Energy/Workouts unvollständig; nicht für TDEE/Kalorienbilanz nutzen, Gewicht bleibt der harte Datenpunkt
 - [Whoop nicht mehr getragen](reference_whoop_history.md) — Tim trug früher Whoop, aktuell nicht; fehlende Whoop-Daten sind erwartet
 - [Cut-Coach Protokoll](project_cut_coach_protocol.md) — 4 Bridge-Schedules (daily/weekly/2× reset); Logging unter /workspace/cut-log/; Reaktions-Regeln auf Tim-Antworten
+- [Supplements Tim](user_supplements.md) — D3 5000 IE + K2 fix; Restliste folgt; vor Supplement-Vorschlägen kurz fragen
