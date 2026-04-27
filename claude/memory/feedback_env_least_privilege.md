@@ -20,3 +20,13 @@ Wenn ein neuer Stack ein eigenes `.env` braucht und die Werte aus dem zentralen 
 - `chmod 600` ist Pflicht. atomar via tmp+mv damit der Service nie ein halbgeschriebenes File sieht.
 - Bei Key-Rotation: gleiches Filterskript nochmal durchziehen, danach `docker compose up -d --force-recreate`.
 - Wenn ein Stack viele zentrale Werte braucht (z.B. ein Reporting-Tool, das mehrere APIs anspricht): trotzdem explizit listen, nicht kopieren — auch als Doku, was tatsächlich gebraucht wird.
+
+## Spezialfall: `TS_AUTHKEY` (Tailscale-Sidecar)
+
+`TS_AUTHKEY` wird von `tailscale/tailscale`-Sidecars **nur beim allerersten Start** gebraucht (Initial-Authentication). Danach liegt der Tailscale-State persistent im Volume (`/var/lib/tailscale`), Restart liest ihn ohne erneuten Key. Heißt: **nach dem ersten erfolgreichen Boot `TS_AUTHKEY` aus dem `.env` entfernen** — er liegt sonst unnötig rum und wäre bei Container-Kompromittierung ein Werkzeug, um beliebige neue Tailnet-Knoten anzulegen.
+
+Proof: Logs zeigen nach Re-Create ohne Key `machineAuthorized=true; authURL=false` — Auth aus State, nicht aus Env.
+
+Wenn das State-Volume verloren geht (z.B. `docker compose down -v` oder Volume-Wipe): Key temporär wieder einfügen, Container starten, danach wieder entfernen.
+
+Gilt für alle Tailscale-Sidecars (data-api, jarvis, künftige Stacks).
