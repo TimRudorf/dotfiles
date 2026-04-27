@@ -5,6 +5,17 @@
 
 set -euo pipefail
 
+# Cron/launchd strip PATH down to a minimal default — make sops findable
+# wherever it lives across hosts: brew on Apple Silicon (/opt/homebrew/bin),
+# brew on Intel/Linuxbrew (/usr/local/bin, /home/linuxbrew/.linuxbrew/bin),
+# apt (/usr/bin), GitHub release (/usr/local/bin), user-local (~/.local/bin).
+export PATH="$HOME/.local/bin:/opt/homebrew/bin:/home/linuxbrew/.linuxbrew/bin:/usr/local/bin:/usr/bin:/bin"
+
+if ! command -v sops >/dev/null 2>&1; then
+  echo "sops not found on PATH ($PATH) — install via apt, GitHub release, or place in ~/.local/bin" >&2
+  exit 5
+fi
+
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 SOPS_FILE="$REPO_ROOT/secrets/env.sops"
 
