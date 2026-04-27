@@ -8,10 +8,12 @@ originSessionId: 6da8ffce-ed73-4d31-92fe-c648997a3234
 
 **Why:** Tims langfristiges Bodybuilding-Engagement, konkretes Beach-Event als externe Deadline; will Kraft im Gym halten und Substanz bewahren.
 
-**Ausgangs-Eckdaten (Stand 2026-04-27):**
-- 28 Jahre, 1,81 m, 76 kg, KFA ~13–14 % geschätzt
-- BMR ≈ 1756 kcal (Mifflin-St Jeor), TDEE ≈ 3000–3100 kcal bei aktuellem Trainingsvolumen (6 Trainingstage, 4× Cardio inkl. Long Runs, viel Krafttraining)
-- Zeitfenster: ~6,5 Wochen → realistisch 2,5–4 kg KG-Verlust, KFA-Ziel ~9–10 %
+**Ausgangs-Eckdaten (Stand 2026-04-27, verifiziert via AHE/Apple Health):**
+- 28 Jahre, 1,81 m, **76,3 kg** (heutige Wiegung; Vortag 77,35 kg → Wasser-/Glykogen-Rauschen, normal)
+- KFA ~13–14 % geschätzt (Spiegel/Maßband, nicht Waage — siehe feedback_smartwaage_data.md)
+- BMR ≈ 1763 kcal (Mifflin-St Jeor mit 76,3 kg), TDEE ≈ 3000–3100 kcal bei aktuellem Trainingsvolumen
+- **Verlauf der letzten 3 Monate aus Apple Health:** Feb-Range 73–75 kg, März-Range 73–77, April 76–77 → langsame Aufwärtsdrift ~+2-3 kg seit Februar (vermutlich Bulk-Creep / Maintenance-Plus). Cut startet daher von leichtem Höchststand — gut, weil viel Wasser/Glykogen in den ersten 2 Wochen ohnehin abgeht.
+- Zeitfenster: ~6,5 Wochen → realistisch 2,5–3,5 kg KG-Verlust, Ziel-Range ~72,8–73,8 kg zur Kroatien-Abreise
 
 **Ernährungs-Anker (von Tim fix vorgegeben):**
 - 500 g Magerquark abends — bleibt drin, ist Cut-mäßig perfekt (~50 g Protein, Casein, sättigend)
