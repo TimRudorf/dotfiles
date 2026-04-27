@@ -30,11 +30,13 @@ originSessionId: 6da8ffce-ed73-4d31-92fe-c648997a3234
 - **Abends fix:** 500 g Magerquark + 15 g Leinsamen + Beeren/1 TL Honig (~325 kcal, ~50 g P)
 
 **Tracking (Pareto):** Tim wiegt sich **täglich morgens nüchtern** (Stand 2026-04-27). Daten landen automatisch via Renpho → Apple Health → data-api. Auswertung:
-- Einzelne Tageswerte ignorieren (Wasser/Glykogen-Rauschen ±1–2 kg)
-- **7-Tage-Rolling-Average** als wahre Trendmetrik
-- Wochenvergleich rolling-vs-rolling
-- Plus 1 Spiegel-Foto/Woche
+- Einzelne Tageswerte ignorieren (Wasser/Glykogen-Rauschen ±1–2 kg, bei Tim heute schon 1 kg Differenz innerhalb 24h gesehen)
+- **7-Tage-Rolling-Average** als wahre Trendmetrik — kickt erst ab ~03.05. realistisch (Mindestens 5 Datenpunkte)
+- Wochenvergleich rolling-vs-rolling, erste belastbare Wochenauswertung **Sa 09.05.2026**
+- Plus 1 Spiegel-Foto/Woche (Sa morgens, gleicher Lichtwinkel)
 - Bei 2 Wochen Stillstand im Rolling-Average: −150 kcal
+- **KFA/Lean-Mass aus Waage ignorieren** (siehe feedback_smartwaage_data.md)
+- **Active-Energy/Workout-Daten der Watch nicht für TDEE-Anpassung** (siehe feedback_ahe_datenluecken.md)
 
 **Training:** Split bleibt unverändert (siehe user_sport.md), Lasten halten, kein zusätzliches Cardio.
 
