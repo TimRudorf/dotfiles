@@ -16,3 +16,4 @@
 - [openclaw als Jarvis-Vorbild](reference_openclaw_inspiration.md) — bei neuen Jarvis-Features dort nach Konzepten schauen, Terminologie aber eigen halten
 - [SWAG Reverse Proxy auf VPS](reference_swag_vps.md) — SWAG für *.timrudorf.de liegt nur auf dem VPS, NICHT im docker-compose Repo — Configs direkt per SSH
 - [VPS Zugang](reference_vps_access.md) — ssh root@82.165.47.37 mit SSH-Key (Host für SWAG / *.timrudorf.de)
+- [EDP Dev-VM Netzwerk](reference_edp_devvm.md) — vm-eifert-develop fixe IP 172.16.0.2, keine eigene Tailscale, nur über Proxmox-Subnet-Router
