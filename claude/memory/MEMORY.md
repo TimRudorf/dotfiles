@@ -26,3 +26,4 @@
 - [Tims Tailnet (Tailscale)](reference_tailscale.md) — taile8466e.ts.net; Container hängt seit 2026-04-27 dran; proxmox/debian/homeassistant/macbook/iphone per Hostname
 - [Apple-Health-Pipeline](project_apple_health_pipeline.md) — Health Auto Export Lifetime gekauft 2026-04-27; Endpoint zu bauen auf Glashütten-VM, Renpho → Health → Jarvis
 - [.env least-privilege filtern](feedback_env_least_privilege.md) — bei neuen Compose-Stacks NUR die wirklich benötigten Env-Vars rüberziehen, nicht das ganze sops-.env
+- [Tims iPhone-Settings](reference_iphone_settings.md) — Background App Refresh global AUS; Apps die "im Hintergrund pushen" tun das nicht — manueller Open nötig
