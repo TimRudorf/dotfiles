@@ -27,7 +27,12 @@ originSessionId: 6da8ffce-ed73-4d31-92fe-c648997a3234
 - **Snack/Pre-Workout (~250–300 kcal):** Banane + Whey ODER Hüttenkäse 200g + Reiswaffel ODER 30g Mandeln + Apfel; an Doppel-Workout-Tagen (Di/Do) mehr Carbs.
 - **Abends fix:** 500 g Magerquark + 15 g Leinsamen + Beeren/1 TL Honig (~325 kcal, ~50 g P)
 
-**Tracking (Pareto):** 1× wöchentlich Sa morgens nüchtern wiegen + 1 Spiegel-Foto. Bei 2 Wochen Stillstand: −150 kcal.
+**Tracking (Pareto):** Tim wiegt sich **täglich morgens nüchtern** (Stand 2026-04-27). Daten landen automatisch via Renpho → Apple Health → data-api. Auswertung:
+- Einzelne Tageswerte ignorieren (Wasser/Glykogen-Rauschen ±1–2 kg)
+- **7-Tage-Rolling-Average** als wahre Trendmetrik
+- Wochenvergleich rolling-vs-rolling
+- Plus 1 Spiegel-Foto/Woche
+- Bei 2 Wochen Stillstand im Rolling-Average: −150 kcal
 
 **Training:** Split bleibt unverändert (siehe user_sport.md), Lasten halten, kein zusätzliches Cardio.
 
