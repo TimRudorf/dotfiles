@@ -8,7 +8,9 @@ originSessionId: d0423f1a-b3e2-4f7c-af1e-6e691e76d6d4
 
 **Bett-Zeit:** Wird rückwärts aus dem Sonnenaufgang berechnet, sodass Tim genug Schlaf bekommt.
 
-**Schlaf-Ziel:** Standardannahme bis weitere Info kommt — **8h**. (Falls Tim einen anderen Wert nennt, anpassen.)
+**Schlaf-Ziel:** **8h** (von Tim am 2026-04-27 bestätigt — bei Bedarf nachjustieren, wenn Tim was anderes feststellt).
+
+**Mittagessen:** Anker **12:30**. Tim ist flexibel, hat manchmal Lunch-Termine — die meldet er separat. Bei Lunch-Termin gilt der Termin, sonst Default 12:30.
 
 **Praktisches:**
 - Sonnenaufgang Frankfurt am Main variiert übers Jahr stark — im Sommer ~5:15, im Winter ~8:30
