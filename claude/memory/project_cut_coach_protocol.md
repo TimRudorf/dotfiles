@@ -18,12 +18,92 @@ originSessionId: af83e9d2-b5c7-4764-a46f-a562bae1d782
 **Wenn Tim auf eine Daily-Check-in-Frage antwortet (Bridge spawnt frische Session):**
 1. Lies `project_cut_kroatien.md`, dieses Protokoll, `feedback_smartwaage_data.md`, `feedback_ahe_datenluecken.md`.
 2. Lies die Topic-Historie — die letzte Bridge-Frage zeigt das Datum (Header `🥗 Daily Check-in [YYYY-MM-DD]`).
-3. Erstelle/überschreibe `/workspace/cut-log/daily/<DATUM>.md` mit Tims Antwort als strukturiertes Markdown (Felder: Frühstück, Mittag, Snacks, Magerquark, Alkohol, Training, Hunger, Stimmung, Slip-Notes).
-4. Gib **knappes ehrliches Feedback** in Telegram zurück — strikt-aber-fair (siehe `feedback_strenge_motivation.md` falls vorhanden):
+3. **Parse Tims Antwort in strukturiertes Markdown mit YAML-Frontmatter** und speichere unter `/workspace/cut-log/daily/<DATUM>.md`. Schema (siehe unten).
+4. Gib **knappes ehrliches Feedback** in Telegram zurück — strikt-aber-fair:
    - Lobend bei Compliance ("sauber, weiter so")
    - Klar bei Slip ohne Drama ("Bier+Pommes ~800 kcal extra → morgen tighter halten")
    - Bei wiederholtem Slip: konkrete Konsequenz benennen
 5. Topic NICHT schließen (General-Topic bleibt offen).
+
+**Daily-Log Schema (`/workspace/cut-log/daily/YYYY-MM-DD.md`):**
+```markdown
+---
+date: 2026-04-27
+day_n: 1
+breakfast:
+  status: hit | partial | miss   # hit=Plan-Skyr-Bowl, partial=modifiziert, miss=ausgelassen/anders
+  detail: "Kurzbeschreibung"
+  kcal_estimate: 480
+lunch:
+  detail: "Was gegessen, wo"
+  kcal_estimate: 750
+  protein_g_estimate: 35
+  status: on_plan | over | low_protein | carb_heavy | junk
+snacks:
+  detail: ""
+  kcal_estimate: 0
+magerquark_evening:
+  status: hit | miss
+  detail: ""
+alcohol:
+  had: false
+  kind: ""           # "Bier", "Wein", etc.
+  units: 0           # Bier=0,5l=1 unit; Glas Wein=1; Shot=0,5
+  kcal_estimate: 0
+training:
+  done: true|false
+  type: "Krafttraining Push" | "Run" | "Rest" etc.
+  duration_min: 60
+  perceived: "stark" | "ok" | "schwach"
+hunger_1_5: 3
+mood_1_5: 4
+slip_notes: "Restaurant mit Tilman, Pommes statt Bowl"
+total_kcal_estimate: 2380
+total_protein_g_estimate: 165
+compliance_score: 92          # 0–100, Formel siehe unten
+on_plan_overall: true
+---
+
+> Tims Antwort (Zitat):
+> <Originaltext>
+
+**Jarvis-Feedback:** <2-4 Sätze ehrlich>
+```
+
+**Compliance-Score-Formel (0–100):**
+- Breakfast: hit=20, partial=10, miss=0
+- Magerquark abends: hit=25, miss=0
+- Total kcal in [2200, 2600]: +25 (over=0, unter 2000 = -5 Crash-Strafe)
+- Protein ≥ 150 g: +15 (130–149: +8; <130: 0)
+- Lunch nicht "junk": +10
+- Mood/Hunger sustainability: 1–5 → keine direkten Punkte, aber Trend-Indikator
+- Alkohol-Penalty: Score cap auf 95 wenn `alcohol.had=true` (Realität, nicht Moral)
+- Max = 100 (clean) / 95 (mit Alkohol)
+
+**Wochen-Aggregation (für Sa-Wiege-Review):**
+- `avg_compliance` = Mittelwert der 7 daily compliance_scores
+- `on_plan_days` = Anzahl Tage mit `on_plan_overall=true`
+- `magerquark_hit_rate` = Anteil hit
+- `alcohol_days` = Tage mit Alkohol
+- `avg_kcal`, `avg_protein` = Mittelwerte
+- `training_days` = Tage mit `training.done=true`
+- Slip-Patterns: an welchen Wochentagen häufen sich Misses? (z.B. immer Fr/Sa → Wochenend-Problem)
+
+**Diskriminator-Logik (im Sa-Wiege-Review explizit so anwenden):**
+
+```
+weekly_avg_compliance ≥ 85?
+  ja → Tim hält den Plan sauber
+       weight_delta < 0,3 kg/Woche  → "PLAN-PROBLEM" → −150 kcal
+       weight_delta 0,4–0,7 kg/Woche → "PERFEKT" → halten
+       weight_delta > 0,8 kg/Woche  → "ZU SCHNELL" → +100 kcal
+  nein, 70–84 → "GEMISCHT" → erst Compliance auf 85+ ziehen, kein Plan-Tightening
+       konkret nennen wo's hakt (Mittag? Wochenende? Alkohol?)
+  nein, < 70 → "TIM-PROBLEM" → Plan-Anpassung GESPERRT bis Compliance fixed
+       Strenge: Slip-Pattern beim Namen nennen, Konsequenz für Kroatien-Ziel ehrlich beziffern
+```
+
+Diese Logik ist die Antwort auf Tims explizite Frage "ist der Plan oder ich das Problem?" — Compliance-Score < 85 macht jede Plan-Anpassung sinnlos, weil wir nicht messen was wir denken zu messen.
 
 **Wenn Tim auf einen Wochen-Review antwortet:**
 - Falls er Spiegel-Foto schickt: kurz auf Sichtbarkeit der Bauchmuskulatur eingehen, mit Vorwoche vergleichen wenn möglich.
