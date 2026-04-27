@@ -5,6 +5,10 @@
 - [Familie Tim](user_familie.md) — Geburtstage Eltern (Martina 02.12.63, Ralf 10.05.63) und Schwestern (Laura 01.02.95, Nina 21.12.01)
 - [Enger Freundeskreis](user_freunde.md) — Tilman Scherer, bester Freund in Frankfurt, Sport-Partner
 - [Sport und Hobbys Tim](user_sport.md) — täglich Sport, Kraftsport+Laufen mit Tilman, Klettern/Golf/Ski, technisch nerdy
+- [Sport-Wochenstruktur](user_sport_struktur.md) — Tilman-Sessions ~19:00 (Mo/Mi Gym, Di Long Run, Do Intervalle), Fr/Sa allein, So Ruhe; optionaler Vormittags-Slot
+- [Uni-Modus Self-Teaching](user_uni_modus.md) — nur Pflichtveranstaltungen vor Ort, Rest von zuhause; FFM↔Darmstadt minimieren
+- [Rettungsdienst-Modus](user_rettungsdienst_modus.md) — Aushilfe, Tim fragt vor Dienstübernahme; ich prüfe Kalender und schiebe ggf.
+- [Tagesanker — Sonnenaufgang](user_tagesanker.md) — Aufstehen bei Sonnenaufgang FFM, Bett-Zeit rückwärts (8h Schlaf), ich plane statt Tim
 - [Finanzen und Reise-Strategie Tim](user_finanzen.md) — Amex Platinum, ~400k MR Points, Lufthansa-Lounge-Thema offen
 - [Nicht bestandene Klausuren WS 25/26](project_uni_pruefungen.md) — Nachholtermine SS 26, Roadmap auf Tims Initiative
 - [Tagesplanung + Lernplan Aufbau](project_tagesplanung_lernplan.md) — Phase 1 Kalender-Tagesplan läuft, Phase 2 Moodle-basierter Lernplan danach
