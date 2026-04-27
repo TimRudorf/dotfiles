@@ -18,12 +18,27 @@ originSessionId: af83e9d2-b5c7-4764-a46f-a562bae1d782
 **Wenn Tim auf eine Daily-Check-in-Frage antwortet (Bridge spawnt frische Session):**
 1. Lies `project_cut_kroatien.md`, dieses Protokoll, `feedback_smartwaage_data.md`, `feedback_ahe_datenluecken.md`.
 2. Lies die Topic-Historie — die letzte Bridge-Frage zeigt das Datum (Header `🥗 Daily Check-in [YYYY-MM-DD]`).
-3. **Parse Tims Antwort in strukturiertes Markdown mit YAML-Frontmatter** und speichere unter `/workspace/cut-log/daily/<DATUM>.md`. Schema (siehe unten).
-4. Gib **knappes ehrliches Feedback** in Telegram zurück — strikt-aber-fair:
+3. **Wenn Mittag-Foto mitgeschickt wurde:** Bild mit Read öffnen, Komponenten erkennen (Hauptprotein, Carbs, Fett-Quellen, Beilagen), kcal+Protein abschätzen — Range angeben (z.B. "~700–850 kcal, ~35–45 g P"), nicht Pseudo-Präzision. Schätzung im `lunch.kcal_estimate`/`protein_g_estimate` ablegen, `photo_provided: true`. Wenn unsicher: konservativ nach OBEN runden (Cut → besser leicht überschätzt als unterschätzt).
+4. **Parse Tims Antwort in strukturiertes Markdown mit YAML-Frontmatter** und speichere unter `/workspace/cut-log/daily/<DATUM>.md`. Schema (siehe unten).
+5. Gib **knappes ehrliches Feedback** in Telegram zurück — strikt-aber-fair:
    - Lobend bei Compliance ("sauber, weiter so")
    - Klar bei Slip ohne Drama ("Bier+Pommes ~800 kcal extra → morgen tighter halten")
    - Bei wiederholtem Slip: konkrete Konsequenz benennen
-5. Topic NICHT schließen (General-Topic bleibt offen).
+   - Bei Schlaf < 6h für 3+ Tage in Folge: kurzer Hinweis auf Cut-Auswirkung (Cortisol/Hunger/Recovery)
+   - Bei Trainings-Progressions-Stillstand >2 Wochen im Cut: erwartbar, nicht besorgt sein, Tim beruhigen
+6. Topic NICHT schließen (General-Topic bleibt offen).
+
+**Daily-Check-in Frage-Format (was die Bridge um 21:00 fragt — bewusst kompakt, alle Felder optional):**
+
+> 🥗 **Daily Check-in [YYYY-MM-DD]**
+> Frühstück: Plan / anders / ausgelassen?
+> Mittag: was, wo? — Foto gerne, ich rechne dann.
+> Snacks?
+> Magerquark abends: ✅ / ❌
+> Alkohol?
+> Training: was, wie's lief — falls Buch dabei, Top-Lift kurz reinwerfen
+> Schlaf: Stunden + 1-5
+> Hunger / Stimmung 1-5
 
 **Daily-Log Schema (`/workspace/cut-log/daily/YYYY-MM-DD.md`):**
 ```markdown
