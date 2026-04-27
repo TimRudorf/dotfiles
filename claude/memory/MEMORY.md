@@ -27,6 +27,7 @@
 - [EDP Dev-VM Netzwerk](reference_edp_devvm.md) — vm-eifert-develop fixe IP 172.16.0.2, keine eigene Tailscale, nur über Proxmox-Subnet-Router
 - [Tims Kalender liegt auf Nextcloud](reference_calendar_nextcloud.md) — CalDAV auf cloud.timrudorf.de, nicht Google Calendar; personal/studium/rettungsdienst Kalender
 - [Pareto-Prinzip als Default](feedback_pareto.md) — 80/20: einfache, alltagstaugliche Lösungen zuerst; kein Over-Engineering, minimaler Tracking-Overhead
+- [Einmal richtig statt iterativ flicken](feedback_einmal_richtig.md) — End-Lösung skizzieren statt MVP-Stufen, die später ersetzt werden; Vorlauf in Recherche ist okay
 - [Cut bis Kroatien Juni 2026](project_cut_kroatien.md) — 76kg/13–14%KFA → Beach-Body bis 12.06.; TDEE ~3000kcal; Anker: 500g Magerquark abends, Pareto, Meal-Prep, flexibles Mittag
 - [Ernährungs-Präferenzen Tim](user_ernaehrung.md) — vegetarisch (nicht vegan); Whey + Leinsamen zuhause; Magerquark als Anker
 - [Tims Infrastruktur-Übersicht](reference_infrastructure.md) — Pi (FFM, Home Assistant 24/7) + Proxmox/Debian-VM (Glashütten, Docker-Stacks) + VPS (SWAG via Tailscale)
