@@ -17,7 +17,8 @@ Tim's Modell für Tages-/Wochenplanung in Nextcloud:
 - Vor jedem Eintragen: existierende Events im Zeitraum lesen, NICHT blind überlappen
 - Konflikt-Auflösung: verschieben, kürzen, weglassen — je nach Lage und Wichtigkeit
 - Routinen-Config wird gepflegt unter `/workspace/jarvis-tagesplan/routines.json` (oder vergleichbarem Pfad — host-übergreifend gilt: das Template lebt in der Workspace-Struktur, nicht im Kalender selbst)
-- Plan-Vorlauf: standardmäßig 7 Tage; bei naher Klausurphase ggf. mehr
-- Re-Plan-Frequenz: wöchentlich (So Abend) als Hauptplanung + tägliche Morgen-Adjustments
+- Plan-Vorlauf: konstant 7 Tage (rolling window) — bei naher Klausurphase ggf. mehr
+- Re-Plan-Frequenz: **jeden Abend** (~21:15 nach Magerquark) — Reflexion gestern + Plan Tag+7 + Adjustments Tag+1..6 nur bei echtem Anlass; Stabilität wird bewahrt, sonst nervt das tägliche Umfriemeln
+- Morgens nur Briefing, keine Plan-Editierung
 - Gilt für alle Tagesplan-Routinen: Aufstehen, Bett, Mittag, Magerquark, Lernblöcke, EDP-Slots
 - Pflicht-Termine (Klausur, PPM, Jourfix, Team-Summit, Sport-Termine) sind separat und können einmalig direkt eingetragen werden — die sind ja keine "Routine", sondern feste Einzelereignisse
