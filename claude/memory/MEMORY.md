@@ -14,3 +14,4 @@
 - [Jarvis Repo lokal](reference_jarvis_repo.md) — Klon von TimRudorf/docker-compose unter ~/dev/docker-compose/, Bridge-Code in jarvis/bridge/src/
 - [Claude Code Sensitive-Path-Schutz](reference_claude_code_sensitive_paths.md) — .claude/.git/.vscode/.idea/.husky hardcoded geblockt auch mit --dangerously-skip-permissions, Bash-Tool inkl., Real-Path mitgeprüft
 - [openclaw als Jarvis-Vorbild](reference_openclaw_inspiration.md) — bei neuen Jarvis-Features dort nach Konzepten schauen, Terminologie aber eigen halten
+- [SWAG Reverse Proxy auf VPS](reference_swag_vps.md) — SWAG für *.timrudorf.de liegt nur auf dem VPS, NICHT im docker-compose Repo — Configs direkt per SSH
