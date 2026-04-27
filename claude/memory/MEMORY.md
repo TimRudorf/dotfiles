@@ -32,4 +32,5 @@
 - [Whoop nicht mehr getragen](reference_whoop_history.md) — Tim trug früher Whoop, aktuell nicht; fehlende Whoop-Daten sind erwartet
 - [Cut-Coach Protokoll](project_cut_coach_protocol.md) — 4 Bridge-Schedules (daily/weekly/2× reset); Logging unter /workspace/cut-log/; Reaktions-Regeln auf Tim-Antworten
 - [Supplements Tim](user_supplements.md) — D3 5000 IE + K2 fix; Restliste folgt; vor Supplement-Vorschlägen kurz fragen
+- [Tim funktioniert über Routinen](user_routines.md) — braucht feste Routinen zum Funktionieren; bei wiederkehrenden Aufgaben proaktiv Schedule vorschlagen
 - [Infrastruktur-Feedback-Loop](feedback_infrastructure_log.md) — Beobachtungen in /workspace/infrastructure-feedback.md; Schedule berichtet alle 3 Tage
