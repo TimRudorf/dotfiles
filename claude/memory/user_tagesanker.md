@@ -12,6 +12,8 @@ originSessionId: d0423f1a-b3e2-4f7c-af1e-6e691e76d6d4
 
 **Mittagessen:** Anker **12:30**. Tim ist flexibel, hat manchmal Lunch-Termine — die meldet er separat. Bei Lunch-Termin gilt der Termin, sonst Default 12:30.
 
+**Morgen-Puffer:** **Mindestens 45 min, sicherer 1 Stunde** zwischen Aufstehen und ersten produktiven Slot (Lernen, EDP, Calls). Aufstehen → Wach werden, Trinken, Duschen, ankommen — kein Direkt-an-den-Schreibtisch-Modus. Erste produktive Aktivität frühestens **Sonnenaufgang + 1h**.
+
 **Praktisches:**
 - Sonnenaufgang Frankfurt am Main variiert übers Jahr stark — im Sommer ~5:15, im Winter ~8:30
 - Ich rechne pro Tag: Bett-Zeit = Sonnenaufgang − 8h − 15min Einschlaf-Puffer
