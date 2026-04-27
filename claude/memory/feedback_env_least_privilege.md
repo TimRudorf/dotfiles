@@ -21,12 +21,15 @@ Wenn ein neuer Stack ein eigenes `.env` braucht und die Werte aus dem zentralen 
 - Bei Key-Rotation: gleiches Filterskript nochmal durchziehen, danach `docker compose up -d --force-recreate`.
 - Wenn ein Stack viele zentrale Werte braucht (z.B. ein Reporting-Tool, das mehrere APIs anspricht): trotzdem explizit listen, nicht kopieren — auch als Doku, was tatsächlich gebraucht wird.
 
-## Spezialfall: `TS_AUTHKEY` (Tailscale-Sidecar)
+## Spezialfall: `TS_AUTHKEY` — kontextabhängig, NICHT pauschal entfernen
 
-`TS_AUTHKEY` wird von `tailscale/tailscale`-Sidecars **nur beim allerersten Start** gebraucht (Initial-Authentication). Danach liegt der Tailscale-State persistent im Volume (`/var/lib/tailscale`), Restart liest ihn ohne erneuten Key. Heißt: **nach dem ersten erfolgreichen Boot `TS_AUTHKEY` aus dem `.env` entfernen** — er liegt sonst unnötig rum und wäre bei Container-Kompromittierung ein Werkzeug, um beliebige neue Tailnet-Knoten anzulegen.
+`TS_AUTHKEY` wird von `tailscale/tailscale`-Sidecars **nur beim allerersten Start** gebraucht (Initial-Authentication). Danach liegt der Tailscale-State persistent im Volume (`/var/lib/tailscale`), Restart liest ihn ohne erneuten Key.
 
-Proof: Logs zeigen nach Re-Create ohne Key `machineAuthorized=true; authURL=false` — Auth aus State, nicht aus Env.
+**Aber:** ob man den Key danach aus dem `.env` entfernt, ist eine Abwägung — Tim hat das 2026-04-27 explizit klargestellt:
 
-Wenn das State-Volume verloren geht (z.B. `docker compose down -v` oder Volume-Wipe): Key temporär wieder einfügen, Container starten, danach wieder entfernen.
+- **`jarvis-Stack`: `TS_AUTHKEY` BLEIBT im `.env`.** Der jarvis-workspace-Container soll dauerhaft als eigene Tailnet-Identität funktionieren und auch nach Volume-/State-Verlust ohne manuellen Eingriff wieder online kommen können. Der Auth-Key ist hier Teil der Service-Definition.
+- **Andere Stacks (z.B. data-api, falls überhaupt eigener TS-Sidecar):** nach erstem Boot `TS_AUTHKEY` raus, weil State persistent. Auch generell weniger Geheimnisse rumliegend.
 
-Gilt für alle Tailscale-Sidecars (data-api, jarvis, künftige Stacks).
+**Kurz:** für den `jarvis`-Stack `TS_AUTHKEY` nie eigenmächtig entfernen. Das ist Tims explizite Vorgabe — er will dass jarvis eine robuste Tailnet-Anbindung hat, auch in Edge-Cases.
+
+Proof bei Stacks ohne identity-Bedarf (z.B. data-api alt): Logs zeigen nach Re-Create ohne Key `machineAuthorized=true; authURL=false` — Auth aus State, nicht aus Env. Aber das ist genau der Fall wo wir den Sidecar eh entfernt haben — siehe `reference_tailscale.md`.
