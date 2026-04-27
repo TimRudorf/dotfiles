@@ -29,3 +29,4 @@
 - [Tims iPhone-Settings](reference_iphone_settings.md) — Background App Refresh global AUS; Apps die "im Hintergrund pushen" tun das nicht — manueller Open nötig
 - [Smartwaage-Daten: nur Gewicht zählt](feedback_smartwaage_data.md) — Renpho-Bioimpedanz nur über Beine; KFA/Lean-Mass aus Waage ignorieren, nur Weight nutzen
 - [AHE-Daten haben Lücken](feedback_ahe_datenluecken.md) — Active Energy/Workouts unvollständig; nicht für TDEE/Kalorienbilanz nutzen, Gewicht bleibt der harte Datenpunkt
+- [Whoop nicht mehr getragen](reference_whoop_history.md) — Tim trug früher Whoop, aktuell nicht; fehlende Whoop-Daten sind erwartet
