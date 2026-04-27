@@ -5,9 +5,11 @@
 
 set -euo pipefail
 
-# Cron strips PATH down to /usr/bin:/bin — make sops findable wherever it lives
-# (apt → /usr/bin, GitHub release → /usr/local/bin, go/manual → ~/.local/bin).
-export PATH="$HOME/.local/bin:/usr/local/bin:/usr/bin:/bin"
+# Cron/launchd strip PATH down to a minimal default — make sops findable
+# wherever it lives across hosts: brew on Apple Silicon (/opt/homebrew/bin),
+# brew on Intel/Linuxbrew (/usr/local/bin, /home/linuxbrew/.linuxbrew/bin),
+# apt (/usr/bin), GitHub release (/usr/local/bin), user-local (~/.local/bin).
+export PATH="$HOME/.local/bin:/opt/homebrew/bin:/home/linuxbrew/.linuxbrew/bin:/usr/local/bin:/usr/bin:/bin"
 
 if ! command -v sops >/dev/null 2>&1; then
   echo "sops not found on PATH ($PATH) — install via apt, GitHub release, or place in ~/.local/bin" >&2
