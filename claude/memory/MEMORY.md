@@ -18,3 +18,11 @@
 - [SWAG Reverse Proxy auf VPS](reference_swag_vps.md) — SWAG für *.timrudorf.de liegt nur auf dem VPS, NICHT im docker-compose Repo — Configs direkt per SSH
 - [VPS Zugang](reference_vps_access.md) — ssh root@82.165.47.37 mit SSH-Key (Host für SWAG / *.timrudorf.de)
 - [EDP Dev-VM Netzwerk](reference_edp_devvm.md) — vm-eifert-develop fixe IP 172.16.0.2, keine eigene Tailscale, nur über Proxmox-Subnet-Router
+- [Tims Kalender liegt auf Nextcloud](reference_calendar_nextcloud.md) — CalDAV auf cloud.timrudorf.de, nicht Google Calendar; personal/studium/rettungsdienst Kalender
+- [Pareto-Prinzip als Default](feedback_pareto.md) — 80/20: einfache, alltagstaugliche Lösungen zuerst; kein Over-Engineering, minimaler Tracking-Overhead
+- [Cut bis Kroatien Juni 2026](project_cut_kroatien.md) — 76kg/13–14%KFA → Beach-Body bis 12.06.; TDEE ~3000kcal; Anker: 500g Magerquark abends, Pareto, Meal-Prep, flexibles Mittag
+- [Ernährungs-Präferenzen Tim](user_ernaehrung.md) — vegetarisch (nicht vegan); Whey + Leinsamen zuhause; Magerquark als Anker
+- [Tims Infrastruktur-Übersicht](reference_infrastructure.md) — Pi (FFM, Home Assistant 24/7) + Proxmox/Debian-VM (Glashütten, Docker-Stacks) + VPS (SWAG via Tailscale)
+- [Tims Tailnet (Tailscale)](reference_tailscale.md) — taile8466e.ts.net; Container hängt seit 2026-04-27 dran; proxmox/debian/homeassistant/macbook/iphone per Hostname
+- [Apple-Health-Pipeline](project_apple_health_pipeline.md) — Health Auto Export Lifetime gekauft 2026-04-27; Endpoint zu bauen auf Glashütten-VM, Renpho → Health → Jarvis
+- [.env least-privilege filtern](feedback_env_least_privilege.md) — bei neuen Compose-Stacks NUR die wirklich benötigten Env-Vars rüberziehen, nicht das ganze sops-.env
