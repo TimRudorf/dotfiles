@@ -39,6 +39,7 @@ lunch:
   kcal_estimate: 750
   protein_g_estimate: 35
   status: on_plan | over | low_protein | carb_heavy | junk
+  photo_provided: true|false    # Foto vom Mittag erhalten? (Standard-Tracking-Modus für Mittag)
 snacks:
   detail: ""
   kcal_estimate: 0
@@ -55,6 +56,12 @@ training:
   type: "Krafttraining Push" | "Run" | "Rest" etc.
   duration_min: 60
   perceived: "stark" | "ok" | "schwach"
+  progression_notes: ""    # was er aus dem Trainings-Buch zitiert: Übung+Gewicht+Reps,
+                           # Vergleich zur Vorwoche wenn er was sagt (Steigerung/Halten/Fall)
+sleep:
+  hours: 7.5               # Stunden, wie Tim sie nennt
+  quality_1_5: 4           # subjektiv 1=mies / 5=top
+  notes: ""                # nur wenn besonders
 hunger_1_5: 3
 mood_1_5: 4
 slip_notes: "Restaurant mit Tilman, Pommes statt Bowl"
