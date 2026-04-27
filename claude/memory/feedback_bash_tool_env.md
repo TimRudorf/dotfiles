@@ -1,22 +1,25 @@
 ---
-name: Bash-Tool hat keine .env geladen
-description: Im Claude-Code Bash-Tool sind ZAMMAD_TOKEN/GH_*/NC_* etc. NICHT im Environment — vor jedem Aufruf, der Secrets braucht, .env explizit sourcen
+name: Bash-Tool hat keine Secrets im Environment
+description: Im Claude-Code Bash-Tool sind Secrets (ZAMMAD_TOKEN/GH_*/NC_* etc.) NICHT im Environment — vor Nutzung erst die Decrypt-Kopie der sops-Datei sourcen
 type: feedback
 originSessionId: 0c26f540-8ffa-4d72-ad8c-b3cf11b7333e
 ---
-Das Bash-Tool im Claude-Code-Harness läuft als Non-Login-Shell und lädt **weder** `~/.zshrc` noch `~/.env`. Folge: alle in `~/.env` (Mac) bzw. `/opt/stacks/jarvis/.env` (Container) abgelegten Secrets — `ZAMMAD_HOST/TOKEN`, `GH_*_TOKEN`, `NC_*`, `OPENAI_API_KEY`, etc. — sind im Tool-Environment **leer**, obwohl die Datei existiert. Nur `EDP_PROJECT_ROOT` und ein paar via Settings.json gesetzte Vars (z.B. `TELEGRAM_*`) sind direkt da.
+Das Bash-Tool im Claude-Code-Harness läuft als Non-Login-Shell, lädt **weder** `~/.zshrc` noch sonst irgendwas, das Tims Secrets ins Environment bringt. Folge: alle Secrets sind im Tool-Environment **leer**, obwohl die Werte verfügbar wären. Nur `EDP_PROJECT_ROOT` und ein paar via `~/.claude/settings.json` gesetzte Vars (z.B. `TELEGRAM_*`) sind direkt da.
 
-**Why:** Tim hat das beim Versuch, ein Zammad-Ticket zu lesen, aufgedeckt — der erste Aufruf scheiterte still mit einer leeren Variable; der zweite ohne explizites Sourcen produzierte 401-Antworten, weil der Token gar nicht mitgeschickt wurde. Er möchte, dass das nicht jedes Mal neu erlebt wird.
+**Why:** Tim hat das beim Versuch, ein Zammad-Ticket zu lesen, aufgedeckt — der Aufruf scheiterte mit 401, weil der Token gar nicht mitgeschickt wurde. Er möchte, dass ich mir das merke und nicht jedes Mal neu darüber stolpere.
 
-**How to apply:** In **jeder** Bash-Tool-Invocation, die ein Secret aus der zentralen `.env` braucht, einleitend sourcen — nicht via `cat /grep` rauspulen, weil Sonderzeichen im Token verloren gehen können:
+**How to apply:** Quelle der Wahrheit ist die SOPS-verschlüsselte Datei `~/dotfiles/secrets/env.sops` (siehe `reference_credentials.md`). Beim Decrypt-Skript wird der Klartext **host-spezifisch** abgelegt:
+
+- Mac → `~/.env`
+- Container/VM (`jarvis-workspace`, /.dockerenv vorhanden oder `JARVIS_HOST=container`) → `/opt/stacks/jarvis/.env`
+
+In jeder Bash-Tool-Invocation, die ein Secret braucht, einleitend sourcen — nicht via `cat`/`grep` rauspulen, weil Sonderzeichen im Token verloren gehen können:
 
 ```bash
 # Mac
 set -a; source ~/.env; set +a
-# Container (jarvis-workspace)
+# Container
 set -a; source /opt/stacks/jarvis/.env; set +a
 ```
 
-Hostauswahl: Wenn `/.dockerenv` existiert oder `JARVIS_HOST=container`, dann VM-Pfad; sonst Mac-Pfad. Quelle der Wahrheit für die Werte bleibt `~/dotfiles/secrets/env.sops` — siehe `reference_credentials.md`.
-
-Wenn nach dem Sourcen das Secret immer noch unbenutzbar ist (z.B. 401), ist es nicht der Lade-Mechanismus, sondern das Token in der sops-Datei ist veraltet/widerrufen → Tim bitten zu rotieren (`sops ~/dotfiles/secrets/env.sops`).
+Wenn nach dem Sourcen das Secret immer noch unbenutzbar ist (z.B. 401), liegt es nicht am Lade-Mechanismus, sondern das Token in der sops-Datei ist veraltet/widerrufen → Tim bitten, in `sops ~/dotfiles/secrets/env.sops` zu rotieren.
