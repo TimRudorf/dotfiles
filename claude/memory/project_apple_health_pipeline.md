@@ -25,15 +25,19 @@ Renpho-Waage ──BLE──► Renpho-App ──► Apple Health
                            Jarvis-Skills lesen daraus (Coach, Wiege-Auswertung, …)
 ```
 
-**To-dos (Reihenfolge):**
-1. Tim kauft AHE Lifetime im App Store ($24.99) ✅ committed
-2. Jarvis-Endpoint bauen — Vorschlag: neuer Compose-Stack `jarvis-health/` mit FastAPI-Service
-   - POST-Endpoint mit API-Key-Auth (Header `X-API-Key`)
-   - Daten in SQLite o. Postgres + ggf. Spiegelung in Nextcloud-CSV
-   - Public erreichbar via SWAG-VPS (Subdomain z.B. `health.timrudorf.de`)
-3. AHE in iOS konfigurieren: Webhook-URL + API-Key, Auto-Export-Schedule, gewünschte Metriken
-4. Erste Wiege-Test Sa 02.05.2026 — verifizieren dass Renpho → Health → Jarvis durchläuft
-5. Auswertungs-Skill für wöchentliche Wiege-Reviews bauen (separat)
+**Status (2026-04-27):** Endpoint deployed + public erreichbar. Wartet nur noch auf iOS-App-Konfiguration durch Tim.
+
+**To-dos:**
+1. ✅ AHE Lifetime im App Store gekauft
+2. ✅ Endpoint gebaut: `data-api`-Stack auf Glashütten-VM (`/opt/stacks/data-api/`)
+   - generischer Service (nicht jarvis-spezifisch), POST/GET pro Source mit X-API-Key
+   - SQLite-Persistenz unter `/opt/data/data-api/state/`
+3. ✅ Public-Reverse-Proxy: `https://data.timrudorf.de` via SWAG (Conf in `/opt/swag/config/nginx/proxy-confs/data.subdomain.conf` auf VPS, `client_max_body_size 50m` für Health-Payloads)
+4. ⏳ Tim konfiguriert AHE-App im iPhone: URL `https://data.timrudorf.de/v1/sources/health/events`, Header `X-API-Key`, Daily/Hourly-Schedule, mindestens Weight/Body-Fat/Lean-Mass Metriken
+5. Erste Wiege-Test Sa 02.05.2026 — verifizieren Renpho → Health → AHE → data-api
+6. Auswertungs-Skill für wöchentliche Wiege-Reviews bauen (separat, liest `GET /v1/sources/health/events` von Jarvis aus)
+
+**Endpoint-URL für AHE-App:** `https://data.timrudorf.de/v1/sources/health/events`
 
 **How to apply:**
 - Bei "wie greife ich auf Tims Health-Daten zu" → Jarvis-Health-Endpoint, nicht direkt Apple/Renpho.
