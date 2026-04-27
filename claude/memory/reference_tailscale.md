@@ -32,3 +32,10 @@ originSessionId: e665452d-f361-4fda-bca6-80320f059636
 - Wenn ich Smart-Home-Daten will: `http://homeassistant:8123`.
 - Bei Connectivity-Tests immer `curl -m 5` oder `/dev/tcp` statt `ping` (fehlt im Container).
 - Hostnamen bevorzugt vor IPs verwenden — MagicDNS macht's hostübergreifend (Mac und Container) gleich nutzbar.
+
+## Compose-Stacks: kein eigener TS-Sidecar pro Stack als Default
+Wenn ein neuer Compose-Stack auf der Glashütten-VM von außen (Tailnet/SWAG) erreichbar sein muss, **nicht reflexartig einen eigenen `tailscale`-Sidecar pro Stack bauen**. Die VM ist via Subnet-Route über `proxmox` aus dem Tailnet bereits ansprechbar — `ports: ["<port>:<port>"]` reicht. SWAG kann via `proxy_pass http://172.16.0.3:<port>` forwarden.
+
+Eigenen TS-Sidecar nur dann, wenn der Container eine **eigene Tailnet-Identität** braucht (z.B. eigener Hostname für ACL-Tagging, eigene Tailscale-IP für strikte Per-Service-Routing-Regeln, oder Container läuft auf einem anderen Host außerhalb des Subnet-Routes). Die `jarvis-workspace`-Sidecar-Konstruktion ist eine Ausnahme aus historischem Grund (Container braucht direkten ACL-Identity, weil er als "Person" agiert, nicht als "Service").
+
+Why: Tim hat das beim data-api-Stack 2026-04-27 explizit korrigiert — Pareto + weniger Komplexität + weniger Geheimnisse rumliegend (`TS_AUTHKEY` entfällt).
