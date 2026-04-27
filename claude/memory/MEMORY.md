@@ -7,6 +7,8 @@
 - [Sport und Hobbys Tim](user_sport.md) — täglich Sport, Kraftsport+Laufen mit Tilman, Klettern/Golf/Ski, technisch nerdy
 - [Finanzen und Reise-Strategie Tim](user_finanzen.md) — Amex Platinum, ~400k MR Points, Lufthansa-Lounge-Thema offen
 - [Nicht bestandene Klausuren WS 25/26](project_uni_pruefungen.md) — Nachholtermine SS 26, Roadmap auf Tims Initiative
+- [Tagesplanung + Lernplan Aufbau](project_tagesplanung_lernplan.md) — Phase 1 Kalender-Tagesplan läuft, Phase 2 Moodle-basierter Lernplan danach
+- [Moodle = Uni-Single-Source-of-Truth](reference_moodle.md) — TU Darmstadt: Kurse/Materialien/Skripte; Zugriff von Tim folgt
 - [Jarvis Unified Identity Plan](project_jarvis_unified_identity.md) — Big-Bang-Refactor Mac+Container vereint, Stand 2026-04-26: Phase 0 ✅, Phase 1 läuft
 - [Echte Umlaute verwenden](feedback_umlauts.md) — generell überall ä/ö/ü/ß statt ae/oe/ue/ss
 - [Jarvis-Deploy-Workflow](feedback_jarvis_deploy_workflow.md) — Git statt scp + Feature-Branch + Test-First — Tim merged erst nach OK
