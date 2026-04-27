@@ -1,6 +1,7 @@
 - [Persönliche Eckdaten Tim](user_personal.md) — Geburtsdatum, Frankfurt/Berger Straße, Single, kein Auto, LKW-Führerschein
 - [Studium Tim](user_studium.md) — TU Darmstadt, Master Wing E-Technik, Thesis Ende 2026 geplant, ein Semester Verzug
 - [Berufliche Situation Tim](user_arbeit.md) — EDP Werkstudent 20h, Rettungssanitäter nebenbei, ~2k€ netto
+- [EDP-Werkstudent voll flexibel](user_arbeit_flexibilitaet.md) — 100% remote, keine festen Zeiten, ergebnis-orientiert; in Tagesplan flexibel um Fixpunkte legen
 - [Familie Tim](user_familie.md) — Geburtstage Eltern (Martina 02.12.63, Ralf 10.05.63) und Schwestern (Laura 01.02.95, Nina 21.12.01)
 - [Enger Freundeskreis](user_freunde.md) — Tilman Scherer, bester Freund in Frankfurt, Sport-Partner
 - [Sport und Hobbys Tim](user_sport.md) — täglich Sport, Kraftsport+Laufen mit Tilman, Klettern/Golf/Ski, technisch nerdy
