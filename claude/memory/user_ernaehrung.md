@@ -5,8 +5,9 @@ type: user
 originSessionId: 6da8ffce-ed73-4d31-92fe-c648997a3234
 ---
 **Ernährungsweise (Stand 2026-04-27):**
-- **Vegetarisch** (nicht vegan) — Eier, Milchprodukte, Whey okay; kein Fleisch, kein Fisch.
-- Bei Empfehlungen, Rezepten, Restaurant-Tipps, Meal-Prep entsprechend filtern.
+- **Überwiegend vegetarisch** (nicht vegan) — Eier, Milchprodukte, Whey okay; kein Fisch.
+- **Fleisch nur ausnahmsweise und mit klarer Herkunft** — z.B. Wild von befreundetem Jäger, gelegentlich Bio-Fleisch. Motivation ist Tierwohl (lehnt Ferkelproduktionsanlagen u.ä. dezidiert ab), nicht ideologische Striktheit.
+- Bei Empfehlungen, Rezepten, Restaurant-Tipps, Meal-Prep **vegetarisch als Default** — Fleischvorschläge nur wenn Tim selbst eine vertrauenswürdige Quelle erwähnt.
 
 **Feste Vorräte / Stammzutaten:**
 - Whey-Protein (zuhause vorhanden)
