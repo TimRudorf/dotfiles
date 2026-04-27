@@ -9,7 +9,7 @@
 - [Jarvis Unified Identity Plan](project_jarvis_unified_identity.md) — Big-Bang-Refactor Mac+Container vereint, Stand 2026-04-26: Phase 0 ✅, Phase 1 läuft
 - [Echte Umlaute verwenden](feedback_umlauts.md) — generell überall ä/ö/ü/ß statt ae/oe/ue/ss
 - [Jarvis-Deploy-Workflow](feedback_jarvis_deploy_workflow.md) — Git statt scp + Feature-Branch + Test-First — Tim merged erst nach OK
-- [Bash-Tool hat keine .env geladen](feedback_bash_tool_env.md) — vor Secret-Nutzung immer `set -a; source ~/.env; set +a` (Mac) bzw. `/opt/stacks/jarvis/.env` (Container)
+- [Bash-Tool hat keine Secrets im Environment](feedback_bash_tool_env.md) — Quelle: `~/dotfiles/secrets/env.sops`; Decrypt-Output Mac=`~/.env`, Container=`/opt/stacks/jarvis/.env` — vor Nutzung sourcen
 - [Credentials / .env Standorte](reference_credentials.md) — ~/.env (Mac) + /opt/stacks/jarvis/.env (VM); PRIVATE/WORK-Schema; GitHub-Tokens + Nextcloud-Endpoints
 - [Docker Compose Stacks Standort](reference_docker_stacks.md) — /opt/stacks auf Debian-VM 172.16.0.3 (Proxmox) + Repo TimRudorf/docker-compose
 - [Jarvis Repo lokal](reference_jarvis_repo.md) — Klon von TimRudorf/docker-compose unter ~/dev/docker-compose/, Bridge-Code in jarvis/bridge/src/
