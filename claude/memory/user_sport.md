@@ -22,11 +22,15 @@ originSessionId: 64ba575d-ce6b-403d-bbc4-11d7efdd5c6f
 - **Sa** Unterkörper solo
 - **So** Rest-Day
 
-**Wearable-Tracking:** Apple Watch trägt Tim **nur beim Laufen** (Di + Do), **nicht beim Kraftsport**. Folgen für Apple-Health-Daten:
-- Workouts in Apple Health = ausschließlich Läufe (Long Run + Intervalle), keine Kraft-Sessions
-- Heart-Rate-Daten dicht nur an Lauf-Tagen
+**Wearable-Tracking:** Apple Watch trägt Tim **nur beim Laufen** (Di + Do), **nicht beim Kraftsport**, **nicht im Alltag, nicht nachts**. Lifestyle-Entscheidung — er findet die Apple Watch hässlich, trägt sonst eine klassische Uhr. **Bei Lauftraining trägt er zusätzlich einen Pulsgurt**, daher dort sehr saubere HR-Daten. Whoop hat er bis ~2024 24/7 getragen, aktuell nicht mehr (Stand 2026-04-27 — überlegt es wieder anzuziehen, weil 24/7 HRV + Sleep für Coaching wertvoll wäre).
+
+Folgen für Apple-Health-Daten:
+- Workouts in Apple Health = ausschließlich Läufe (Long Run + Intervalle) und ggf. Whoop-Auto-Detection alter Sessions; keine aktuellen Kraft-Sessions ohne manuelle Aktion
+- Heart-Rate-Daten dicht nur an Lauf-Tagen (mit Pulsgurt-Genauigkeit) plus früher 24/7 aus Whoop
 - Calories Burned aus Apple Health unterschätzt den realen Wochenenergieverbrauch (Kraftsport fehlt)
-- Bei Coach-Insights aus Apple-Health-Daten: nicht annehmen "wenig Workouts diese Woche → Tim war faul"; immer differenzieren Lauf vs. Kraft.
+- HRV/Resting-HR/Sleep aktuell **nicht** 24/7 verfügbar — bei Bulk-Daten bis 2024 stark, danach Lücken
+- Bei Coach-Insights: niemals annehmen "wenig Workouts diese Woche → Tim war faul"; immer differenzieren Lauf vs. Kraft.
+- **Apple Watch öfter tragen ist KEINE Option** — bei Recovery-/HRV-Themen alternativ nach Whoop fragen (oder ohne 24/7-Daten coachen).
 
 **Allgemein:**
 - Keine bekannten Allergien
