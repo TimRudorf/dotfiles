@@ -24,7 +24,7 @@ originSessionId: 6da8ffce-ed73-4d31-92fe-c648997a3234
 
 **Tages-Plan (verabschiedet 2026-04-27):**
 - **Tagesziel:** 2.400–2.500 kcal | Protein 165 g | Fett 65–70 g | Carbs ~280 g
-- **Frühstück (~480 kcal, ~40 g P):** 250 g Skyr + 60 g Haferflocken + 1 Scoop Whey + Beeren + 15 g Leinsamen
+- **Frühstück (~555 kcal, ~57 g P):** 200 g Skyr (½ der 400-g-Packung) + 60 g Haferflocken + 1 Scoop Whey (30 g gestrichen) + 80–100 g Beeren + 15 g Leinsamen
 - **Mittag (~700–800 kcal, flexibel auswärts):** Faustregel — vegetarischer Eiweiss-Anker (Halloumi/Falafel/Tofu/Linsen-Bowl/Eier/Caprese), Carbs ja (Reis/Bulgur/Brot/Kartoffel), keine Fritten/Sahnesoßen.
 - **Snack/Pre-Workout (~250–300 kcal):** Banane + Whey ODER Hüttenkäse 200g + Reiswaffel ODER 30g Mandeln + Apfel; an Doppel-Workout-Tagen (Di/Do) mehr Carbs.
 - **Abends fix:** 500 g Magerquark + 15 g Leinsamen + Beeren/1 TL Honig (~325 kcal, ~50 g P)
