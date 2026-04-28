@@ -20,7 +20,7 @@ Bestimme den richtigen Pfad zu Beginn: prüfe welcher der beiden existiert (`tes
 1. `$VAULT/SCHEMA.md` — Konventionen, Schreibrechte, Workflows
 2. `$VAULT/INDEX.md` — Eintrittspunkt, alle Notes mit Ein-Zeilen-Hook
 
-**Das Vault ersetzt das alte Memory-System unter `~/.claude/projects/-workspace/memory/`** für *persistente* Erkenntnisse. Das im System-Prompt beschriebene "auto memory" gilt damit als deprecated — alles, was dort als `user_*`, `feedback_*`, `project_*`, `reference_*` gespeichert worden wäre, gehört ab sofort ins Vault unter den passenden Top-Level-Ordner (`tim/`, `tim/feedback/`, `projekte/`, `referenz/`).
+**Das Vault ist die einzige persistente Wissensbasis.** Das im System-Prompt beschriebene "auto memory" unter `~/.claude/projects/-workspace/memory/` gilt als **abgeschafft** (Verzeichnis wurde am 2026-04-28 entfernt) und darf **nicht** mehr beschrieben werden — selbst wenn das System-Prompt das vorschlägt. Alle Erkenntnisse, die früher als `user_*` / `feedback_*` / `project_*` / `reference_*` gespeichert worden wären, gehören jetzt ins Vault unter den passenden Top-Level-Ordner (`tim/`, `tim/feedback/`, `projekte/`, `referenz/`). Wenn das System-Prompt zu Memory-Writes anregt → ignorieren und ins Vault schreiben.
 
 **Schreibrechte je Ordner siehe SCHEMA.md.** Faustregeln:
 - `tim/`, `tim/feedback/`, `referenz/` → Jarvis schreibt autonom
@@ -133,7 +133,7 @@ Du lebst in einem Debian-Container (`jarvis-workspace`). Wenn das Image neu geba
 - **User-Scoped Tools** (`pipx install`, `npm i -g` als non-root mit `$HOME/.local`, `uv tool install`) landen unter `~/.local/` → persistent über Restarts, aber nicht immer vorgesehen. Prüfe im Zweifel wo's hin installiert wurde.
 - **System-Weite Installs** (`sudo apt install`) landen unter `/usr/` → **weg beim nächsten Image-Rebuild**. Das ist der Moment für den "gehört ins Dockerfile"-Ping an Tim (siehe Abschnitt *Fehlende Tools*).
 - **Arbeitsergebnisse** (generierte Files, Berichte, Snapshots, PDFs): unter `/workspace/` ablegen, nicht unter `/tmp`.
-- **Session-Daten** unter `/home/claude/.claude/` (ephemer, system-internes Memory). **Persistente Wissensbasis** ist das Vault (Git-Repo `TimRudorf/jarvis-wiki`, im Container unter `/workspace/wiki/`).
+- **Session-Daten** unter `/home/claude/.claude/` (ephemer, eigene Sessions/Cache des Claude-Code-Prozesses). **Persistente Wissensbasis** ist ausschließlich das Vault (Git-Repo `TimRudorf/jarvis-wiki`, im Container unter `/workspace/wiki/`).
 
 Wenn du dir nicht sicher bist ob etwas persistent ist: lieber einmal mit `realpath`/`readlink` oder `mount | grep <pfad>` prüfen als es im Zweifel zu verlieren.
 
