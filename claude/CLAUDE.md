@@ -8,11 +8,17 @@ These instructions apply to every Claude Code session in Tim's setup. Scope: use
 
 ## Persistente Wissensbasis — jarvis-wiki Vault
 
-Tim und Jarvis teilen sich ein persistentes Wiki-Vault unter `/workspace/wiki/` (Git-Repo `TimRudorf/jarvis-wiki`, privat, gesynct via Obsidian-Git auf dem Mac und Auto-Commit im Container). Konzept-Vorbild: [Karpathys LLM-Wiki](https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f).
+Tim und Jarvis teilen sich ein persistentes Wiki-Vault (Git-Repo `TimRudorf/jarvis-wiki`, privat, gesynct via Obsidian-Git auf dem Mac und Auto-Commit im Container). Konzept-Vorbild: [Karpathys LLM-Wiki](https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f).
+
+**Vault-Pfad ist host-abhängig:**
+- **Container** (Linux, JARVIS_HOST=container): `/workspace/wiki/`
+- **Mac** (Darwin): `/Users/timrudorf/Documents/jarvis-wiki/`
+
+Bestimme den richtigen Pfad zu Beginn: prüfe welcher der beiden existiert (`test -d`). Speichere den als `VAULT` für die Session, alle weiteren Pfade in dieser Doku sind relativ zu diesem Root.
 
 **Beim Session-Start lesen:**
-1. `/workspace/wiki/SCHEMA.md` — Konventionen, Schreibrechte, Workflows
-2. `/workspace/wiki/INDEX.md` — Eintrittspunkt, alle Notes mit Ein-Zeilen-Hook
+1. `$VAULT/SCHEMA.md` — Konventionen, Schreibrechte, Workflows
+2. `$VAULT/INDEX.md` — Eintrittspunkt, alle Notes mit Ein-Zeilen-Hook
 
 **Das Vault ersetzt das alte Memory-System unter `~/.claude/projects/-workspace/memory/`** für *persistente* Erkenntnisse. Das im System-Prompt beschriebene "auto memory" gilt damit als deprecated — alles, was dort als `user_*`, `feedback_*`, `project_*`, `reference_*` gespeichert worden wäre, gehört ab sofort ins Vault unter den passenden Top-Level-Ordner (`tim/`, `tim/feedback/`, `projekte/`, `referenz/`).
 
@@ -88,7 +94,7 @@ Nach nicht-trivialen Aufgaben (mehrstufig, ad-hoc, unerwartet verlaufen — *nic
 
 | Typ des Learnings | Ziel | Approval nötig? |
 |---|---|---|
-| Einzelne Erkenntnis, Präferenz, Fehl-Annahme, Fakt | **Vault-Note** in `/workspace/wiki/` nach `SCHEMA.md` (Types: profil/feedback/projekt/referenz) | nein — normale Tätigkeit |
+| Einzelne Erkenntnis, Präferenz, Fehl-Annahme, Fakt | **Vault-Note** in `$VAULT/` nach `SCHEMA.md` (Types: profil/feedback/projekt/referenz) | nein — normale Tätigkeit |
 | Wiederkehrendes Arbeits-Muster (≥2× erlebt oder absehbar) | **Skill** via `skill-create` | ja — Tim fragen, ob er zustimmt |
 | Globale Regel, die alle zukünftigen Sessions treffen soll | **Edit in `CLAUDE.md` / `PERSONA.md` / `PROFILE.md`** | **ja — `request_approval`**, weil es in die Dotfiles committet + gepusht wird |
 
@@ -127,7 +133,7 @@ Du lebst in einem Debian-Container (`jarvis-workspace`). Wenn das Image neu geba
 - **User-Scoped Tools** (`pipx install`, `npm i -g` als non-root mit `$HOME/.local`, `uv tool install`) landen unter `~/.local/` → persistent über Restarts, aber nicht immer vorgesehen. Prüfe im Zweifel wo's hin installiert wurde.
 - **System-Weite Installs** (`sudo apt install`) landen unter `/usr/` → **weg beim nächsten Image-Rebuild**. Das ist der Moment für den "gehört ins Dockerfile"-Ping an Tim (siehe Abschnitt *Fehlende Tools*).
 - **Arbeitsergebnisse** (generierte Files, Berichte, Snapshots, PDFs): unter `/workspace/` ablegen, nicht unter `/tmp`.
-- **Session-Daten** unter `/home/claude/.claude/` (ephemer, system-internes Memory). **Persistente Wissensbasis** ist das Vault unter `/workspace/wiki/` (Git-Repo `TimRudorf/jarvis-wiki`).
+- **Session-Daten** unter `/home/claude/.claude/` (ephemer, system-internes Memory). **Persistente Wissensbasis** ist das Vault (Git-Repo `TimRudorf/jarvis-wiki`, im Container unter `/workspace/wiki/`).
 
 Wenn du dir nicht sicher bist ob etwas persistent ist: lieber einmal mit `realpath`/`readlink` oder `mount | grep <pfad>` prüfen als es im Zweifel zu verlieren.
 
