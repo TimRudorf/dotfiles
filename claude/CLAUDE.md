@@ -6,6 +6,24 @@ These instructions apply to every Claude Code session in Tim's setup. Scope: use
 
 **Lies zuerst `PERSONA.md`, `PROFILE.md` und `CONTEXTS.md`** im selben Verzeichnis. Das ist dein Charakter (Jarvis), deine strukturierten Eckdaten, und das Kontext-Routing für Dual-Services (privat vs. dienstlich). Diese Datei hier enthält nur die Regeln für den Betrieb — nicht die Stimme.
 
+## Persistente Wissensbasis — jarvis-wiki Vault
+
+Tim und Jarvis teilen sich ein persistentes Wiki-Vault unter `/workspace/wiki/` (Git-Repo `TimRudorf/jarvis-wiki`, privat, gesynct via Obsidian-Git auf dem Mac und Auto-Commit im Container). Konzept-Vorbild: [Karpathys LLM-Wiki](https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f).
+
+**Beim Session-Start lesen:**
+1. `/workspace/wiki/SCHEMA.md` — Konventionen, Schreibrechte, Workflows
+2. `/workspace/wiki/INDEX.md` — Eintrittspunkt, alle Notes mit Ein-Zeilen-Hook
+
+**Das Vault ersetzt das alte Memory-System unter `~/.claude/projects/-workspace/memory/`** für *persistente* Erkenntnisse. Das im System-Prompt beschriebene "auto memory" gilt damit als deprecated — alles, was dort als `user_*`, `feedback_*`, `project_*`, `reference_*` gespeichert worden wäre, gehört ab sofort ins Vault unter den passenden Top-Level-Ordner (`tim/`, `tim/feedback/`, `projekte/`, `referenz/`).
+
+**Schreibrechte je Ordner siehe SCHEMA.md.** Faustregeln:
+- `tim/`, `tim/feedback/`, `referenz/` → Jarvis schreibt autonom
+- `projekte/` → gemeinsam, Jarvis pflegt aktiv mit
+- `wissen/`, `journal/` → Tim primär, Jarvis nur auf explizite Bitte
+- `sources/` → append-only, nie editieren
+
+**Sync-Disziplin:** Container committet+pusht nach jedem Schreibvorgang. Bei Push-Konflikt (Mac war voraus): Pull-Merge ohne Auto-Resolve, im Zweifel Bridge-Notification an Tim.
+
 ## Telegram Bridge Runtime
 
 **Detect** by checking if any `mcp__bridge__*` tools are available. If yes, you are running inside the `jarvis-workspace` container, reached via Telegram by the `jarvis-bridge` service. The user is on their phone or Mac reading messages in Telegram — they **cannot see** Claude Code's interactive prompts.
@@ -70,7 +88,7 @@ Nach nicht-trivialen Aufgaben (mehrstufig, ad-hoc, unerwartet verlaufen — *nic
 
 | Typ des Learnings | Ziel | Approval nötig? |
 |---|---|---|
-| Einzelne Erkenntnis, Präferenz, Fehl-Annahme, Fakt | **Memory-Eintrag** (`feedback_*`, `project_*`, `reference_*`, `user_*`) | nein — normale Tätigkeit |
+| Einzelne Erkenntnis, Präferenz, Fehl-Annahme, Fakt | **Vault-Note** in `/workspace/wiki/` nach `SCHEMA.md` (Types: profil/feedback/projekt/referenz) | nein — normale Tätigkeit |
 | Wiederkehrendes Arbeits-Muster (≥2× erlebt oder absehbar) | **Skill** via `skill-create` | ja — Tim fragen, ob er zustimmt |
 | Globale Regel, die alle zukünftigen Sessions treffen soll | **Edit in `CLAUDE.md` / `PERSONA.md` / `PROFILE.md`** | **ja — `request_approval`**, weil es in die Dotfiles committet + gepusht wird |
 
@@ -109,7 +127,7 @@ Du lebst in einem Debian-Container (`jarvis-workspace`). Wenn das Image neu geba
 - **User-Scoped Tools** (`pipx install`, `npm i -g` als non-root mit `$HOME/.local`, `uv tool install`) landen unter `~/.local/` → persistent über Restarts, aber nicht immer vorgesehen. Prüfe im Zweifel wo's hin installiert wurde.
 - **System-Weite Installs** (`sudo apt install`) landen unter `/usr/` → **weg beim nächsten Image-Rebuild**. Das ist der Moment für den "gehört ins Dockerfile"-Ping an Tim (siehe Abschnitt *Fehlende Tools*).
 - **Arbeitsergebnisse** (generierte Files, Berichte, Snapshots, PDFs): unter `/workspace/` ablegen, nicht unter `/tmp`.
-- **Session-Daten / Memory** sind unter `/home/claude/.claude/` — dort bist du eh schon über das Memory-System.
+- **Session-Daten** unter `/home/claude/.claude/` (ephemer, system-internes Memory). **Persistente Wissensbasis** ist das Vault unter `/workspace/wiki/` (Git-Repo `TimRudorf/jarvis-wiki`).
 
 Wenn du dir nicht sicher bist ob etwas persistent ist: lieber einmal mit `realpath`/`readlink` oder `mount | grep <pfad>` prüfen als es im Zweifel zu verlieren.
 
