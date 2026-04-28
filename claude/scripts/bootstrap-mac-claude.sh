@@ -19,7 +19,7 @@ LOCAL_STATE_ITEMS=(
   .credentials.json history.jsonl mcp-needs-auth-cache.json
 )
 SYMLINK_FILES=(CLAUDE.md PERSONA.md PROFILE.md CONTEXTS.md settings.json)
-SYMLINK_DIRS=(agents skills)  # einzelne Items darin werden symlinkt
+SYMLINK_DIRS=(skills)  # ganzer Ordner wird gesymlinkt
 
 log() { printf '[bootstrap-mac-claude] %s\n' "$*"; }
 
@@ -88,7 +88,7 @@ for item in "${SYMLINK_FILES[@]}"; do
   log "link $item -> $src"
 done
 
-# ---------- Phase 3: per-Item-Symlinks für agents/ und skills/ ----------
+# ---------- Phase 3: Ordner-Symlinks ----------
 for dir in "${SYMLINK_DIRS[@]}"; do
   src_dir="$DOTFILES_CLAUDE/$dir"
   dst_dir="$CLAUDE_DIR/$dir"
@@ -96,24 +96,51 @@ for dir in "${SYMLINK_DIRS[@]}"; do
     log "skip $dir/ (nicht in dotfiles)"
     continue
   fi
-  mkdir -p "$dst_dir"
 
-  # Stale Symlinks im dst entfernen (nicht echte Verzeichnisse anfassen)
-  shopt -s dotglob nullglob
-  for f in "$dst_dir"/*; do
-    [ -L "$f" ] && rm "$f"
-  done
-  shopt -u dotglob nullglob
+  # Vorhandenes Ziel aufräumen — egal ob alter Symlink oder Verzeichnis mit per-Item-Symlinks
+  if [ -L "$dst_dir" ]; then
+    rm "$dst_dir"
+  elif [ -d "$dst_dir" ]; then
+    # Sicherheits-Check: nur löschen wenn alle Einträge Symlinks sind (kein echter Inhalt)
+    shopt -s dotglob nullglob
+    has_real=false
+    for f in "$dst_dir"/*; do
+      [ -L "$f" ] || { has_real=true; break; }
+    done
+    shopt -u dotglob nullglob
+    if $has_real; then
+      log "WARN: $dst_dir enthält echte Dateien — nicht überschrieben. Manuell prüfen."
+      continue
+    fi
+    rm -rf "$dst_dir"
+  fi
 
-  # Neue Symlinks pro Item
-  shopt -s nullglob
-  for entry in "$src_dir"/*; do
-    [ -e "$entry" ] || continue
-    name=$(basename "$entry")
-    ln -sfn "$entry" "$dst_dir/$name"
-  done
-  shopt -u nullglob
-  log "linked $(ls -1 "$dst_dir" | wc -l | tr -d ' ') items in $dir/"
+  ln -sfn "$src_dir" "$dst_dir"
+  log "link $dir -> $src_dir"
+done
+
+# ---------- Phase 3b: Aufräumen entfernter Symlink-Ziele ----------
+# Vorher wurden agents/ als per-Item-Symlinks ausgerollt — jetzt nicht mehr,
+# also alte Symlink-Verzeichnisse entfernen, falls noch vorhanden.
+for legacy in agents; do
+  legacy_dst="$CLAUDE_DIR/$legacy"
+  if [ -L "$legacy_dst" ]; then
+    log "remove legacy symlink: $legacy_dst"
+    rm "$legacy_dst"
+  elif [ -d "$legacy_dst" ]; then
+    shopt -s dotglob nullglob
+    has_real=false
+    for f in "$legacy_dst"/*; do
+      [ -L "$f" ] || { has_real=true; break; }
+    done
+    shopt -u dotglob nullglob
+    if $has_real; then
+      log "WARN: $legacy_dst enthält echte Dateien — nicht entfernt. Manuell prüfen."
+    else
+      log "remove legacy dir: $legacy_dst"
+      rm -rf "$legacy_dst"
+    fi
+  fi
 done
 
 # ---------- Phase 4: Sanity-Check ----------
