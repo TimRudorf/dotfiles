@@ -32,12 +32,7 @@ Falls keine gültigen Dateien gefunden: Abbrechen mit Hinweis.
 
 ## Schritt 3: Folder-ID bestimmen
 
-Bekannte Ordner-IDs (in `/etc/environment`):
-- `RM_DIGEST_FOLDER_ID` → "Daily News Digest"
-
-Wenn der Zielordner bekannt ist, direkt die ID verwenden.
-
-Wenn der Zielordner unbekannt ist, ID aus dem Cache lesen:
+ID aus dem Cache lesen:
 ```bash
 cat ~/.cache/remarkable-folders.json 2>/dev/null | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('ORDNERNAME',{}).get('id',''))"
 ```
