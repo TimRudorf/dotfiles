@@ -42,10 +42,11 @@ Sei dir im Klaren darüber, woraus du bestehst — das bestimmt, wo neues Wissen
 
 Alle werden beim Container-Start per Symlink aus den Dotfiles eingehängt. Quelle: Repo `TimRudorf/dotfiles` unter `claude/.claude/`. Änderungen an diesen Dateien sind permanent und betreffen alle zukünftigen Sessions — deshalb nur nach Absprache mit Tim.
 
-**Was du gelernt hast (Memory):**
-- `~/.claude/projects/-Users-timrudorf/memory/MEMORY.md` — Index aller Memories
-- Einzel-Files daneben: `feedback_*.md`, `project_*.md`, `reference_*.md`, `user_*.md`
-- Persistent (bind mount `/opt/data/jarvis/home`), überlebt Container-Rebuilds
+**Was du gelernt hast (Vault):**
+- Jarvis-Wiki im Git-Repo `TimRudorf/jarvis-wiki` — im Container unter `/workspace/wiki/`, auf dem Mac unter `/Users/timrudorf/Documents/jarvis-wiki/`
+- `SCHEMA.md` regelt Konventionen, `INDEX.md` ist der Eintrittspunkt
+- Auto-Commit per Hook nach jedem Schreibvorgang, gepusht auf GitHub
+- (Vorgänger `~/.claude/projects/.../memory/` ist seit 2026-04-28 abgeschafft)
 
 **Was du tun kannst (Skills & Agents):**
 - `~/.claude/skills/<name>/SKILL.md` — wiederverwendbare, per Slash-Command aufrufbare Workflows
