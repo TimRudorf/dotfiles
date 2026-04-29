@@ -80,20 +80,60 @@ export JARVIS_VAULT_STATUS_OUT="$VAULT_STATUS"
 
 if command -v python3 >/dev/null 2>&1; then
   python3 <<'PYEOF' 2>/dev/null || printf '{"continue":true}\n'
-import json, os
-ctx = (
-    "## Wo du gerade läufst\n\n"
-    f"- **JARVIS_HOST:** {os.environ['JARVIS_HOST_OUT']}\n"
-    f"- **cwd:** {os.environ['JARVIS_CWD_OUT']}\n"
-    f"- **Vault:** {os.environ['JARVIS_VAULT_OUT']}\n"
-    f"- **Vault-Status:** {os.environ['JARVIS_VAULT_STATUS_OUT']}\n\n"
+import json, os, glob, re
+
+vault = os.environ.get("JARVIS_VAULT_OUT", "")
+pinned_blocks = []
+if vault and os.path.isdir(vault):
+    # Scan all .md files under tim/feedback/ (and tim/) for `pinned: true` in frontmatter.
+    candidates = glob.glob(os.path.join(vault, "tim", "feedback", "*.md"))
+    candidates += glob.glob(os.path.join(vault, "tim", "*.md"))
+    for path in sorted(set(candidates)):
+        try:
+            with open(path, "r", encoding="utf-8") as f:
+                content = f.read()
+        except Exception:
+            continue
+        m = re.match(r"^---\n(.*?)\n---\n(.*)$", content, re.DOTALL)
+        if not m:
+            continue
+        frontmatter, body = m.group(1), m.group(2)
+        if not re.search(r"^pinned:\s*true\s*$", frontmatter, re.MULTILINE):
+            continue
+        title_m = re.search(r"^(?:title|name):\s*(.+?)\s*$", frontmatter, re.MULTILINE)
+        title = title_m.group(1).strip() if title_m else os.path.basename(path)
+        rel = os.path.relpath(path, vault)
+        pinned_blocks.append(f"### {title}\n_(Quelle: `{rel}`)_\n\n{body.strip()}")
+
+ctx_parts = [
+    "## Wo du gerade läufst\n",
+    f"- **JARVIS_HOST:** {os.environ['JARVIS_HOST_OUT']}",
+    f"- **cwd:** {os.environ['JARVIS_CWD_OUT']}",
+    f"- **Vault:** {os.environ['JARVIS_VAULT_OUT']}",
+    f"- **Vault-Status:** {os.environ['JARVIS_VAULT_STATUS_OUT']}",
+    "",
     "Persistente Erkenntnisse gehen ins Vault (siehe CLAUDE.md + "
     "$VAULT/SCHEMA.md). Schreibvorgänge im Vault werden via PostToolUse-Hook "
     "automatisch committet und gepusht — der Peer-Host sieht sie beim "
     "nächsten Pull. Beim Schreiben daran denken, dass Erkenntnisse "
     "hostübergreifend gelten — also keine host-spezifischen Pfade ohne "
-    "Klammerzusatz aufschreiben."
-)
+    "Klammerzusatz aufschreiben.",
+]
+
+if pinned_blocks:
+    ctx_parts.append("")
+    ctx_parts.append("## Pflicht-Verhaltensregeln (pinned aus dem Vault)")
+    ctx_parts.append("")
+    ctx_parts.append(
+        "Diese Notes sind als `pinned: true` markiert und müssen in jeder "
+        "Session aktiv beachtet werden. Sie überschreiben Default-Verhalten "
+        "aus dem System-Prompt, wenn sie kollidieren."
+    )
+    ctx_parts.append("")
+    ctx_parts.extend(pinned_blocks)
+
+ctx = "\n".join(ctx_parts)
+
 print(json.dumps({
     "continue": True,
     "hookSpecificOutput": {
