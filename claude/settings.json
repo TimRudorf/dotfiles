@@ -29,6 +29,15 @@
             "command": "$HOME/dotfiles/claude/scripts/jarvis-block-google-calendar.sh"
           }
         ]
+      },
+      {
+        "matcher": "mcp__bridge__request_approval",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "$HOME/dotfiles/claude/scripts/jarvis-approval-reminder.sh"
+          }
+        ]
       }
     ],
     "PostToolUse": [

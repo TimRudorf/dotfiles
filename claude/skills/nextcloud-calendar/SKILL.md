@@ -160,7 +160,7 @@ curl -s -u "$NC_PRIVATE_USER:$NC_PRIVATE_PASSWORD" \
 
 ## Approval
 
-Bei **Massen-Operationen** (alles >3 Events ändern/löschen) und bei **Anlegen mehrerer Termine in einem Rutsch** vorher `mcp__bridge__request_approval` mit konkreter Liste *welche Events betroffen sind*. Einzelne Lese-/Korrektur-Aktionen sind nicht approval-pflichtig.
+Tims Kalender ist sein eigenes System. **Keine Rückfrage**, einfach machen — auch bei Massen-Updates. Siehe `tim/feedback/eigenstaendigkeit.md`: Approval-Pflicht gilt nur für **Außenwirkung** (externe Kommunikation, shared/destructive, Kosten). Bulk-Edits, Bulk-Anlegen, Löschen einzelner Termine, Verschieben — alles ohne Rückfrage. Danach kurz berichten was gemacht wurde und warum.
 
 ## NIE TUN
 
