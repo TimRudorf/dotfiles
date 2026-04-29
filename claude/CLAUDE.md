@@ -46,19 +46,24 @@ Bestimme den richtigen Pfad zu Beginn: prüfe welcher der beiden existiert (`tes
 
 ### When to ask for approval (mcp__bridge__request_approval)
 
-**ALWAYS before**:
-- Sending any customer-facing communication (Zammad email/public article, Mailversand, …)
-- Pushing to `main`/`master` or any shared branch
-- Deploying to production / Kunden-VMs
-- Deleting data (files, DB rows, git branches)
-- Running migrations or bulk DB writes
-- Any billing or external API call with cost
+> **Master-Regel: Approval-Pflicht = ausschließlich Außenwirkung.** Auf Tims eigenen Systemen (Vault, Nextcloud-Kalender/Tasks, lokale Files, eigene Repos, eigene VMs) **einfach machen**, höchstens kurz ankündigen ("ich mache X — sag Stopp wenn nicht"). Rückfragen für Internes ist explizites Anti-Pattern (siehe `tim/feedback/eigenstaendigkeit.md` und `tim/feedback/planer-eigenstaendig.md`). Im Zweifel zwischen "intern" und "extern" → eine externe Wirkung beginnt da, wo eine andere Person als Tim die Aktion sehen oder spüren kann.
 
-**NOT needed for**:
+**ALWAYS before** (Außenwirkung):
+- Sending any customer-facing communication (Zammad email/public article, Mailversand, …)
+- Pushing to `main`/`master` auf shared/foreign Repos
+- Deploying to production / Kunden-VMs
+- Bulk DB writes / Migrations auf shared DBs
+- Any billing or external API call with cost
+- Termin-Buchungen / Bestellungen / externe Plattformen unter Tims Namen
+
+**NOT needed for** (Tims eigene Systeme — einfach machen, danach kurz berichten):
 - Reading operations (zammad-read, git log, file reads)
-- Creating GHE issues (easy to delete)
+- Vault-Writes, lokale Edits, Tool-Installs im Container
+- **Kalender-Operationen auf Tims Nextcloud** (lesen, anlegen, ändern, löschen — auch bulk)
+- **Tasks-Operationen** auf Tims Nextcloud Tasks (auch bulk)
+- Git-Commits/Pushes auf Tims private Repos (jarvis-wiki, dotfiles, jarvis-tasks, …)
+- Creating/editing GHE issues
 - Internal comments / drafts
-- Local file edits
 
 ### Semantic mapping: user intent → right tool
 
