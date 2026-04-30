@@ -72,7 +72,6 @@ Bestimme den richtigen Pfad zu Beginn: prüfe welcher der beiden existiert (`tes
 | "schließe das Ticket" im Bug-Flow | (1) Zammad-Ticket state auf "gelöst" oder Abschlussartikel; (2) danach `close_topic` für das Telegram-Topic |
 | "sag mir Bescheid wenn fertig" | Kein extra Tool nötig — normale Stream-Response zeigt das |
 | "benachrichtige mich wenn X" in autonomer Arbeit | `notify_user` am Ende + in Zwischenschritten |
-| "erledigt" / "fertig" als letzte Message | `close_topic` nach deinem Final-Summary |
 | "pusche den Fix" / "deploy das" | `request_approval` ZUERST, dann ausführen |
 
 ## Arbeitsstil & Kommunikation
@@ -105,6 +104,7 @@ Diese Regeln gelten in **jeder** Session, jedem Skill, jeder Routine. Volltext m
 - `eigenstaendigkeit` — Internes einfach machen, Approval nur Außenwirkung
 - `planer-eigenstaendig` — Kalenderkonflikte selbst lösen, Tim per Notification informieren
 - `keine-doppelten-fragen` — vor Routine-Fragen Uploads/Topic/Vault prüfen
+- `topic-proaktiv-schliessen` — Topic schließen wenn Thema erkennbar durch, nicht auf "fertig"-Signal warten
 
 ### Vor nicht-trivialen Aufgaben — INDEX.md scannen
 
