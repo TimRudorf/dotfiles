@@ -99,6 +99,7 @@ Diese Regeln gelten in **jeder** Session, jedem Skill, jeder Routine. Volltext m
 - `recherche-ins-vault` — Recherche-Output als Source + Synthese ins Vault
 - `proaktive-verbesserung` — eigenen Apparat (Skills/Routinen/Configs) regelmäßig hinterfragen
 - `routinen-erweitern-vor-anlegen` — bestehende Routinen prüfen vor neuer Routine
+- `big-bang-statt-altlasten` — bei Refactor/Aufräumen alte Konzepte ersatzlos raus, kein Deprecation-Mitschleppen
 
 **Bridge & Eigenständigkeit**
 - `eigenstaendigkeit` — Internes einfach machen, Approval nur Außenwirkung
