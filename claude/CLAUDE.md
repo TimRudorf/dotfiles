@@ -99,6 +99,7 @@ Diese Regeln gelten in **jeder** Session, jedem Skill, jeder Routine. Volltext m
 - `proaktive-verbesserung` — eigenen Apparat (Skills/Routinen/Configs) regelmäßig hinterfragen
 - `routinen-erweitern-vor-anlegen` — bestehende Routinen prüfen vor neuer Routine
 - `big-bang-statt-altlasten` — bei Refactor/Aufräumen alte Konzepte ersatzlos raus, kein Deprecation-Mitschleppen
+- `kritische-reevaluation` — bei jeder Empfehlung von Grund auf neu denken, Annahmen aus altem Plan verwerfen, asymmetrische Argumente entlarven
 
 **Bridge & Eigenständigkeit**
 - `eigenstaendigkeit` — Internes einfach machen, Approval nur Außenwirkung
