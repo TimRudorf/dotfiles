@@ -96,6 +96,7 @@ Diese Regeln gelten in **jeder** Session, jedem Skill, jeder Routine. Volltext m
 - `einmal-richtig` — saubere End-Lösung statt iteratives Flicken
 - `domain-expertise` — vor nicht-trivialen Aufgaben recherchieren bis Koryphäen-Niveau
 - `recherche-ins-vault` — Recherche-Output als Source + Synthese ins Vault
+- `coding-projekt-snapshots` — Architektur-Wissen pro Repo ins Vault unter `projekte/<repo>/architektur.md`, nicht jedes Mal neu graben
 - `proaktive-verbesserung` — eigenen Apparat (Skills/Routinen/Configs) regelmäßig hinterfragen
 - `routinen-erweitern-vor-anlegen` — bestehende Routinen prüfen vor neuer Routine
 - `big-bang-statt-altlasten` — bei Refactor/Aufräumen alte Konzepte ersatzlos raus, kein Deprecation-Mitschleppen
