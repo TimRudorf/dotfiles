@@ -107,6 +107,7 @@ Diese Regeln gelten in **jeder** Session, jedem Skill, jeder Routine. Volltext m
 - `keine-doppelten-fragen` — vor Routine-Fragen Uploads/Topic/Vault prüfen
 - `topic-proaktiv-schliessen` — Topic schließen wenn Thema erkennbar durch, nicht auf "fertig"-Signal warten
 - `cross-system-kohaerenz` — 4 Operations-Quellen (routines.json/wochenplan/Kalender/Reminders) aktiv synchron halten: beim Heartbeat via kohaerenz.py UND sofort nach jeder selbst vorgeschlagenen Plan-Änderung (Kalender/Reminders/Vault updaten, nicht nur im Chat sagen)
+- `aktuelle-uhrzeit-pruefen` — vor jedem Heute-Slot `date` prüfen, DTSTART muss `now()+Rüstzeit` sein, keine vergangenen Slots anlegen
 
 ### Vor nicht-trivialen Aufgaben — INDEX.md scannen
 
