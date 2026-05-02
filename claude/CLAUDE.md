@@ -105,6 +105,7 @@ Diese Regeln gelten in **jeder** Session, jedem Skill, jeder Routine. Volltext m
 - `planer-eigenstaendig` — Kalenderkonflikte selbst lösen, Tim per Notification informieren
 - `keine-doppelten-fragen` — vor Routine-Fragen Uploads/Topic/Vault prüfen
 - `topic-proaktiv-schliessen` — Topic schließen wenn Thema erkennbar durch, nicht auf "fertig"-Signal warten
+- `cross-system-kohaerenz` — 4 Operations-Quellen (routines.json/wochenplan/Kalender/Reminders) bei jedem Heartbeat aktiv synchron halten via kohaerenz.py
 
 ### Vor nicht-trivialen Aufgaben — INDEX.md scannen
 
