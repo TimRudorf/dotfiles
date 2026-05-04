@@ -32,8 +32,9 @@ git status --porcelain            # muss leer sein
 git rev-parse --abbrev-ref HEAD   # darf nicht "main" sein
 ```
 
-- Arbeitsbereich dirty → drei Optionen anbieten (Default 1, wenn die Änderungen offenbar zum Designziel gehören):
-  1. **WIP-Commit jetzt** auf aktuellem Branch (`git add -A && git commit -m "wip: design-loop start"`) — die Änderungen werden als Ausgangspunkt der Loop verwendet.
+- **macOS-Junk vorab filtern:** Wenn `.DS_Store` (oder `Thumbs.db`) im untracked-Status steht, **nicht** mit `git add -A` mitcommitten. Vor dem WIP-Commit `rm -f .DS_Store` (das File ist nirgends gewollt) — falls es schon getrackt war, separat mit `git rm --cached` und `.gitignore`-Eintrag bereinigen.
+- Arbeitsbereich dirty (nach Junk-Filter) → drei Optionen anbieten (Default 1, wenn die Änderungen offenbar zum Designziel gehören):
+  1. **WIP-Commit jetzt** auf aktuellem Branch — Änderungen gezielt staging mit `git add <pfade>` oder `git add -A -- ':!*.DS_Store'`, dann `git commit -m "wip: design-loop start"`.
   2. **Stash + restore am Ende** (`git stash push -m "design-loop"`).
   3. **Abbrechen** und User die Änderungen vorher klären lassen.
 - Branch = `main` → User informieren und abbrechen (oder nach Schritt 4 des Kommunikationswegs einen neuen Feature-Branch vorschlagen).
@@ -178,6 +179,14 @@ Zusätzlich zu `snapshot` und `screenshot` nützlich, wenn Screenshots nicht rei
   ```
 
   Unverzichtbar, wenn ein UI-Klick keinen sichtbaren Effekt zeigt und man wissen muss, ob der Fehler im Backend, in der Auth oder in der UI-Aktualisierung liegt.
+
+- **DOM-/CSS-Diagnose** via `eval` — wenn ein Element laut Snapshot existiert aber nicht sichtbar ist (Dropdown öffnet sich nicht, Tooltip clipped, z-index-Konflikt), die Render-Kette prüfen statt zu raten:
+
+  ```bash
+  playwright-cli -s=edpdesign eval "() => { const el = document.querySelector('<selector>'); let n = el; const chain = []; while (n && n !== document.body) { const cs = getComputedStyle(n); chain.push({ class: n.className, overflow: cs.overflow, position: cs.position, zIndex: cs.zIndex }); n = n.parentElement; } const r = el?.getBoundingClientRect(); return JSON.stringify({ rect: r, chain }); }" | grep -A2 'Result'
+  ```
+
+  Typische Fundstellen: `overflow:hidden` auf einem Vorfahren clippt absolute-positionierte Children (Fix oft `popperConfig.strategy:'fixed'` für Bootstrap-Dropdowns), niedriger z-index, transform-Kontext der position-fixed unbeabsichtigt einschränkt.
 
 - **Browser-Errors auslesen** — Playwright schreibt Browser-Konsolen-Events in `.playwright-cli/console-*.log`. Die neueste Datei (per Dateiname-Timestamp erkennbar) enthält den aktuellen Request-Lauf.
 
