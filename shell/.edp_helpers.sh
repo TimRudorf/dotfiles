@@ -518,7 +518,7 @@ _edp_compile() {
     return $rc
   fi
 
-  if ! grep -qi "0 Error(s)\|Build succeeded\|0 Fehler\|Buildvorgang.*erfolgreich" /tmp/edp_compile_$$.log; then
+  if ! grep -aqi "0 Error(s)\|Build succeeded\|0 Fehler\|Buildvorgang.*erfolgreich" /tmp/edp_compile_$$.log; then
     echo ""
     echo "FEHLER: Build nicht erfolgreich. Output:" >&2
     cat /tmp/edp_compile_$$.log >&2
