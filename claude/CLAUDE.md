@@ -101,6 +101,7 @@ Diese Regeln gelten in **jeder** Session, jedem Skill, jeder Routine. Volltext m
 - `routinen-erweitern-vor-anlegen` — bestehende Routinen prüfen vor neuer Routine
 - `big-bang-statt-altlasten` — bei Refactor/Aufräumen alte Konzepte ersatzlos raus, kein Deprecation-Mitschleppen
 - `kritische-reevaluation` — bei jeder Empfehlung von Grund auf neu denken, Annahmen aus altem Plan verwerfen, asymmetrische Argumente entlarven
+- `ci-nach-push-beobachten` — nach jedem Push CI-Run-Status abwarten, bei Fail Logs ziehen + fixen
 
 **Bridge & Eigenständigkeit**
 - `eigenstaendigkeit` — Internes einfach machen, Approval nur Außenwirkung
