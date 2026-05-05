@@ -149,6 +149,59 @@ curl -s -u "$APPLE_ID:$APPLE_PASS" -X DELETE "https://p123-caldav.icloud.com:443
 
 204 = gelöscht.
 
+## Apple-Maps-Verknüpfung im Termin (`X-APPLE-STRUCTURED-LOCATION`)
+
+Damit Apple Calendar **eine Karte unter dem Termin anzeigt** und der Tap auf die Adresse direkt nach Apple Maps führt, reicht das normale `LOCATION`-Feld nicht — es braucht zusätzlich die proprietäre `X-APPLE-STRUCTURED-LOCATION`-Property mit Geo-Koordinaten als `geo:lat,lng`-URI.
+
+**Minimum-Form (ohne MapKit-Handle, funktioniert von außen):**
+
+```
+X-APPLE-STRUCTURED-LOCATION;VALUE=URI;X-APPLE-RADIUS=70;X-APPLE-REFERENCEFRAME=1;X-TITLE="Name\nStraße Hausnummer, PLZ Ort":geo:50.126970,8.685191
+```
+
+- `geo:lat,lng` — Pflicht, sonst wird's ignoriert
+- `X-TITLE` — was Apple Maps als Pin-Beschriftung zeigt (mit `\n` für Zeilenumbruch im Display)
+- `X-APPLE-RADIUS` — Such-Radius in Metern (50–100 sinnvoll für Restaurants/Studios)
+- `X-APPLE-REFERENCEFRAME=1` — extern erzeugt (0 wäre Apple's MapKit-Quelle)
+- `X-APPLE-MAPKIT-HANDLE` — Apple-internes Place-Token (Base64-Protobuf), kann nur Apple's MapKit-API generieren. Von außen weglassen — Apple Maps macht beim ersten Öffnen Reverse-Geocoding und ergänzt das Handle selbst.
+
+**Geocoding** (lat/lng besorgen):
+
+```bash
+# Nominatim (OSM) — strukturiert mit Hausnummer
+curl -s "https://nominatim.openstreetmap.org/search?street=Eckenheimer+Landstra%C3%9Fe+111&city=Frankfurt&postalcode=60318&format=json&limit=1" \
+  -H "User-Agent: jarvis/1.0"
+```
+
+OSM hat oft nicht jede Hausnummer erfasst — bei Lücken die Nachbarn (109, 113) abfragen und mitteln. Apple ist tolerant: Ungenauigkeit von ~30m wird beim Open-in-Maps korrigiert (Apple macht selbst Reverse-Geocoding auf die volle Adresse).
+
+**Stamm-Locations mit Geo-Koordinaten** (vorab bekannt, kein Lookup nötig):
+
+| Location | Geo (verifiziert) | LOCATION-String |
+|---|---|---|
+| Fitness First MyZeil | `50.114945,8.681096` | `Fitness First Frankfurt - MyZeil, Zeil 102, Haus 106, 60313 Frankfurt am Main` |
+| Herkerts Bistro Eckenheimer | `50.126970,8.685191` | `Herkerts Bistro, Eckenheimer Landstraße 111, 60318 Frankfurt am Main` |
+| Fitness First Konstablerwache | (TBD beim ersten Schreiben geocoden) | `Fitness First Frankfurt Konstablerwache, Zeil 72-82, 60313 Frankfurt am Main` |
+| Herkert Feinkost Oeder Weg | (TBD) | `Herkert, Oeder Weg 50, 60318 Frankfurt am Main` |
+| Laufbahn Ostendpark | (TBD) | `Laufbahn Ostendpark, Frankfurt am Main` |
+
+Für neue Stamm-Locations: Adresse verifizieren (siehe `tim/feedback/kalender-location.md`) → geocoden → in dieser Tabelle ergänzen + im Vault unter passender Stamm-Note aufschreiben.
+
+**Beispiel-Event mit Apple-Maps-Karte + Attendee:**
+
+```
+BEGIN:VEVENT
+UID:...
+SUMMARY:🍽 Mittag mit Tillmann @ Herkerts Bistro
+LOCATION:Herkerts Bistro\, Eckenheimer Landstraße 111\, 60318 Frankfurt am Main
+DTSTART;TZID=Europe/Berlin:20260506T120000
+DTEND;TZID=Europe/Berlin:20260506T133000
+X-APPLE-STRUCTURED-LOCATION;VALUE=URI;X-APPLE-RADIUS=70;X-APPLE-REFERENCEFRAME=1;X-TITLE="Herkerts Bistro\nEckenheimer Landstraße 111, 60318 Frankfurt am Main":geo:50.126970,8.685191
+ORGANIZER;CN=Tim Rudorf:mailto:tim.rudorf@icloud.com
+ATTENDEE;CN=Tillmann Scherer;ROLE=REQ-PARTICIPANT;PARTSTAT=NEEDS-ACTION;RSVP=TRUE:mailto:scherer.tillmann@web.de
+END:VEVENT
+```
+
 ## Schreib-Konventionen
 
 - **Location bei fixen Orten immer mitgeben** (siehe `tim/feedback/kalender-location.md`):
