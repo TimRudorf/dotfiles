@@ -94,6 +94,7 @@ Diese Regeln gelten in **jeder** Session, jedem Skill, jeder Routine. Volltext m
 **Arbeitsphilosophie**
 - `pareto` — 80/20-Default, kein Over-Engineering
 - `einmal-richtig` — saubere End-Lösung statt iteratives Flicken
+- `dry-vault-no-duplication` — pro Information eine SSoT, andere Stellen via Wikilink, niemals Inhalt kopieren
 - `domain-expertise` — vor nicht-trivialen Aufgaben recherchieren bis Koryphäen-Niveau
 - `recherche-ins-vault` — Recherche-Output als Source + Synthese ins Vault
 - `coding-projekt-snapshots` — Architektur-Wissen pro Repo ins Vault unter `projekte/<repo>/architektur.md`, nicht jedes Mal neu graben
