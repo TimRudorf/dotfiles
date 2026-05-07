@@ -26,6 +26,17 @@ Tims Kalender ist iCloud, **nicht** Google, **nicht** Nextcloud. Bei jedem Kalen
 
 **Kontext-Routing:** Im Zweifel **Privat** (Sport, Familie, Alltag). Uni-Lernblöcke und Pflichttermine → `Studium`. Werkstudent-Arbeitsblocks → `EifertSystemsGmbH`. Echte dienstliche Termine (Jourfix, Entwicklermeeting, Kunden-Meetings) kommen read-only aus dem Outlook-ICS-Feed (`WORK_CAL_ICS`, siehe `referenz/calendar-arbeit-ics.md`) — die **nicht** in iCloud-EifertSystemsGmbH duplizieren, sonst Doublette mit ICS.
 
+## Vor jedem Schreibvorgang — Konflikt + Duplikat prüfen
+
+Bevor ein neues Event ins iCloud geschrieben wird (und auch bevor verschoben wird), **immer erst lesen**:
+
+1. Über alle relevanten iCloud-Kalender (`Privat`, `Studium`, `EifertSystemsGmbH`) am gleichen Tag(en) suchen — `cal.search(start, end, event=True, expand=True)` — plus Outlook-ICS via `WORK_CAL_ICS` (siehe [[referenz/calendar-arbeit-ics]]).
+2. **Duplikat?** (gleiche Person/Thema im SUMMARY oder überlappendes Zeitfenster ±15 min oder gleicher externer Identifier wie Zoom-Meeting-ID): das **bestehende Event updaten** (`event_by_url(...)`, `ev.data = neue_ical`, `ev.save()`) — UID beibehalten. **Niemals** ein paralleles zweites Event anlegen.
+3. **Konflikt mit anderem Termin?** Kleinere Bewegungen (Lernblock kürzen, Soft-Anker schieben) selbst lösen + per `notify_user` informieren ([[tim/feedback/planer-eigenstaendig]]). Bei Pflicht-Konflikt oder Unklarheit: `request_approval` mit Konflikt-Beschreibung.
+4. **Soft-Anker** (🌅 Aufstehen, 🌙 Bett, 📚 Lernblock, 🍽 Mittag) zählen nicht als Konflikt — sie sind erwartet.
+
+Volle Begründung: [[tim/feedback/kalender-konflikt-und-duplikate-pruefen]].
+
 ## Workflow
 
 Empfehlung: für non-trivialen Code die Python-`caldav`-Library nutzen — robuster als curl-XML zu basteln. Im jarvis-tasks-Venv schon installiert (`/workspace/jarvis-tasks/.venv/bin/python` (Container) bzw. analoges venv auf dem Mac).
@@ -165,6 +176,26 @@ X-APPLE-STRUCTURED-LOCATION;VALUE=URI;X-APPLE-RADIUS=70;X-APPLE-REFERENCEFRAME=1
 - `X-APPLE-REFERENCEFRAME=1` — extern erzeugt (0 wäre Apple's MapKit-Quelle)
 - `X-APPLE-MAPKIT-HANDLE` — Apple-internes Place-Token (Base64-Protobuf), kann nur Apple's MapKit-API generieren. Von außen weglassen — Apple Maps macht beim ersten Öffnen Reverse-Geocoding und ergänzt das Handle selbst.
 
+**RFC-5545-Line-Folding ist kritisch.** iCal-Zeilen >75 Octets müssen mit `\r\n ` (CRLF + Leerzeichen) gefaltet werden — sonst bricht Apples Parser komplett, normalisiert die Adresse zu Großbuchstaben und merged das XAL-Property in die LOCATION-TEXT-Wert (Empirisch 2026-05-06 verifiziert: ein 700-Zeichen-XAL ohne Folding zerstört das VEVENT). **Bei jedem PUT von LOCATION oder X-APPLE-STRUCTURED-LOCATION** diesen Helper nutzen:
+
+```python
+def fold(line: str) -> str:
+    """RFC 5545 Section 3.1: fold lines >75 octets with CRLF + space."""
+    b = line.encode('utf-8')
+    if len(b) <= 75:
+        return line
+    chunks = [b[:75].decode('utf-8')]
+    rest = b[75:]
+    while len(rest) > 74:
+        chunks.append(' ' + rest[:74].decode('utf-8'))
+        rest = rest[74:]
+    if rest:
+        chunks.append(' ' + rest.decode('utf-8'))
+    return '\r\n'.join(chunks)
+```
+
+Beim Umbau bestehender Events: VEVENT-Block kpl. neu zusammensetzen statt Zeilen einzufügen — dann kommt Folding garantiert auf alle relevanten Properties.
+
 **Geocoding** (lat/lng besorgen):
 
 ```bash
@@ -175,17 +206,66 @@ curl -s "https://nominatim.openstreetmap.org/search?street=Eckenheimer+Landstra%
 
 OSM hat oft nicht jede Hausnummer erfasst — bei Lücken die Nachbarn (109, 113) abfragen und mitteln. Apple ist tolerant: Ungenauigkeit von ~30m wird beim Open-in-Maps korrigiert (Apple macht selbst Reverse-Geocoding auf die volle Adresse).
 
-**Stamm-Locations mit Geo-Koordinaten** (vorab bekannt, kein Lookup nötig):
+**Stamm-Locations mit Geo-Koordinaten** (vorab bekannt, kein Lookup nötig). Für jede Stamm-Location ist sowohl die `LOCATION`-Schreibweise (im Format wie Apple Maps sie speichert — wichtig, sonst greift das MAPKIT-HANDLE nicht) als auch das vollständige `X-APPLE-STRUCTURED-LOCATION`-Snippet erfasst. **Beim Anlegen oder Updaten von Sport-/Stamm-Terminen immer beides aus dieser Tabelle übernehmen** — sonst sieht Tim die Apple-Maps-Karte nicht im Termin.
 
-| Location | Geo (verifiziert) | LOCATION-String |
+**Konstablerwache** — Tims **Default-Studio** für alle Sport-Termine (PM-Tilli + AM-Schulter/Arme + Fr/Sa Solo OK/UK), sofern nichts anderes angesagt:
+
+```ical
+LOCATION:Fitness First Frankfurt - Konstablerwache\nZeil 72\, 60313 Frank
+ furt\, Germany
+X-APPLE-STRUCTURED-LOCATION;VALUE=URI;X-APPLE-MAPKIT-HANDLE=CAESxAIIrk0Qm
+ oig4L24v7TpARoSCfGcLSC0DklAEQJQewBBXyFAIl8KB0dlcm1hbnkSAkRFGgVIZXNzZSoJR
+ nJhbmtmdXJ0MglGcmFua2Z1cnQ6BTYwMzEzQgxJbm5lbnN0YWR0IElSBFplaWxaAjcyYgdaZ
+ WlsIDcyigEKSW5uZW5zdGFkdCopRml0bmVzcyBGaXJzdCBGcmFua2Z1cnQgLSBLb25zdGFib
+ GVyd2FjaGUyB1plaWwgNzIyDzYwMzEzIEZyYW5rZnVydDIHR2VybWFueTgvUAFabQooCJqIo
+ OC9uL+06QESEgnxnC0gtA5JQBECUHsAQV8hQBiuTZADAZgDAaIfQAiaiKDgvbi/tOkBGjMKK
+ UZpdG5lc3MgRmlyc3QgRnJhbmtmdXJ0IC0gS29uc3RhYmxlcndhY2hlEAAqAmVuQAA=;X-AP
+ PLE-RADIUS=141.1750793457031;X-APPLE-REFERENCEFRAME=0;X-TITLE="Fitness F
+ irst Frankfurt - Konstablerwache\nZeil 72, 60313 Frankfurt, Germany":geo
+ :50.114872,8.686043
+```
+
+Verifiziert per direkter Apple-Calendar-Eintragung 2026-05-06 (UID `c6fabf51-…`). MAPKIT-HANDLE und REFERENCEFRAME=0 funktionieren bei Re-PUT — Apple respektiert das.
+
+**FFC Olympia 07** — Tims Default für **Do PM Intervalle mit Tillmann** (Sportclub Olympia 1906 / FFC Olympia 07, Laufbahn am Ostpark):
+
+```ical
+LOCATION:FFC Olympia 07\nRatsweg 10\, 60386 Frankfurt\, Germany
+X-APPLE-STRUCTURED-LOCATION;VALUE=URI;X-APPLE-MAPKIT-HANDLE=CAESogIIrk0Q2
+ YGf8LHjoc3hARoSCfxUFRqID0lAEc9IKY09dCFAIlwKB0dlcm1hbnkSAkRFGgVIZXNzZSoJR
+ nJhbmtmdXJ0MglGcmFua2Z1cnQ6BTYwMzg2QgNPc3RSB1JhdHN3ZWdaAjEwYgpSYXRzd2VnI
+ DEwigEKUmllZGVyd2FsZCoORkZDIE9seW1waWEgMDcyClJhdHN3ZWcgMTAyDzYwMzg2IEZyY
+ W5rZnVydDIHR2VybWFueTgvUAFaZgo8CNmBn/Cx46HN4QESEgn8VBUaiA9JQBHPSCmNPXQhQ
+ BiuTZADAZgDAaIDEUlFMTlBODcxQjFFMDdDMEQ5oh8lCNmBn/Cx46HN4QEaGAoORkZDIE9se
+ W1waWEgMDcQACoCZGVAAA==;X-APPLE-RADIUS=206.2665481143097;X-APPLE-REFEREN
+ CEFRAME=1;X-TITLE="FFC Olympia 07\nRatsweg 10, 60386 Frankfurt, Germany"
+ :geo:50.121341,8.727032
+```
+
+Tim sagte umgangssprachlich "Laufbahn Ostendpark" / "Olympia im Ostpark" — der offizielle Name ist FFC Olympia 07 / Sport-Club Olympia 1906 e.V., Adresse Ratsweg 10 (Stadtteil Riederwald, am Ostpark). Verifiziert per Apple-Calendar-Eintragung 2026-05-05 (UID `e7441fbc-…`).
+
+**Friedberger Platz** — Tims Default für **Di PM Long Run mit Tillmann** (Treffpunkt am Friedberger Platz):
+
+```ical
+LOCATION:Friedberger Platz\nFrankfurt\, Hesse\, Germany
+X-APPLE-STRUCTURED-LOCATION;VALUE=URI;X-ADDRESS="Frankfurt, Hesse, German
+ y";X-APPLE-MAPKIT-HANDLE=CAEScBoSCYEniBXJD0lAEWNYamImYiFAIioKB0dlcm1hbnk
+ SAkRFGgVIZXNzZSoJRnJhbmtmdXJ0MglGcmFua2Z1cnQqEUZyaWVkYmVyZ2VyIFBsYXR6Mgl
+ GcmFua2Z1cnQyBUhlc3NlMgdHZXJtYW55UAE=;X-APPLE-RADIUS=0;X-APPLE-REFERENCE
+ FRAME=0;X-TITLE=Friedberger Platz:geo:50.123324,8.691699
+```
+
+Verifiziert per Apple-Calendar-Eintragung 2026-05-05 (UID `807623f5-…`). Achtung: `X-APPLE-RADIUS=0` und kein expliziter Stadtbezug im LOCATION — Treffpunkt ist groß genug, dass Apple Maps den ohne Radius findet.
+
+**Andere Stamm-Locations:**
+
+| Location | Geo | LOCATION (Apple-Schreibweise) |
 |---|---|---|
-| Fitness First MyZeil | `50.114945,8.681096` | `Fitness First Frankfurt - MyZeil, Zeil 102, Haus 106, 60313 Frankfurt am Main` |
-| Herkerts Bistro Eckenheimer | `50.126970,8.685191` | `Herkerts Bistro, Eckenheimer Landstraße 111, 60318 Frankfurt am Main` |
-| Fitness First Konstablerwache | (TBD beim ersten Schreiben geocoden) | `Fitness First Frankfurt Konstablerwache, Zeil 72-82, 60313 Frankfurt am Main` |
+| Fitness First MyZeil | `50.114945,8.681096` | `Fitness First Frankfurt - MyZeil\nZeil 102\, Haus 106\, 60313 Frankfurt am Main\, Deutschland` (verifiziert per Apple, MAPKIT-HANDLE bekannt — siehe Eventquelle UID `c6fabf51` Stand vor Korrektur) |
+| Herkerts Bistro Eckenheimer | `50.126970,8.685191` | `Herkert\nEckenheimer Landstraße 111\, 60318 Frankfurt am Main\, Deutschland` (verifiziert, MAPKIT-HANDLE im Event 2026-05-06 12:00 Mittag) |
 | Herkert Feinkost Oeder Weg | (TBD) | `Herkert, Oeder Weg 50, 60318 Frankfurt am Main` |
-| Laufbahn Ostendpark | (TBD) | `Laufbahn Ostendpark, Frankfurt am Main` |
 
-Für neue Stamm-Locations: Adresse verifizieren (siehe `tim/feedback/kalender-location.md`) → geocoden → in dieser Tabelle ergänzen + im Vault unter passender Stamm-Note aufschreiben.
+Für neue Stamm-Locations: Adresse verifizieren (siehe `tim/feedback/kalender-location.md`) → **am liebsten** Tim einmal in Apple Calendar händisch eintragen lassen (MAPKIT-HANDLE = beste Maps-Integration), dann Event-Body lesen und hier ablegen. Fallback: Nominatim geocoden + extern-Format (`REFERENCEFRAME=1`, ohne MAPKIT-HANDLE).
 
 **Beispiel-Event mit Apple-Maps-Karte + Attendee:**
 
@@ -204,8 +284,8 @@ END:VEVENT
 
 ## Schreib-Konventionen
 
-- **Location bei fixen Orten immer mitgeben** (siehe `tim/feedback/kalender-location.md`):
-  - Mo/Mi Gym mit Tillmann → *Fitness First Frankfurt Konstablerwache, Zeil 72-82, 60313 Frankfurt am Main*
+- **Location bei fixen Orten immer mitgeben** (siehe `tim/feedback/kalender-location.md`) — bei Studio-Sessions zusätzlich `X-APPLE-STRUCTURED-LOCATION` aus der Stamm-Tabelle setzen:
+  - **Default für ALLE Sport-Studio-Termine** (Mo/Mi Gym Tilli, Di/Do AM Schulter/Arme, Fr/Sa Solo OK/UK): **Fitness First Konstablerwache** — Snippet aus Stamm-Tabelle. Tim sagt explizit Bescheid, wenn ein Ausnahme-Studio (MyZeil, Opernplatz, …) anliegt.
   - Do Intervalle mit Tillmann → *Laufbahn Ostendpark, Frankfurt am Main*
 - **Zeitzone:** `Europe/Berlin` mit `TZID=`. Keine UTC-Offsets ausrechnen.
 - **Titel kompakt** — ~50 Zeichen, Apple Calendar zeigt nur das.
@@ -216,6 +296,18 @@ END:VEVENT
 iCloud verschickt iMIP-Einladungen **selbst** (zu anderen Apple-Usern als native Kalender-Push, sonst per Mail-Anhang) sobald ein Event mit ATTENDEE/ORGANIZER liegt. RSVPs kommen automatisch zurück und reflektieren in den PARTSTAT der ATTENDEE-Properties. Das ist der Hauptgrund, warum Tim von Nextcloud weg ist — funktioniert dort nicht.
 
 **Achtung beim Schreiben:** ATTENDEE/ORGANIZER nur dann setzen, wenn Tim **selbst** der ORGANIZER ist (sein Apple-ID-Email = `tim.rudorf@icloud.com`). Wenn Tim nur Teilnehmer eines fremden Events ist, gehört das Event nicht von außen via PUT in den Kalender — solche Events kommen automatisch via iMIP-Inbox + Annahme rein.
+
+### Tilli-Sessions automatisch mit Attendee
+
+Bei **allen gemeinsamen Sport-Sessions mit Tillmann** (Mo/Mi PM Gym, Di PM Long Run, Do PM Intervalle) Tilli direkt als ATTENDEE mit reinschreiben — Tim hat das so gewünscht (2026-05-06). iCloud schickt die Einladung dann automatisch raus, RSVPs syncen zurück. Format aus Tims selbst-eingetragenen Events:
+
+```ical
+ORGANIZER;CN=Tim Rudorf;EMAIL=tim@rudorf.me:mailto:tim@rudorf.me
+ATTENDEE;CN=Tim Rudorf;CUTYPE=INDIVIDUAL;EMAIL=tim@rudorf.me;PARTSTAT=ACCEPTED;ROLE=CHAIR:mailto:tim@rudorf.me
+ATTENDEE;CN=Tillmann Scherer;CUTYPE=INDIVIDUAL;EMAIL=scherer.tillmann@web.de:mailto:scherer.tillmann@web.de
+```
+
+Tims primärer Mail-Alias in iCloud-Kalender ist **`tim@rudorf.me`** (nicht `tim.rudorf@icloud.com`) — so taucht er in seinen eigenen ORGANIZER-Feldern auf. iCloud akzeptiert mailto-only Form — der `principal/`-Pfad ist optional und wird beim Sync ergänzt.
 
 ## Approval
 
