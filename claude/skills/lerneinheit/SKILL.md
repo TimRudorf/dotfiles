@@ -1,6 +1,6 @@
 ---
 name: lerneinheit
-description: User invokes /lerneinheit to generate a structured "Lerneinheit-Brief" before starting a study session. The brief is a Vault-Note under projekte/lernplan/<modul>/lerneinheiten/<YYYY-MM-DD>-<thema-slug>.md with concrete Lernziele, hardware-specific Material-Liste (reMarkable/Mac/Buch), Block-Plan (Pre-Read/Active-Read/Skizze/Self-Test), Self-Test-Fragen, Karten-Themen-Vorschläge for /anki, Crossovers to other modules, and "after the session" checkboxes (Verständnis-Score, Lücken). Pulls modul-specific context from modul.md (anki_rolle, modul_typ, klausur-format, klausur.sprache) and plan.md (aktive Phase + matching Pool-Item). Final step patches the corresponding Todoist task description with an Obsidian-URL deeplink to the new note. Trigger keywords - lerneinheit, brief, /lerneinheit, "ich fang gleich an mit", "lass mich auf X vorbereiten", "was soll ich heute machen für".
+description: User invokes /lerneinheit to generate a structured "Lerneinheit-Brief" before starting a study session AND to auto-prepare all reading material on the reMarkable. The brief is a Vault-Note under projekte/lernplan/<modul>/lerneinheiten/<YYYY-MM-DD>-<thema-slug>.md with concrete Lernziele, hardware-specific Material-Liste (reMarkable/Mac/Buch), Block-Plan (Pre-Read/Active-Read/Skizze/Self-Test), Self-Test-Fragen, Karten-Themen-Vorschläge for /anki, Crossovers, and "after the session" checkboxes. Pulls modul-context from modul.md (anki_rolle, modul_typ, klausur-format, klausur.sprache) and plan.md (aktive Phase + matching Pool-Item). Identifies relevant PDFs (slides, scripts, book chapters) and uploads them to /Studium/<Modul>/ on the reMarkable via the remarkable-upload skill. Final step patches the corresponding Todoist task description with an Obsidian-URL deeplink. Trigger keywords - lerneinheit, brief, /lerneinheit, "ich fang gleich an mit", "lass mich auf X vorbereiten", "was soll ich heute machen für".
 disable-model-invocation: true
 argument-hint: <modul-slug> <thema-slug> [--minuten=N] [--datum=YYYY-MM-DD]
 ---
@@ -115,7 +115,53 @@ Verweise auf andere Module, deren Stoff hier wieder auftaucht oder vorbereitet w
 **Verlinkt mit Pool-Item** in [[projekte/lernplan/<modul-slug>/plan#Phase <N> — <Phasen-Name>]]: *"<Pool-Item-Text aus plan.md>"*
 ```
 
-## Schritt 4: Vault-Note schreiben
+## Schritt 4: Material auf reMarkable vorbereiten
+
+Tim liest und schreibt am liebsten auf dem reMarkable — also: alles was im Brief unter "Material" mit Gerät `reMarkable` steht, wird **vorab** in den Modul-Folder hochgeladen, damit Tim beim Setzen einfach loslegen kann.
+
+### 4.1 Material identifizieren
+
+Aus dem Modul-Kontext (modul.md "Material"-Sektion + Pool-Item-Text) die **PDFs** ableiten, die zur Lerneinheit gehören. Quellen-Reihenfolge:
+
+1. **FB18-Archiv lokal** (`~/Documents/uni/<modul-slug>-fb18-archive/`) — komprimierte Folien sind oft hier (z. B. `STV01-min.pdf`, `STV02-mit-Notizen-min.pdf`)
+2. **Moodle-Download** (falls `moodle-dl` installiert + Token verfügbar; sonst skippen)
+3. **Vault-eigene PDFs** (Lerneinheit-spezifische Erzeugnisse wie FS-Skelette unter `projekte/lernplan/<modul>/...`)
+
+Heuristik für Filename-Match: Pool-Item-Stichwort (`vo01`, `kap-2-1`, `paper-3`) → Filename-Pattern (`STV01*`, `Kap2*`, `paper3*`). Pro Lerneinheit typisch **1–3 Files** (Folien + ggf. Aufgaben + ggf. Buch-Kapitel). Aufzeichnungen (Videos) sind nicht reMarkable-tauglich → skip.
+
+Wenn keine Files identifiziert werden können: Brief trotzdem schreiben, im Material-Block transparent vermerken *"Kein Material lokal verfügbar — Tim selbst von Moodle ziehen"*.
+
+### 4.2 Upload via remarkable-upload skill
+
+Modul-Folder bestimmen via:
+
+```bash
+FOLDER=$(bash ~/.claude/skills/remarkable-upload/scripts/rm.sh slug_to_folder <modul-slug>)
+```
+
+Pro identifiziertem File:
+
+```bash
+bash ~/.claude/skills/remarkable-upload/scripts/rm.sh put <local-pfad> "$FOLDER/"
+```
+
+Das Script legt den Folder bei Bedarf an (mkdir-p). Output ist `✅ Uploaded: <name> → /Studium/<Modul>/<basename>`.
+
+### 4.3 reMarkable-Pfad in Brief eintragen
+
+Im "Material"-Block des Briefes für jedes hochgeladene File den reMarkable-Pfad konkret nennen:
+
+```markdown
+| **reMarkable** | Folien VO01 (komprimiert, mit Notizen) | `/Studium/Sensortechnik/STV01-min` ✅ vorbereitet |
+```
+
+Der Hinweis `✅ vorbereitet` signalisiert Tim: file ist schon auf seinem reMarkable.
+
+### 4.4 Failsoft
+
+Wenn rmapi nicht erreichbar ist (Auth abgelaufen, Cloud down, Tim offline), Skill **bricht nicht ab** — er warnt und schreibt den Brief trotzdem mit Hinweis *"Material lokal vorhanden, manuelles Hochladen auf reMarkable nötig (rmapi-Auth checken)"*.
+
+## Schritt 5: Vault-Note schreiben
 
 Pfad: `~/Documents/jarvis-wiki/projekte/lernplan/<modul-slug>/lerneinheiten/<YYYY-MM-DD>-<thema-slug>.md`. Verzeichnis bei Bedarf anlegen.
 
@@ -123,7 +169,7 @@ Datei darf nicht überschrieben werden, wenn sie schon existiert — bei Konflik
 
 Auto-Commit-Hook im Vault pusht die Note automatisch — Peer-Host (Container) sieht sie beim nächsten Pull.
 
-## Schritt 5: Todoist-Task patchen
+## Schritt 6: Todoist-Task patchen
 
 `bash scripts/patch_todoist_task.sh <modul-slug> <thema-slug> <vault-pfad-relativ>` aufrufen.
 
@@ -132,14 +178,15 @@ Das Skript:
 2. Wenn gefunden: patcht die Task-Description um eine Zeile `🔗 Lerneinheit-Brief: obsidian://open?vault=jarvis-wiki&file=<URL-encoded-Pfad>` (idempotent — wenn schon drin, kein Doppel-Eintrag).
 3. Wenn nicht gefunden: kein Auto-Anlegen — stattdessen warnen *"Kein passender Todoist-Task heute gefunden. Brief liegt im Vault, du kannst ihn manuell verlinken oder ich lege auf Wunsch einen neuen Task an."* User entscheidet.
 
-## Schritt 6: Bestätigung
+## Schritt 7: Bestätigung
 
 Output:
 
 ```
 ✅ Lerneinheit-Brief erstellt
-   Pfad: projekte/lernplan/<modul-slug>/lerneinheiten/<datum>-<thema-slug>.md
+   Vault: projekte/lernplan/<modul-slug>/lerneinheiten/<datum>-<thema-slug>.md
    Obsidian: obsidian://open?vault=jarvis-wiki&file=...
+   reMarkable: <N> Files in /Studium/<Modul>/ (oder: keine Files vorbereitet)
    Todoist: <Task-Inhalt> — Description aktualisiert (oder: kein Task gefunden)
    Phase: <N> (<Phasen-Name>) · anki_rolle: <rolle>
 ```
