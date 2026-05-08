@@ -165,7 +165,9 @@ Wenn rmapi nicht erreichbar ist (Auth abgelaufen, Cloud down, Tim offline), Skil
 
 Pfad: `~/Documents/jarvis-wiki/projekte/lernplan/<modul-slug>/lerneinheiten/<YYYY-MM-DD>-<thema-slug>.md`. Verzeichnis bei Bedarf anlegen.
 
-Datei darf nicht überschrieben werden, wenn sie schon existiert — bei Konflikt warnen und mit `--force` erzwingbar oder `<thema-slug>-v2` anhängen lassen.
+**Idempotenz** (wichtig wegen Heartbeat-Aufrufen): wenn die Datei für gleiches Datum + Thema schon existiert → **silent skip** mit Erfolgs-Output *"Brief existiert bereits, kein Re-Generate"*. Schritt 4 (Material) UND Schritt 6 (Todoist-Patch) werden trotzdem ausgeführt — der Brief bleibt unverändert (Tims Reflexionen "Nach der Session" gehen sonst verloren), aber Material und Todoist-Description werden re-validiert.
+
+Mit `--force` wird der Brief überschrieben (zerstört Reflexionen — selten gewollt, eigentlich nur bei manuellem Re-Run nach Schema-Änderung).
 
 Auto-Commit-Hook im Vault pusht die Note automatisch — Peer-Host (Container) sieht sie beim nächsten Pull.
 
