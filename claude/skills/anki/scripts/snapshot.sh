@@ -119,6 +119,21 @@ EOF
 } > "$OUTFILE"
 
 echo "Snapshot geschrieben: $OUTFILE"
+
+# Auto-commit ins Vault — der globale PostToolUse-Hook fängt nur Write/Edit-Tool-
+# Schreibungen, nicht Bash-Skripte. Hier explizit nachziehen, damit der
+# Heartbeat im Container den frischen Snapshot via git pull sieht.
+if [ -d "$VAULT/.git" ]; then
+  pushd "$VAULT" > /dev/null
+  git add projekte/lernplan/anki-stats.md 2>/dev/null
+  if ! git diff --cached --quiet -- projekte/lernplan/anki-stats.md 2>/dev/null; then
+    git commit -m "anki-stats: snapshot $(date -u +%Y-%m-%dT%H:%MZ)" --quiet 2>/dev/null || true
+    git pull --rebase --autostash --quiet 2>/dev/null || true
+    ( git push origin main --quiet 2>/dev/null & disown ) 2>/dev/null || true
+  fi
+  popd > /dev/null
+fi
+
 echo ""
 echo "Top-3 Module nach Due heute:"
 for slug in "${SLUGS[@]}"; do
