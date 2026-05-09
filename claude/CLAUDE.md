@@ -101,6 +101,7 @@ Diese Regeln gelten in **jeder** Session, jedem Skill, jeder Routine. Volltext m
 - `routinen-erweitern-vor-anlegen` — bestehende Routinen prüfen vor neuer Routine
 - `big-bang-statt-altlasten` — bei Refactor/Aufräumen alte Konzepte ersatzlos raus, kein Deprecation-Mitschleppen
 - `kritische-reevaluation` — bei jeder Empfehlung von Grund auf neu denken, Annahmen aus altem Plan verwerfen, asymmetrische Argumente entlarven
+- `kalibrierte-einschaetzung` — bei Risiko-/Empfehlungsfragen realistische Abwägung statt Vorsichts-Reflex; Tim ist domain-erfahren (v.a. Sport/Cut/Ernährung), grobe Fehler sind unwahrscheinlich
 - `ci-nach-push-beobachten` — nach jedem Push CI-Run-Status abwarten, bei Fail Logs ziehen + fixen
 - `git-changes-selbst-pushen` — jede Repo-Änderung selbst committen+pushen (Vault via Hook, andere Repos manuell), Tim kommt nicht in den Container
 
