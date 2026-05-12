@@ -1,8 +1,4 @@
 {
-  "env": {
-    "TELEGRAM_BOT_TOKEN": "***REMOVED-LEAKED-TOKEN***",
-    "TELEGRAM_CHAT_ID": "266706699"
-  },
   "enabledPlugins": {
     "typescript-lsp@claude-plugins-official": true,
     "frontend-design@claude-plugins-official": true
