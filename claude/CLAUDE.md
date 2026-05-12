@@ -104,6 +104,9 @@ Diese Regeln gelten in **jeder** Session, jedem Skill, jeder Routine. Volltext m
 - `kalibrierte-einschaetzung` — bei Risiko-/Empfehlungsfragen realistische Abwägung statt Vorsichts-Reflex; Tim ist domain-erfahren (v.a. Sport/Cut/Ernährung), grobe Fehler sind unwahrscheinlich
 - `ci-nach-push-beobachten` — nach jedem Push CI-Run-Status abwarten, bei Fail Logs ziehen + fixen
 - `git-changes-selbst-pushen` — jede Repo-Änderung selbst committen+pushen (Vault via Hook, andere Repos manuell), Tim kommt nicht in den Container
+- `plan-quellen-tiefenanalyse` — bei Lerneinheits-/Plan-/Karten-Erstellung Originalquellen (PDFs, Folien, Kontrollfragen) vorab lesen und jede Annahme verifizieren; lieber lange brauchen als oberflächlich planen, Tim soll nicht selbst nachprüfen müssen
+- `modul-spezifische-lernstrategie` — pro Modul eine eigene `strategie.md` (6 Tutor-Leitfragen: Klausur-Anatomie+Priorisierung, Lehrstuhl+Goldquellen, Methodik+Karten, Tracking, Validation, Slippage+Cross-Modul); nie generisch über Module bügeln
+- `tutor-team-modus` — bei Lernplan-Tasks als spezialisierter Modul-Tutor agieren (tief im Stoff, klausur-fokussiert), bei Cross-Modul-Sicht als Tutor-Manager via `projekte/lernplan/tutor-manager.md`; Sub-Agents pro Modul wenn passend
 
 **Bridge & Eigenständigkeit**
 - `eigenstaendigkeit` — Internes einfach machen, Approval nur Außenwirkung
