@@ -84,7 +84,7 @@ Tabelle Block / Zeit / Tätigkeit / Gerät. Block-Aufbau modul-typ-abhängig:
 - **quantitativ**: Pre-Read → Worked Examples studieren mit Self-Explanation → Eigene Aufgaben mit Hinweisen → Self-Test
 - **mixed**: Mischung je nach Thema-Charakter
 
-Für Sensortechnik (3.-Versuch + keine FS) zusätzlich Skizzen-Block. Für Open-Book-Module (Thermo) Buch-Index-Block. Für e-Exam mit Word Limit (Modern Firm) Antwort-Template-Block.
+Für Sensortechnik (3.-Versuch + keine FS) zusätzlich Skizzen-Block. Für Open-Book-Module (Thermo) Buch-Index-Block. Für e-Exam mit Word Limit (Modern Firm) Antwort-Template-Block. **Für SDRT3** zusätzlich `📝 Formel-Kandidaten für Formelsammlung`-Sektion (siehe unten — Pflicht-Konvention aus [[projekte/lernplan/sdrt3/strategie#Lerneinheits-Konvention-Formel-Kandidaten-Sektion]]).
 
 ## ❓ Self-Test-Fragen
 
@@ -99,6 +99,17 @@ Pro Eintrag: kurze Beschreibung + (Cloze/Basic/Image-Occlusion). Bei quantitativ
 ## 🧩 Crossovers
 
 Verweise auf andere Module, deren Stoff hier wieder auftaucht oder vorbereitet wird. Wenn nichts: "kein direkter Bezug" — nicht erfinden.
+
+<!-- NUR FÜR modul-slug == sdrt3 — sonst diese Sektion komplett weglassen -->
+## 📝 Formel-Kandidaten für Formelsammlung
+
+> **Status-Check:** vor dem Vorschlag relevante Buckets in [[projekte/lernplan/sdrt3/formelsammlung]] lesen, prüfen was schon eingetragen ist. Doppel-Einträge vermeiden, bestehende `provisorisch`-Einträge ggf. auf `bestätigt` heben (wenn diese LE die 2. unabhängige Quelle ist).
+
+**Vorschlag:** Pro Kandidat: Bucket, Kurz-Name, Formel (LaTeX), Quelle (Skript-Abschnitt / Übungs-Aufgabe / Kochrezept-Schritt), Begründung warum klausur-relevant.
+
+**Aktion:** Jarvis trägt die Kandidaten direkt in `formelsammlung.md` ein (Status `provisorisch`); Status-Up-Lifts werden ebenfalls dort gepflegt. In dieser LE bleibt die Liste als Audit-Spur stehen.
+
+Wenn nichts neues kam: `_keine neuen Kandidaten_` — explizit, nicht weggelassen.
 
 ## ✅ Nach der Session (für Heartbeat-Auswertung)
 
