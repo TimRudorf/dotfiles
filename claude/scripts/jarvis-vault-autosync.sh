@@ -77,7 +77,18 @@ REL_PATH="${REAL_PATH#$REAL_VAULT/}"
   git commit -m "vault: ${REL_PATH} (auto-sync via ${HOST})" --quiet 2>/dev/null || exit 0
 
   # Pull --rebase davor, falls Peer in der Zwischenzeit gepusht hat.
-  git pull --rebase --autostash --quiet 2>/dev/null || true
+  # Wenn das fehlschlägt (Konflikt) → sauber abbrechen, KEINE stille Halb-Garung
+  # liegen lassen. Der Heartbeat-Step-0 findet den Vault dann wieder clean.
+  if ! git pull --rebase --autostash --quiet 2>/dev/null; then
+    git rebase --abort 2>/dev/null || true
+    git merge --abort  2>/dev/null || true
+    # Marker für Heartbeat / nächste Session — wird vom Step-0 / Session-Start gesehen.
+    {
+      echo "auto-sync pull --rebase fehlgeschlagen bei ${REL_PATH} (${HOST}, $(date -Iseconds))"
+      echo "git status:"
+      git status --short
+    } >> "$VAULT_DIR/.vault-sync-incidents.log" 2>/dev/null || true
+  fi
 
   # Push asynchron im Hintergrund — Hook returned sofort, Claude wartet nicht.
   ( git push origin main --quiet 2>/dev/null & disown ) || true
