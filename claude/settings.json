@@ -46,6 +46,25 @@
             "command": "$HOME/dotfiles/claude/scripts/jarvis-vault-autosync.sh"
           }
         ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "$HOME/dotfiles/claude/scripts/jarvis-vault-bash-autosync.sh"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "$HOME/dotfiles/claude/scripts/jarvis-repo-clean-check.sh"
+          }
+        ]
       }
     ]
   }
