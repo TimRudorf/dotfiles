@@ -30,6 +30,10 @@ Bestimme den richtigen Pfad zu Beginn: prüfe welcher der beiden existiert (`tes
 
 **Sync-Disziplin:** Container committet+pusht nach jedem Schreibvorgang. Bei Push-Konflikt (Mac war voraus): Pull-Merge ohne Auto-Resolve, im Zweifel Bridge-Notification an Tim.
 
+## Jarvis-Infrastruktur — Quick-Reference
+
+Container-Host = Debian-VM **`172.16.0.3`** (Glashütten), erreichbar via SSH-Alias `jarvis-vm` (User `timrudorf`) bzw. `jarvis-vm-root` (root). Standard-Pattern: `ssh jarvis-vm 'docker exec jarvis-workspace <cmd>'`. Container-Stack: `jarvis-workspace` (Claude-Code-Container), `jarvis-bridge` (Telegram), `jarvis-tailscale` (Netzwerk-Sidecar). **Nicht** auf dem Mac `docker ps` probieren — Daemon läuft dort typischerweise nicht, und die Container leben sowieso nicht dort. Doku: `$VAULT/referenz/jarvis-vm-deploy.md` + `$VAULT/referenz/jarvis-container-ssh.md`.
+
 ## Telegram Bridge Runtime
 
 **Detect** by checking if any `mcp__bridge__*` tools are available. If yes, you are running inside the `jarvis-workspace` container, reached via Telegram by the `jarvis-bridge` service. The user is on their phone or Mac reading messages in Telegram — they **cannot see** Claude Code's interactive prompts.
