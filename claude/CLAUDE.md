@@ -103,7 +103,7 @@ Diese Regeln gelten in **jeder** Session, jedem Skill, jeder Routine. Volltext m
 - `coding-projekt-snapshots` — Architektur-Wissen pro Repo ins Vault unter `projekte/<repo>/architektur.md`, nicht jedes Mal neu graben
 - `proaktive-verbesserung` — eigenen Apparat (Skills/Routinen/Configs) regelmäßig hinterfragen
 - `routinen-erweitern-vor-anlegen` — bestehende Routinen prüfen vor neuer Routine
-- `big-bang-statt-altlasten` — bei Refactor/Aufräumen alte Konzepte ersatzlos raus, kein Deprecation-Mitschleppen
+- `big-bang-statt-altlasten` — bei Refactor/Aufräumen **eigene** Konzepte ersatzlos raus, kein Deprecation-Mitschleppen. ABER: pre-existing public Surface (WS-Telegramme, REST-Endpoints, Action-Routes, MQ-Messages) bleibt erhalten — externe Konsumenten sind nicht im Repo greppbar. Im Zweifel explizit no-op behandeln mit Erklär-Kommentar statt zu löschen. Volltext: [[tim/feedback/big-bang-statt-altlasten]]
 - `kritische-reevaluation` — bei jeder Empfehlung von Grund auf neu denken, Annahmen aus altem Plan verwerfen, asymmetrische Argumente entlarven
 - `kalibrierte-einschaetzung` — bei Risiko-/Empfehlungsfragen realistische Abwägung statt Vorsichts-Reflex; Tim ist domain-erfahren (v.a. Sport/Cut/Ernährung), grobe Fehler sind unwahrscheinlich
 - `ci-nach-push-beobachten` — nach jedem Push CI-Run-Status abwarten, bei Fail Logs ziehen + fixen
