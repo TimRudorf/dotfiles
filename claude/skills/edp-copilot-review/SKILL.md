@@ -13,6 +13,16 @@ Holt das Copilot-Review eines PRs, lässt den User entscheiden was umgesetzt wir
 
 Voraussetzungen gemäß `requirement-checker` Skill validieren. Bei Fehlschlag abbrechen.
 
+## GH_HOST setzen (GHE)
+
+Auf Setups mit mehreren `gh auth`-Hosts (z.B. github.com + einsatzleitsoftware.ghe.com) routen `gh api`-Aufrufe ohne expliziten Host auf den Default — was bei GHE-PRs zu 404 führt, obwohl die Auth steht. Vor allen `gh api`-Aufrufen den Host aus dem Repo-Remote extrahieren und exportieren:
+
+```bash
+export GH_HOST="$(git remote get-url origin | sed -E 's#^https?://([^/]+)/.*#\1#; s#^git@([^:]+):.*#\1#')"
+```
+
+`GH_HOST` für die gesamte Session beibehalten — auch der Subagent in Schritt 2 sollte das Environment erben.
+
 ## Schritt 1: PR identifizieren
 
 Falls `$ARGUMENTS` eine PR-Nummer enthält → direkt verwenden.
@@ -107,11 +117,13 @@ Umgesetzt: <kurze Beschreibung was geändert wurde>
 Nicht umgesetzt: <Begründung — z.B. "Vom Entwickler als nicht relevant eingestuft", "Widerspricht bestehender Architektur", etc.>
 ```
 
-Für jeden Thread per `gh` CLI kommentieren:
+Für jeden Thread per `gh` CLI kommentieren — als Reply zum ursprünglichen Copilot-Kommentar:
 
 ```bash
-gh api repos/<owner>/<repo>/pulls/<pr>/comments/<comment_id>/replies -f body="<kommentar>"
+gh api -X POST "repos/<owner>/<repo>/pulls/<pr>/comments" -f body="<kommentar>" -F in_reply_to=<comment_id>
 ```
+
+**Wichtig:** Der naheliegende `/<comment_id>/replies`-Pfad funktioniert auf GHE **nicht** (gibt 404). Stattdessen wird per `POST .../comments` mit `-F in_reply_to=<id>` geantwortet — derselbe Endpoint wie für neue Review-Kommentare, nur mit `in_reply_to`-Verweis.
 
 Anschließend alle Threads per GraphQL resolven:
 

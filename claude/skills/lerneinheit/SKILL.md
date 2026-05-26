@@ -1,214 +1,106 @@
 ---
 name: lerneinheit
-description: User invokes /lerneinheit to generate a structured "Lerneinheit-Brief" before starting a study session AND to auto-prepare all reading material on the reMarkable. The brief is a Vault-Note under projekte/lernplan/<modul>/lerneinheiten/<YYYY-MM-DD>-<thema-slug>.md with concrete Lernziele, hardware-specific Material-Liste (reMarkable/Mac/Buch), Block-Plan (Pre-Read/Active-Read/Skizze/Self-Test), Self-Test-Fragen, Karten-Themen-Vorschläge for /anki, Crossovers, and "after the session" checkboxes. Pulls modul-context from modul.md (anki_rolle, modul_typ, klausur-format, klausur.sprache) and plan.md (aktive Phase + matching Pool-Item). Identifies relevant PDFs (slides, scripts, book chapters) and uploads them to /Studium/<Modul>/ on the reMarkable via the remarkable-upload skill. Final step patches the corresponding Todoist task description with an Obsidian-URL deeplink. Trigger keywords - lerneinheit, brief, /lerneinheit, "ich fang gleich an mit", "lass mich auf X vorbereiten", "was soll ich heute machen für".
+description: User invokes /lerneinheit to start a new study session for an existing LE (Lerneinheit) OR to create a new LE skeleton. LE files live datumslos under projekte/lernplan/<modul>/lerneinheiten/<einheit-slug>.md with 4 sections (🎯 Lernziele / 📖 Stoffaufnahme / 🔄 Aktiver Abruf / 🩺 Self-Test). Skill prepares reMarkable material if applicable, appends a session entry to the LE, and returns the obsidian:// URL. Todoist-link integration happens automatically via lernplan_eval Heartbeat — NOT via this skill. Konzept-Doku - /workspace/wiki/projekte/lernplan/lerneinheit-konzept.md. Trigger keywords - lerneinheit, /lerneinheit, "ich fang an mit", "lass mich auf X vorbereiten", "session starten für".
 disable-model-invocation: true
-argument-hint: <modul-slug> <thema-slug> [--minuten=N] [--datum=YYYY-MM-DD]
+argument-hint: <modul-slug> <einheit-slug> [--session-min=N]
 ---
 
-# Lerneinheit — Strukturierter Brief vor der Session
+# Lerneinheit — Session-Start für eine LE
 
-Generiert pro Lerneinheit eine Vault-Note mit konkretem Plan, Self-Test-Fragen und Karten-Themen-Vorschlägen für `/anki`. Verbindet den Brief mit dem passenden Todoist-Task (Vault-Link in der Description als Obsidian-URL).
+LEs (Lerneinheiten) sind **datumslose, deadline-getriebene logische Einheiten** mit 4 Sektionen (🎯 Lernziele / 📖 Stoffaufnahme / 🔄 Aktiver Abruf / 🩺 Self-Test). Pro Modul leben sie unter `projekte/lernplan/<modul>/lerneinheiten/<einheit-slug>.md`. Eine LE kann über mehrere Tage gehen — der Skill startet eine neue Session in einer existierenden LE oder legt eine neue LE als Skelett an.
 
-Konzept-Kontext: [[projekte/lernplan/methodik]], [[projekte/lernplan/anki-konzept]]. Nicht zu verwechseln mit `/anki cards <modul>` — der Brief steht *vor* der Session, die Karten *während/nach* der Session.
+**Wichtig:** Die Todoist-Integration läuft jetzt **vollautomatisch über den Heartbeat** (`lernplan_eval.py --mode=morning`) — der Heartbeat setzt den Obsidian-Deep-Link direkt im Todoist-Task, ohne diesen Skill. Dieser Skill ist nur noch für **Session-Vorbereitung** zuständig: reMarkable-Material, Lernziele-Recap, Session-Tagebuch-Eintrag.
+
+Konzept-Kontext: [[projekte/lernplan/lerneinheit-konzept]], [[projekte/lernplan/methodik]], [[projekte/lernplan/anki-konzept]].
 
 ## Voraussetzungen
 
-- Tools: `curl`, `jq`, `python3`
-- Datei: `~/Documents/jarvis-wiki/projekte/lernplan/methodik.md`
-- Datei: `~/Documents/jarvis-wiki/projekte/lernplan/anki-konzept.md`
+- Tools: `python3`, optional `rmapi` für reMarkable-Upload
+- Datei: `~/Documents/jarvis-wiki/projekte/lernplan/lerneinheit-konzept.md`
 
-Voraussetzungen gemäß `requirement-checker` Skill validieren. Bei Fehlschlag abbrechen.
+Voraussetzungen gemäß `requirement-checker` Skill validieren.
 
 ## Schritt 1: Argumente parsen
 
-Erwartet: `<modul-slug> <thema-slug> [--minuten=N] [--datum=YYYY-MM-DD]`.
+Erwartet: `<modul-slug> <einheit-slug> [--session-min=N]`
 
-- `modul-slug`: einer der 12 Slugs (siehe Mapping unten). Bei Fehler: Liste zeigen, stoppen.
-- `thema-slug`: kebab-case Slug für Datei-Name + Anker (z. B. `vo01-messkette`, `kap-2-1-trajektorien`, `paper-3-meta-analyse`).
-- `--minuten=N`: optional, default 75 wenn nicht im Pool-Item findbar.
-- `--datum=YYYY-MM-DD`: optional, default `date +%Y-%m-%d` am Mac.
+- `modul-slug`: einer der 12 Slugs (Liste unten)
+- `einheit-slug`: kebab-case Slug der LE (z.B. `kap01-konzepte`, `vo01-einfuehrung`, `paper-acemoglu-2001`)
+- `--session-min=N`: Dauer dieser Session in Minuten (default 75)
 
-## Schritt 2: Modul-Kontext laden
+## Schritt 2: LE-Datei laden ODER Skelett anlegen
 
-Aus `~/Documents/jarvis-wiki/projekte/lernplan/<modul-slug>/modul.md` Frontmatter extrahieren:
+Pfad: `~/Documents/jarvis-wiki/projekte/lernplan/<modul-slug>/lerneinheiten/<einheit-slug>.md`
 
-- `klausur.sprache` (DE/EN) — Brief in dieser Sprache verfassen.
-- `klausur.format`, `klausur.dauer_min`, `klausur.hilfsmittel`, `klausur.nicht_erlaubt` — wichtige Constraints für die Klausur-Realität-Sektion im Brief.
-- `anki_rolle` (`primaer`/`struktur`/`konzept`/`marginal`) — bestimmt die Anki-Empfehlung im Brief.
-- `modul_typ` (`konzeptuell`/`quantitativ`/`mixed`) — bestimmt, welche Lernmethoden im Block-Plan auftauchen (Worked Examples bei quantitativ, Concept Maps bei konzeptuell, vgl. [[projekte/lernplan/methodik]]).
+**Falls Datei existiert:**
+- Frontmatter lesen (`status`, `deadline`, `modul-phase`, `karten-ziel`, `geplante-minuten`)
+- Status-Check: wenn `status: abgeschlossen` → warnen *"LE bereits abgeschlossen — neue Session sicher gewünscht? (z.B. Nacharbeit-Status setzen)"*
+- Modul-Phase 4 = keine neuen LE-Sessions → warnen *"Modul-Phase 4 (Pre-Klausur) = Klausur-Hygiene, normalerweise nur Anki-Reviews"*
 
-Aus `~/Documents/jarvis-wiki/projekte/lernplan/<modul-slug>/plan.md`:
+**Falls Datei nicht existiert:**
+- Skelett anlegen gemäß Konzept-Doku Sektion 4 (4 Sektionen, leere Checkboxes mit Item-Typ-Tags)
+- Frontmatter aus `modul.md` `le-profil:` ableiten (unit-typ, block-defaults)
+- Deadline: in Absprache mit Tim (Default: heute + 7 Tage)
 
-- Aktive Phase: das `phasen:`-Element mit `status: aktiv`. Phase-Nummer + Name + Deadline merken.
-- **Pool-Item-Match**: in der aktiven Phase nach einem Pool-Item suchen, das zum `thema-slug` passt (Heuristik: VO/Kap-Nummer oder Stichwort im Item-Text). Bei mehreren Treffern: den mit höchstem Token-Overlap nehmen. Bei keinem Treffer: warnen aber fortfahren ("kein Pool-Item gefunden — Brief wird trotzdem erstellt, prüfe `thema-slug`").
+## Schritt 3: Modul-Kontext laden
 
-**Wenn `aktive_phase_id == 4`**: warnen *"Phase 4 = Klausur-Hygiene, normalerweise nur Reviews, keine neuen Lerneinheiten. Mit `--force` erzwingbar."* — User muss `--force` setzen.
+Aus `~/Documents/jarvis-wiki/projekte/lernplan/<modul-slug>/modul.md`:
+- `klausur.sprache` → Brief in dieser Sprache
+- `anki_rolle` → Anki-Empfehlung im Brief
+- `modul_typ` → Lernmethoden-Mix (siehe Konzept-Doku)
+- `phasen:`-Block → aktive Modul-Phase (Phase 4 = Warnung)
+- `le-profil.block-defaults` → falls Skelett angelegt werden muss
 
-## Schritt 3: Brief-Inhalt generieren
+Aus `~/Documents/jarvis-wiki/projekte/lernplan/<modul-slug>/tracker.md`:
+- Modul-Cockpit-Status (welche LEs sind in welcher Phase 🔴🟡🟢)
 
-Nach Template unten. Die **modul-spezifischen Felder** (Lernziele, Self-Test-Fragen, Karten-Themen, Crossovers) müssen aus dem Modul-Kontext + dem konkreten Thema abgeleitet werden — nicht generisch befüllt.
+## Schritt 4: reMarkable-Material vorbereiten (optional)
 
-### Template-Struktur
-
-```markdown
----
-title: <MODUL-KÜRZEL> <THEMA-TITEL>
-type: lerneinheit
-tags: [uni, <modul-slug>, lerneinheit]
-modul: <modul-slug>
-thema_slug: <thema-slug>
-datum: <YYYY-MM-DD>
-phase: <N>
-geplante_minuten: <N>
-status: aktiv
----
-
-> [!info] Kontext
-> **Modul:** [[projekte/lernplan/<modul-slug>/modul]] · **Plan:** [[projekte/lernplan/<modul-slug>/plan]]
-> **Phase <N>** (<Phasen-Name>) bis <deadline> · **Klausur-Format:** <kompakter Format-Hinweis aus modul.md>
-> `anki_rolle: <rolle>` → <Floor-Slot-Hinweis aus cross-modul.md>
-
-## 🎯 Lernziele
-
-3–5 konkrete, prüfbare Outcomes. Nicht "verstehen", sondern "kann X benennen + erklären", "skizziert Y aus dem Kopf", "wendet Formel Z auf gegebenes Beispiel an".
-
-## 📚 Material
-
-Tabelle: Wo (reMarkable/Mac/Buch) — Was — Quelle. Pro Modul ableiten aus modul.md "Material"-Sektion + thema-passender Auswahl. iPhone nur erwähnen wenn Anki-Review explizit Teil dieser Einheit ist.
-
-## 🧭 Vorgeschlagener Ablauf (<minuten> min)
-
-Tabelle Block / Zeit / Tätigkeit / Gerät. Block-Aufbau modul-typ-abhängig:
-
-- **konzeptuell**: Pre-Read → Active Read mit Elaborative Interrogation → Concept Map / Self-Explanation → Self-Test
-- **quantitativ**: Pre-Read → Worked Examples studieren mit Self-Explanation → Eigene Aufgaben mit Hinweisen → Self-Test
-- **mixed**: Mischung je nach Thema-Charakter
-
-Für Sensortechnik (3.-Versuch + keine FS) zusätzlich Skizzen-Block. Für Open-Book-Module (Thermo) Buch-Index-Block. Für e-Exam mit Word Limit (Modern Firm) Antwort-Template-Block. **Für SDRT3** zusätzlich `📝 Formel-Kandidaten für Formelsammlung`-Sektion (siehe unten — Pflicht-Konvention aus [[projekte/lernplan/sdrt3/strategie#Lerneinheits-Konvention-Formel-Kandidaten-Sektion]]).
-
-## ❓ Self-Test-Fragen
-
-5 Fragen, die den ganzen Stoff abdecken. Antworten gehen offline, ohne Material — das ist der Retrieval-Practice-Hebel. Pro Frage 1–2 Sätze Erwartungshorizont mental.
-
-## 🃏 Karten-Themen für `/anki cards <modul-slug> <thema-slug>`
-
-Liste von 6–12 Karten-Vorschlägen — *Themen*, nicht fertige Karten. Tim baut die Karten *nach* dem Durcharbeiten via `/anki`-Skill (Generation Effect).
-
-Pro Eintrag: kurze Beschreibung + (Cloze/Basic/Image-Occlusion). Bei quantitativen Modulen: pro Formel 1 Cloze pro Variable, bei konzeptuellen: Definition + Anwendung + Edge-Case.
-
-## 🧩 Crossovers
-
-Verweise auf andere Module, deren Stoff hier wieder auftaucht oder vorbereitet wird. Wenn nichts: "kein direkter Bezug" — nicht erfinden.
-
-<!-- NUR FÜR modul-slug == sdrt3 — sonst diese Sektion komplett weglassen -->
-## 📝 Formel-Kandidaten für Formelsammlung
-
-> **Status-Check:** vor dem Vorschlag relevante Buckets in [[projekte/lernplan/sdrt3/formelsammlung]] lesen, prüfen was schon eingetragen ist. Doppel-Einträge vermeiden, bestehende `provisorisch`-Einträge ggf. auf `bestätigt` heben (wenn diese LE die 2. unabhängige Quelle ist).
-
-**Vorschlag:** Pro Kandidat: Bucket, Kurz-Name, Formel (LaTeX), Quelle (Skript-Abschnitt / Übungs-Aufgabe / Kochrezept-Schritt), Begründung warum klausur-relevant.
-
-**Aktion:** Jarvis trägt die Kandidaten direkt in `formelsammlung.md` ein (Status `provisorisch`); Status-Up-Lifts werden ebenfalls dort gepflegt. In dieser LE bleibt die Liste als Audit-Spur stehen.
-
-Wenn nichts neues kam: `_keine neuen Kandidaten_` — explizit, nicht weggelassen.
-
-## ✅ Nach der Session (für Heartbeat-Auswertung)
-
-- [ ] Karten in Anki angelegt: ___ neu
-- [ ] Verständnis-Score 1–5: ___
-- [ ] [modul-spezifischer Check, z. B. "Skizze X aus dem Kopf"] — modul-typ ableitbar
-- [ ] Lücken / Stoff für nächste Session: 
-
-> [!info] Auswertung
-> Beim nächsten Lernpause-Heartbeat ([[tim/feedback/lernpause-vier-syncs]]) wird dieser Block ausgewertet, fehlende Aspekte ins nächste Pool-Item ergänzt, ggf. Druck-Score angepasst.
-
----
-
-**Verlinkt mit Pool-Item** in [[projekte/lernplan/<modul-slug>/plan#Phase <N> — <Phasen-Name>]]: *"<Pool-Item-Text aus plan.md>"*
-```
-
-## Schritt 4: Material auf reMarkable vorbereiten
-
-Tim liest und schreibt am liebsten auf dem reMarkable — also: alles was im Brief unter "Material" mit Gerät `reMarkable` steht, wird **vorab** in den Modul-Folder hochgeladen, damit Tim beim Setzen einfach loslegen kann.
-
-### 4.1 Material identifizieren
-
-Aus dem Modul-Kontext (modul.md "Material"-Sektion + Pool-Item-Text) die **PDFs** ableiten, die zur Lerneinheit gehören. Quellen-Reihenfolge:
-
-1. **FB18-Archiv lokal** (`~/Documents/uni/<modul-slug>-fb18-archive/`) — komprimierte Folien sind oft hier (z. B. `STV01-min.pdf`, `STV02-mit-Notizen-min.pdf`)
-2. **Moodle-Download** (falls `moodle-dl` installiert + Token verfügbar; sonst skippen)
-3. **Vault-eigene PDFs** (Lerneinheit-spezifische Erzeugnisse wie FS-Skelette unter `projekte/lernplan/<modul>/...`)
-
-Heuristik für Filename-Match: Pool-Item-Stichwort (`vo01`, `kap-2-1`, `paper-3`) → Filename-Pattern (`STV01*`, `Kap2*`, `paper3*`). Pro Lerneinheit typisch **1–3 Files** (Folien + ggf. Aufgaben + ggf. Buch-Kapitel). Aufzeichnungen (Videos) sind nicht reMarkable-tauglich → skip.
-
-Wenn keine Files identifiziert werden können: Brief trotzdem schreiben, im Material-Block transparent vermerken *"Kein Material lokal verfügbar — Tim selbst von Moodle ziehen"*.
-
-### 4.2 Upload via remarkable-upload skill
-
-Modul-Folder bestimmen via:
+Nur wenn Stoffaufnahme-Block der LE Folien/Skript-Verweise hat:
 
 ```bash
 FOLDER=$(bash ~/.claude/skills/remarkable-upload/scripts/rm.sh slug_to_folder <modul-slug>)
-```
-
-Pro identifiziertem File:
-
-```bash
+# Pro identifiziertem PDF (aus 📖 Stoffaufnahme-Checkboxes):
 bash ~/.claude/skills/remarkable-upload/scripts/rm.sh put <local-pfad> "$FOLDER/"
 ```
 
-Das Script legt den Folder bei Bedarf an (mkdir-p). Output ist `✅ Uploaded: <name> → /Studium/<Modul>/<basename>`.
+Failsoft: wenn rmapi nicht erreichbar → Skill bricht nicht ab, warnt nur.
 
-### 4.3 reMarkable-Pfad in Brief eintragen
+## Schritt 5: Session-Tagebuch-Eintrag anlegen
 
-Im "Material"-Block des Briefes für jedes hochgeladene File den reMarkable-Pfad konkret nennen:
+In `## 📅 Sessions`-Sektion der LE-Datei einen neuen Eintrag anhängen:
 
 ```markdown
-| **reMarkable** | Folien VO01 (komprimiert, mit Notizen) | `/Studium/Sensortechnik/STV01-min` ✅ vorbereitet |
+### YYYY-MM-DD Nmin (Phase: <stoffaufnahme|aktiver_abruf|self_test>)
+- (Eintrag wird von Tim nach der Session gefüllt — was wurde gemacht, welche Karten, Lücken)
 ```
 
-Der Hinweis `✅ vorbereitet` signalisiert Tim: file ist schon auf seinem reMarkable.
+Falls Sessions-Sektion noch nicht existiert: anlegen.
 
-### 4.4 Failsoft
-
-Wenn rmapi nicht erreichbar ist (Auth abgelaufen, Cloud down, Tim offline), Skill **bricht nicht ab** — er warnt und schreibt den Brief trotzdem mit Hinweis *"Material lokal vorhanden, manuelles Hochladen auf reMarkable nötig (rmapi-Auth checken)"*.
-
-## Schritt 5: Vault-Note schreiben
-
-Pfad: `~/Documents/jarvis-wiki/projekte/lernplan/<modul-slug>/lerneinheiten/<YYYY-MM-DD>-<thema-slug>.md`. Verzeichnis bei Bedarf anlegen.
-
-**Idempotenz** (wichtig wegen Heartbeat-Aufrufen): wenn die Datei für gleiches Datum + Thema schon existiert → **silent skip** mit Erfolgs-Output *"Brief existiert bereits, kein Re-Generate"*. Schritt 4 (Material) UND Schritt 6 (Todoist-Patch) werden trotzdem ausgeführt — der Brief bleibt unverändert (Tims Reflexionen "Nach der Session" gehen sonst verloren), aber Material und Todoist-Description werden re-validiert.
-
-Mit `--force` wird der Brief überschrieben (zerstört Reflexionen — selten gewollt, eigentlich nur bei manuellem Re-Run nach Schema-Änderung).
-
-Auto-Commit-Hook im Vault pusht die Note automatisch — Peer-Host (Container) sieht sie beim nächsten Pull.
-
-## Schritt 6: Todoist-Task patchen
-
-`bash scripts/patch_todoist_task.sh <modul-slug> <thema-slug> <vault-pfad-relativ>` aufrufen.
-
-Das Skript:
-1. Sucht in Todoist via REST `/api/v1/tasks/filter?query=today&...` einen Task, dessen Content den Modul-Kürzel + Thema-Stichwort enthält (z. B. "ST: Folien VO01" → matched für `sensortechnik vo01-messkette`).
-2. Wenn gefunden: patcht die Task-Description um eine Zeile `🔗 Lerneinheit-Brief: obsidian://open?vault=jarvis-wiki&file=<URL-encoded-Pfad>` (idempotent — wenn schon drin, kein Doppel-Eintrag).
-3. Wenn nicht gefunden: kein Auto-Anlegen — stattdessen warnen *"Kein passender Todoist-Task heute gefunden. Brief liegt im Vault, du kannst ihn manuell verlinken oder ich lege auf Wunsch einen neuen Task an."* User entscheidet.
-
-## Schritt 7: Bestätigung
+## Schritt 6: Bestätigung + Obsidian-URL
 
 Output:
 
 ```
-✅ Lerneinheit-Brief erstellt
-   Vault: projekte/lernplan/<modul-slug>/lerneinheiten/<datum>-<thema-slug>.md
-   Obsidian: obsidian://open?vault=jarvis-wiki&file=...
-   reMarkable: <N> Files in /Studium/<Modul>/ (oder: keine Files vorbereitet)
-   Todoist: <Task-Inhalt> — Description aktualisiert (oder: kein Task gefunden)
-   Phase: <N> (<Phasen-Name>) · anki_rolle: <rolle>
+✅ LE-Session vorbereitet
+   Vault: projekte/lernplan/<modul>/lerneinheiten/<einheit-slug>.md
+   Obsidian: obsidian://open?vault=jarvis-wiki&file=<url-encoded-path>
+   Status: <status> · Deadline: <YYYY-MM-DD> · Phase: <id>
+   reMarkable: <N> Files in /Studium/<Modul>/ (oder: keine vorbereitet)
+   Nächste offene Checkbox: <block> — "<text>" (<Xmin>)
 ```
+
+## Schritt 7: Status-Update prompten
+
+Frage Tim am Ende: *"LE-Status aktualisieren? geplant → aktiv? Soll ich das Frontmatter setzen?"*
+
+Wenn ja: `status: aktiv` ins Frontmatter, `updated: <today>` setzen.
 
 ## Modul-Slug → Anki-Deck Mapping
 
-(identisch zu [[skills/anki|/anki-Skill]])
+(identisch zu `/anki`-Skill)
 
-| Slug | Modul-Kürzel im Brief-Titel |
+| Slug | Modul-Kürzel |
 |---|---|
 | `dimm` | DIMM |
 | `ppm-seminar` | PPM |
@@ -223,14 +115,26 @@ Output:
 | `thermo` | Thermo |
 | `mpc-ml` | MPC&ML |
 
+## Was sich vs. alter Skill geändert hat (Big-Bang 2026-05-13)
+
+- **Datumslose Filenames** statt `<YYYY-MM-DD>-<thema>.md` — eine LE lebt über mehrere Tage als ein File
+- **Frontmatter-Schema neu** — `deadline`, `modul-phase`, `unit-typ`, `geplante-minuten` (siehe Konzept-Doku Sektion 3)
+- **4-Sektionen-Body** statt Block-Plan + Material + Self-Test — entspricht Lernforschung (Retrieval × Spacing)
+- **plan.md → strategie.md** als Referenz
+- **Todoist-Patch entfällt** — `lernplan_eval --mode=morning` setzt den Obsidian-Link beim Push direkt
+- **Varianten A/B/C eliminiert** — eine universelle LE-Struktur statt Stoff/Anki-Bau/Setup-Varianten. Anki-Bau ist Block 🔄 in der Stoff-LE, Setup-Mikrotasks wandern in eine separate LE mit `unit-typ: setup` ohne Modul-Phase-Bindung.
+
 ## Stolperfallen
 
-- **Brief steht *vor* der Session** — wenn Tim den Stoff schon durchgearbeitet hat und Karten bauen will, ist `/anki cards <modul>` der richtige Weg, nicht `/lerneinheit`.
-- **Karten-Themen, nicht Karten** — der Brief listet Themen-Vorschläge für `/anki`, schreibt aber keine fertigen Karten. Generation Effect ist explizit der Grund (siehe [[projekte/lernplan/anki-konzept]]).
-- **Modul-Sprache** — bei Modulen mit `klausur.sprache: EN` (RVCPS, Modern Firm, Int. Economics) Brief in EN verfassen. Default ist DE.
-- **Phase 4** — keine neuen Lerneinheiten, nur Reviews. Skill blockt das, außer mit `--force`.
-- **Pool-Item-Match** — Heuristik kann danebenliegen. Bei "kein Pool-Item gefunden" trotzdem Brief erstellen, aber ohne den Footer-Verweis.
-- **Todoist-Match** — Filter `today` reicht oft, aber nicht wenn Task auf morgen geplant ist. Bei No-Match keine Eskalation, nur Warnung.
-- **Datei-Konflikt** — wenn Brief für gleiches Datum + Thema schon existiert, nicht überschreiben (Lerntag-Reflektionen darin gehen sonst verloren).
+- **LE-Datei existiert schon mit altem Datums-Schema?** → Manuell migrieren (Inhalt in datumslose Datei kopieren, Frontmatter anpassen, alte Datei löschen). Siehe Konzept-Doku Sektion 12.
+- **`einheit-slug` matched keine bestehende LE?** → Skelett anlegen, NICHT Brief erzwingen.
+- **Modul-Phase 4** → Skill warnt, User entscheidet mit `--force`.
+- **Sessions-Block voll** → niemals löschen, immer anhängen (Audit-Spur).
 
-Abschließend `skill-optimize` mit `lerneinheit` aufrufen.
+## Verlinkt mit Konzept
+
+- [[projekte/lernplan/lerneinheit-konzept]] — Konzept-Doku (Single Source of Truth)
+- [[projekte/lernplan/methodik]] — Lernmethodik-Foundation
+- [[projekte/lernplan/anki-konzept]] — Anki-Workflow
+- [[tim/feedback/lerneinheit-self-test-zweck]] — Self-Test als Diagnose
+- [[tim/feedback/lerneinheit-kontrollfragen-zentriert]] — KF-Modul-Spezialfall (Sensortechnik)
