@@ -17,23 +17,44 @@ def ffprobe_dur(p):
 def hms(s):
     s=int(s); return f"{s//3600:02d}:{(s%3600)//60:02d}:{s%60:02d}"
 
-def transcribe_chunk(path, key, prompt):
+def transcribe_chunk(path, key, prompt, lang="de"):
     # multipart/form-data manuell (keine externen Deps)
     boundary="----jarvisASR"; nl="\r\n"
-    fields={"model":"gpt-4o-transcribe","language":"de","response_format":"json","prompt":prompt}
+    fields={"model":"gpt-4o-transcribe","language":lang,"response_format":"json","prompt":prompt}
     body=b""
     for k,v in fields.items():
         body+=f"--{boundary}{nl}Content-Disposition: form-data; name=\"{k}\"{nl}{nl}{v}{nl}".encode()
     with open(path,"rb") as f: audio=f.read()
     body+=f"--{boundary}{nl}Content-Disposition: form-data; name=\"file\"; filename=\"a.mp3\"{nl}Content-Type: audio/mpeg{nl}{nl}".encode()
     body+=audio+f"{nl}--{boundary}--{nl}".encode()
-    req=urllib.request.Request("https://api.openai.com/v1/audio/transcriptions", data=body,
-        headers={"Authorization":f"Bearer {key}","Content-Type":f"multipart/form-data; boundary={boundary}"})
-    try:
-        with urllib.request.urlopen(req, timeout=300) as r:
-            return json.loads(r.read()).get("text","").strip()
-    except urllib.error.HTTPError as e:
-        return f"[FEHLER {e.code}: {e.read().decode()[:200]}]"
+    import time as _t
+    for attempt in range(5):
+        req=urllib.request.Request("https://api.openai.com/v1/audio/transcriptions", data=body,
+            headers={"Authorization":f"Bearer {key}","Content-Type":f"multipart/form-data; boundary={boundary}"})
+        try:
+            with urllib.request.urlopen(req, timeout=300) as r:
+                return json.loads(r.read()).get("text","").strip()
+        except urllib.error.HTTPError as e:
+            code=e.code; bodytxt=e.read().decode()[:200]
+            if code in (429,500,502,503,529) and attempt<4:
+                _t.sleep(5*(attempt+1)+__import__("random").uniform(0,3)); continue
+            return f"[FEHLER {code}: {bodytxt}]"
+        except Exception as e:
+            if attempt<4: _t.sleep(5*(attempt+1)); continue
+            return f"[FEHLER net: {str(e)[:150]}]"
+
+def strip_prompt_echo(text, terms):
+    """gpt-4o-transcribe spiegelt bei Stille/Intro manchmal den Prompt (Terms) zurück.
+    Entfernt einen führenden (nahezu) wörtlichen Echo der Terms-Liste aus dem Chunk."""
+    if not terms or not text: return text
+    t=terms.strip()
+    head=text[:max(len(t)+80,160)].lower()
+    if t[:40].lower() not in head: return text
+    tail=t[-25:]                       # Ende der Terms-Liste im Chunk suchen
+    idx=text.lower().find(tail.lower())
+    if 0<=idx<=len(t)+80:
+        return text[idx+len(tail):].lstrip(" .,-–—\n\t")
+    return text
 
 def main():
     ap=argparse.ArgumentParser()
@@ -41,6 +62,7 @@ def main():
     ap.add_argument("--seg",type=int,default=300)
     ap.add_argument("--title",default="")
     ap.add_argument("--prompt-file",default="")
+    ap.add_argument("--lang",default="de")
     a=ap.parse_args()
     key=os.environ.get("OPENAI_API_KEY_PRIVATE") or os.environ.get("OPENAI_API_KEY_WORK")
     if not key: sys.exit("Kein OPENAI_API_KEY_PRIVATE/_WORK im Environment.")
@@ -57,7 +79,8 @@ def main():
         for i,c in enumerate(chunks):
             cp=os.path.join(td,c)
             prompt=(terms+" "+prev[-300:]).strip()
-            text=transcribe_chunk(cp,key,prompt)
+            text=transcribe_chunk(cp,key,prompt,a.lang)
+            if not text.startswith("[FEHLER"): text=strip_prompt_echo(text,terms)
             fout.write(f"\n## [{hms(offset)}]\n\n{text}\n"); fout.flush()   # inkrementell → nie Datenverlust
             print(f"  chunk {i+1}/{len(chunks)} @ {hms(offset)} — {len(text)} chars",file=sys.stderr)
             offset+=ffprobe_dur(cp); prev=text
