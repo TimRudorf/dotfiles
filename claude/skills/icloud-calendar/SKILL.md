@@ -257,7 +257,7 @@ X-APPLE-STRUCTURED-LOCATION;VALUE=URI;X-ADDRESS="Frankfurt, Hesse, German
 
 Verifiziert per Apple-Calendar-Eintragung 2026-05-05 (UID `807623f5-…`). Achtung: `X-APPLE-RADIUS=0` und kein expliziter Stadtbezug im LOCATION — Treffpunkt ist groß genug, dass Apple Maps den ohne Radius findet.
 
-**SKW (Sprach- und Kulturwissenschaften, Campus Westend)** — Tims **Default-Uni-Location** für alle Lernblöcke an Uni-Tagen (Goethe-Uni FB09):
+**SKW-Bib (Sprach- und Kulturwissenschaften, Campus Westend)** — Tims **Default-Location für ALLE jarvis-generierten Lernblöcke** (`📚 Lernblock`, `🧠 Anki`). Tim lernt prinzipiell in der SKW-Bib am Goethe-Uni-FB09. Override nur bei Pflichtterminen mit eigener Location (z.B. TUD Darmstadt):
 
 ```ical
 LOCATION:Sprach- und Kulturwissenschaften (SKW)\nWismarer Straße 4\, 6032
@@ -275,7 +275,7 @@ X-APPLE-STRUCTURED-LOCATION;VALUE=URI;X-APPLE-MAPKIT-HANDLE=CAES9gIIrk0Qs
  :50.130080,8.668506
 ```
 
-Verifiziert per Apple-Calendar-Eintragung 2026-05-27 (Tim selbst für KW22-Uni-Fokus-Lernblöcke, UID `A9A91E91-…`). MAPKIT-HANDLE direkt aus Apples Quelle übernommen. Beim Anlegen von 📚 Lernblock an Uni-Tagen → diesen Block 1:1 verwenden. Siehe [[tim/feedback/kalender-location-skw]].
+Verifiziert per Apple-Calendar-Eintragung 2026-05-27 (Tim selbst für KW22-Uni-Fokus-Lernblöcke, UID `A9A91E91-…`). MAPKIT-HANDLE direkt aus Apples Quelle übernommen. Beim Anlegen JEDES 📚 Lernblock / 🧠 Anki-Floor → diesen Block 1:1 verwenden, sofern nicht der Block selbst ein eigenes `location`-Override mitbringt. Siehe [[tim/feedback/kalender-location-skw]].
 
 **Andere Stamm-Locations:**
 
