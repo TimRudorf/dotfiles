@@ -257,6 +257,26 @@ X-APPLE-STRUCTURED-LOCATION;VALUE=URI;X-ADDRESS="Frankfurt, Hesse, German
 
 Verifiziert per Apple-Calendar-Eintragung 2026-05-05 (UID `807623f5-…`). Achtung: `X-APPLE-RADIUS=0` und kein expliziter Stadtbezug im LOCATION — Treffpunkt ist groß genug, dass Apple Maps den ohne Radius findet.
 
+**SKW (Sprach- und Kulturwissenschaften, Campus Westend)** — Tims **Default-Uni-Location** für alle Lernblöcke an Uni-Tagen (Goethe-Uni FB09):
+
+```ical
+LOCATION:Sprach- und Kulturwissenschaften (SKW)\nWismarer Straße 4\, 6032
+ 3 Frankfurt\, Germany
+X-APPLE-STRUCTURED-LOCATION;VALUE=URI;X-APPLE-MAPKIT-HANDLE=CAES9gIIrk0Qs
+ czKqoj0iOi3ARoSCbdtznemEElAERJhDWFGViFAIngKB0dlcm1hbnkSAkRFGgVIZXNzZSoJR
+ nJhbmtmdXJ0MglGcmFua2Z1cnQ6BTYwMzIzQg1Jbm5lbnN0YWR0IElJUhBXaXNtYXJlciBTd
+ HJhw59lWgE0YhJXaXNtYXJlciBTdHJhw59lIDSKAQxXZXN0ZW5kLU5vcmQqJlNwcmFjaC0gd
+ W5kIEt1bHR1cndpc3NlbnNjaGFmdGVuIChTS1cpMhJXaXNtYXJlciBTdHJhw59lIDQyDzYwM
+ zIzIEZyYW5rZnVydDIHR2VybWFueTgvUAFafgo8CLHMyqqI9IjotwESEgm3bc53phBJQBESY
+ Q1hRlYhQBiuTZADAZgDAaIDEUlCN0QwMjNBMDg1NTJBNjMxoh89CLHMyqqI9IjotwEaMAomU
+ 3ByYWNoLSB1bmQgS3VsdHVyd2lzc2Vuc2NoYWZ0ZW4gKFNLVykQACoCZGVAAA==;X-APPLE-
+ RADIUS=158.4766694912;X-APPLE-REFERENCEFRAME=0;X-TITLE="Sprach- und Kult
+ urwissenschaften (SKW)\nWismarer Straße 4, 60323 Frankfurt, Germany":geo
+ :50.130080,8.668506
+```
+
+Verifiziert per Apple-Calendar-Eintragung 2026-05-27 (Tim selbst für KW22-Uni-Fokus-Lernblöcke, UID `A9A91E91-…`). MAPKIT-HANDLE direkt aus Apples Quelle übernommen. Beim Anlegen von 📚 Lernblock an Uni-Tagen → diesen Block 1:1 verwenden. Siehe [[tim/feedback/kalender-location-skw]].
+
 **Andere Stamm-Locations:**
 
 | Location | Geo | LOCATION (Apple-Schreibweise) |
