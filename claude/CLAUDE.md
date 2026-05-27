@@ -129,6 +129,7 @@ Diese Regeln gelten in **jeder** Session, jedem Skill, jeder Routine. Volltext m
 - `aktuelle-uhrzeit-pruefen` — vor jedem Heute-Slot `date` prüfen, DTSTART muss `now()+Rüstzeit` sein, keine vergangenen Slots anlegen
 - `arbeit-ics-immer-pullen` — vor JEDER Termin-/Tagesplanung Outlook-ICS (`WORK_CAL_ICS`) pullen, auch an "kein Arbeiten"-Tagen. Outlook ist authoritative, Tim entscheidet pro Termin einzeln was er wahrnimmt — was im Feed steht, ist gesetzt
 - `schreib-verify` — nach jeder Mutation auf ein persistentes externes System (CalDAV, Tasks, Mail, fremde/private Repos, VM-Files) sofort Read-back vom Server gegen Intent; erst dann "erledigt" melden. Bei Apple-Calendar-Cache-Hänger trotz Server-OK: [[tim/feedback/kalender-sync-haenger-recreate]] (DELETE + neu mit frischer UID). Volltext: [[tim/feedback/schreib-verify]]
+- `kalender-attendee-events-tabu` — Events mit fremden Attendees (ATTENDEE ≠ Tim) sind read-only: nie autonom löschen/verschieben/überschreiben — auch nicht durch Routinen, Tag+7, kohaerenz.py oder Dedup-Heuristik. Bei Konflikt weicht IMMER der Block ohne Attendees, sonst request_approval. Volltext: [[tim/feedback/kalender-attendee-events-tabu]]
 
 ### Vor nicht-trivialen Aufgaben — INDEX.md scannen
 
