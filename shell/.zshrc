@@ -50,5 +50,9 @@ export ENABLE_LSP_TOOL=1
 
 export LC_CTYPE=en_US.UTF-8
 
-# zoxide — muss laut eigener Prüfung als letztes initialisiert werden
+# zoxide — muss laut eigener Prüfung als letztes initialisiert werden.
+# _ZO_DOCTOR=0 unterdrückt den False-Positive-Doctor-Check: Claude Codes
+# Bash-Wrapper registriert eigene precmd/chpwd-Hooks nach zoxide, wodurch
+# der Check trotz korrekter Reihenfolge anschlägt.
+export _ZO_DOCTOR=0
 eval "$(zoxide init zsh)"
