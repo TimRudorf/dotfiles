@@ -35,6 +35,15 @@
             "command": "$HOME/dotfiles/claude/scripts/jarvis-approval-reminder.sh"
           }
         ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "$HOME/dotfiles/claude/scripts/jarvis-version-bump-check.sh"
+          }
+        ]
       }
     ],
     "PostToolUse": [
