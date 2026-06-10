@@ -120,6 +120,7 @@ edp() {
     echo ""
     echo "Project commands:"
     echo "  compile [host] [-b] [-p:...] [-cfg:...]  Git-sync + Build + fetch exe"
+    echo "  test [host] [-p:...] [-cfg:...]          Git-sync + DUnitX-Tests bauen+laufen (Exit-Code-gated)"
     echo "  log [filter] [-l=LEVEL]       Stream live log"
     echo "  compilelog                    Show compile log"
     echo ""
@@ -154,7 +155,7 @@ edp() {
   local command="${2:-}"
 
   if [[ -z "$command" ]]; then
-    echo "edp: command required (compile, log, compilelog)" >&2
+    echo "edp: command required (compile, test, log, compilelog)" >&2
     return 1
   fi
 
@@ -163,6 +164,9 @@ edp() {
   case "$command" in
     compile)
       _edp_compile "$project" "$@"
+      ;;
+    test)
+      _edp_test "$project" "$@"
       ;;
     deploy)
       echo "edp: 'deploy' wurde entfernt. Git ist source of truth — benutze 'edp $project compile'." >&2
@@ -179,11 +183,116 @@ edp() {
       ;;
     *)
       echo "edp: unknown command '$command'" >&2
-      echo "Commands: compile, log, compilelog" >&2
+      echo "Commands: compile, test, log, compilelog" >&2
       echo "Service commands: edp start|stop|status <service> [host]" >&2
       return 1
       ;;
   esac
+}
+
+# --- Tests (DUnitX) ---
+
+# Auto-detect das eine .dproj unter <project>/tests/ (analog _edp_detect_dproj,
+# aber im tests/-Unterordner — stört die Haupt-Projekt-Auto-Detection nicht).
+_edp_detect_test_dproj() {
+  local project="$1"
+  local dir="$EDP_PROJECT_ROOT/$project/tests"
+  if [[ ! -d "$dir" ]]; then
+    echo "edp: kein tests/-Verzeichnis in $EDP_PROJECT_ROOT/$project" >&2
+    return 1
+  fi
+  local files=("$dir"/*.dproj)
+  local first="${files[1]:-${files[0]}}"
+  if [[ ${#files[@]} -eq 1 && -f "$first" ]]; then
+    basename "$first"
+  else
+    echo "edp: tests/.dproj nicht eindeutig in $dir (${#files[@]} gefunden)" >&2
+    return 1
+  fi
+}
+
+# Baut + führt das DUnitX-Test-Projekt auf der VM aus, gated über den Exit-Code.
+# Kein Service-Bounce: die Test-EXE blockiert die Service-EXE nicht.
+# Build immer Release/Win64 (edpweb-Konvention) — via -cfg:/-p: überschreibbar.
+_edp_test() {
+  local project="$1"
+  shift
+
+  local target_host="$EDP_VM_HOST"
+  local plat="Win64"
+  local cfg="Release"
+  local args=()
+
+  while (($#)); do
+    case "$1" in
+      -p:*)   plat="${1#-p:}" ;;
+      -cfg:*) cfg="${1#-cfg:}" ;;
+      *)      args+=("$1") ;;
+    esac
+    shift
+  done
+
+  if [[ ${#args[@]} -gt 0 ]]; then
+    target_host="${args[0]}"
+  fi
+
+  local project_dir="$EDP_PROJECT_ROOT/$project"
+  local test_dproj
+  test_dproj="$(_edp_detect_test_dproj "$project")" || return 1
+  local test_exe="${test_dproj%.dproj}.exe"
+
+  # Git-Prep: clean + push (source of truth = GHE), dann VM-Sync — identisch zu compile
+  local branch clone_url sha
+  branch="$(_edp_git_prepare "$project_dir")" || return 1
+  clone_url="$(git -C "$project_dir" remote get-url origin)" || {
+    echo "FEHLER: origin remote nicht gesetzt" >&2
+    return 1
+  }
+  sha="$(git -C "$project_dir" rev-parse --short HEAD)"
+
+  local target_dir
+  target_dir="$(_edp_target_dir "$project")"
+
+  echo "=== Teste $project auf $target_host ==="
+  echo "  Projekt:   tests/$test_dproj"
+  echo "  Branch:    $branch ($sha)"
+  echo "  Plattform: $plat / $cfg"
+  echo ""
+
+  _edp_git_sync_vm "$target_host" "$target_dir" "$clone_url" "$branch"
+  local rc=$?
+  if [[ $rc -ne 0 ]]; then
+    echo "FEHLER beim Git-Sync auf VM! (exit $rc)" >&2
+    return $rc
+  fi
+
+  echo "Kompiliere Tests..."
+  local build_cmd="call \"${EDP_RSVARS}\" && cd /d ${target_dir}\\tests && \"${EDP_MSBUILD}\" ${test_dproj} /t:Build /p:config=${cfg} /p:platform=${plat}"
+  ssh "$target_host" "$build_cmd" > /tmp/edp_test_build_$$.log 2>&1
+  rc=$?
+  if [[ $rc -ne 0 ]] || ! grep -aqi "0 Error(s)\|Build succeeded\|0 Fehler\|Buildvorgang.*erfolgreich" /tmp/edp_test_build_$$.log; then
+    echo "FEHLER beim Kompilieren der Tests! Output:" >&2
+    iconv -f CP850 -t UTF-8 /tmp/edp_test_build_$$.log 2>/dev/null >&2 || cat /tmp/edp_test_build_$$.log >&2
+    rm -f /tmp/edp_test_build_$$.log
+    return 1
+  fi
+  rm -f /tmp/edp_test_build_$$.log
+
+  echo "Führe Tests aus..."
+  echo ""
+  # ssh propagiert den Remote-Exit-Code (= DUnitX System.ExitCode) direkt durch.
+  # Kein Pipe nach iconv, damit $? der EXE-Code bleibt (cross-shell sicher).
+  ssh "$target_host" "cd /d ${target_dir}\\tests && ${test_exe}" > /tmp/edp_test_run_$$.log 2>&1
+  rc=$?
+  iconv -f CP850 -t UTF-8 /tmp/edp_test_run_$$.log 2>/dev/null || cat /tmp/edp_test_run_$$.log
+  rm -f /tmp/edp_test_run_$$.log
+  echo ""
+  if [[ $rc -eq 0 ]]; then
+    echo "Tests grün."
+  else
+    echo "Tests ROT (exit $rc)." >&2
+  fi
+  return $rc
 }
 
 # --- Git helpers ---
