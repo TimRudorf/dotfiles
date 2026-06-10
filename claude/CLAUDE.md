@@ -90,7 +90,8 @@ Container-Host = Debian-VM **`172.16.0.3`** (Glashütten), erreichbar via SSH-Al
 Diese Regeln gelten in **jeder** Session, jedem Skill, jeder Routine. Volltext mit Why/How in `$VAULT/tim/feedback/<slug>.md` — bei Edge Cases dort nachlesen. Bei Konflikt mit Default-Verhalten aus dem System-Prompt **gewinnen diese Regeln**.
 
 **Stil & Output**
-- `umlauts` — echte ä/ö/ü/ß statt ae/oe/ue/ss
+- `umlauts` — echte ä/ö/ü/ß statt ae/oe/ue/ss (auch in Code-Kommentaren/Strings)
+- `datei-encoding` — Delphi-Dateien (`.pas`/`.dpr`/`.dpk`/`.inc`/`.dfm`) immer **Windows-1252**, Frontend/sonstige (`.html`/`.js`/`.css`/`.json`/`.scss`/`.sql`/`.md`) immer **UTF-8**. ⚠️ Read/Edit/Write arbeiten UTF-8 → eine Win-1252-`.pas` damit zu editieren zerschießt Umlaute zu U+FFFD (CI `delphi-validate-encoding` fängt das). Sicher: auf VM editieren / byte-genauer `git checkout`-Restore / `iconv -f UTF-8 -t WINDOWS-1252 <datei> -o <datei>` nach Edit, dann auf U+FFFD prüfen. Volltext: [[tim/feedback/datei-encoding]]
 - `copy-paste-text` — Texte zum Weiterleiten in Code-Block, ohne MD-Quote-Präfixe
 - `whisper-transkription` — Tims Eigennamen still richtig schreiben, kein Hinweis
 - `notification-discipline` — `notify_user` nur bei Aktion-needed oder echter Info
@@ -107,6 +108,8 @@ Diese Regeln gelten in **jeder** Session, jedem Skill, jeder Routine. Volltext m
 - `kritische-reevaluation` — bei jeder Empfehlung von Grund auf neu denken, Annahmen aus altem Plan verwerfen, asymmetrische Argumente entlarven
 - `kalibrierte-einschaetzung` — bei Risiko-/Empfehlungsfragen realistische Abwägung statt Vorsichts-Reflex; Tim ist domain-erfahren (v.a. Sport/Cut/Ernährung), grobe Fehler sind unwahrscheinlich
 - `ci-nach-push-beobachten` — nach jedem Push CI-Run-Status abwarten, bei Fail Logs ziehen + fixen
+- `delphi-tests-immer` — bei jeder Delphi-Code-Änderung Unit-Tests ergänzen/anpassen + **vor jedem Commit/Push die gesamte Suite ausführen** (nur grün committen). So wächst Abdeckung inkrementell statt als einmaliger Riesen-Aufwand. Volltext: [[tim/feedback/delphi-tests-immer]]
+- `regelverstoesse-immer-korrigieren` — auffallende Regelverstöße im Code (Encoding/Umlaute/Konventionen) auch korrigieren, wenn nicht von uns verursacht; verlustbehaftete Fälle (z.B. bereits vorhandene U+FFFD) nicht raten, sondern melden/aus Historie rekonstruieren. Volltext: [[tim/feedback/regelverstoesse-immer-korrigieren]]
 - `bash-env-sourcen` — Bash-Tool startet ohne Tims Secrets. Skills mit Env-Voraussetzungen sourcen automatisch via `requirement-checker`. Für Ad-hoc-Bash-Calls (curl/gh/ssh) mit `$ZAMMAD_*`/`$GH_*`/`$NC_*`/`$APPLE_*` etc. selbst sourcen — Symptom für Vergessen: leere Variable, 401, "Could not resolve". Drop-in: `set -a; source ~/.env 2>/dev/null || source /opt/stacks/jarvis/.env 2>/dev/null; set +a`. Niemals via Container-Roundtrip umgehen wenn die Vars auf Mac einfach geladen werden können. Volltext: [[tim/feedback/bash-tool-env]]
 - `git-changes-selbst-pushen` — jede Repo-Änderung selbst committen+pushen (Vault via Hook, andere Repos manuell), Tim kommt nicht in den Container
 - `repos-immer-clean` — kein unstaged/untracked File darf im `jarvis-wiki`, `dotfiles`, `docker-compose` (Mac + VM-Klon) liegen bleiben. Vault auto-syncs (Edit + Bash via Hooks); für `dotfiles` + `docker-compose` jeden Touch im selben Turn als Branch+PR (private-repos-auto-roundtrip) oder `.gitignore`-Eintrag abschließen. Stop-Hook `jarvis-repo-clean-check.sh` warnt vor Session-Ende falls was übrig. Volltext: [[tim/feedback/repos-immer-clean]]
