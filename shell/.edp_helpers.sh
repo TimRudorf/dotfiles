@@ -282,7 +282,11 @@ _edp_test() {
   echo ""
   # ssh propagiert den Remote-Exit-Code (= DUnitX System.ExitCode) direkt durch.
   # Kein Pipe nach iconv, damit $? der EXE-Code bleibt (cross-shell sicher).
-  ssh "$target_host" "cd /d ${target_dir}\\tests && ${test_exe}" > /tmp/edp_test_run_$$.log 2>&1
+  # ${target_dir} (Projekt-Root) auf PATH: die Test-EXE braucht dieselben
+  # nativen Load-Time-DLLs wie der Service (libcrypto/libmariadb/...), die
+  # neben der Haupt-EXE im Projekt-Root liegen, nicht im tests\-Output.
+  # Ohne das: Startup-Crash ohne Output (Exit 53 = DLL nicht gefunden).
+  ssh "$target_host" "cd /d ${target_dir}\\tests && set PATH=${target_dir};%PATH% && ${test_exe}" > /tmp/edp_test_run_$$.log 2>&1
   rc=$?
   iconv -f CP850 -t UTF-8 /tmp/edp_test_run_$$.log 2>/dev/null || cat /tmp/edp_test_run_$$.log
   rm -f /tmp/edp_test_run_$$.log
