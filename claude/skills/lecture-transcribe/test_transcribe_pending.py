@@ -53,6 +53,37 @@ class TestExtractUrl(unittest.TestCase):
         self.assertEqual(tp.extract_url("### Result\nnull\n"), "")
 
 
+class TestVerifyCoverage(unittest.TestCase):
+    """Coverage-Check in transcribe_bulk.verify (über tp.tb erreichbar)."""
+
+    def _write(self, last_ts, body_chars=4000):
+        import tempfile
+        fd = tempfile.NamedTemporaryFile("w", suffix=".md", delete=False, encoding="utf-8")
+        fd.write("---\ntype: transkript\n---\n\n# T\n\n")
+        fd.write(f"## [{last_ts}]\n\n" + ("wort " * (body_chars // 5)))
+        fd.close()
+        return fd.name
+
+    def test_truncated_flagged_suspect(self):
+        # 46-min-Audio, aber letzte Marke bei 9:59 → abgeschnitten
+        p = self._write("00:09:59")
+        status, _, note = tp.tb.verify(p, 45 * 60 + 58)
+        self.assertEqual(status, "SUSPECT")
+        self.assertIn("abgeschnitten", note)
+
+    def test_full_coverage_ok(self):
+        # 56-min-Audio, letzte Marke 54:59, genug Text (>180 cpm) → vollständig
+        p = self._write("00:54:59", body_chars=40000)
+        status, _, _ = tp.tb.verify(p, 56 * 60 + 46)
+        self.assertEqual(status, "OK")
+
+    def test_short_clip_single_chunk_ok(self):
+        # 2:45-Clip, letzte (einzige) Marke 0:00 → Lücke 165s < 420s → OK
+        p = self._write("00:00:00")
+        status, _, _ = tp.tb.verify(p, 165)
+        self.assertEqual(status, "OK")
+
+
 class TestIdentity(unittest.TestCase):
     def test_lti_cmid(self):
         self.assertEqual(tp._identity({"modname": "lti", "cmid": 1630442, "url": "v"}), "cmid:1630442")
