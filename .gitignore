@@ -19,6 +19,10 @@ secrets/*.env
 keys.txt
 *.age-key
 
+# Python artifacts (Skill-Tests/-Tools)
+__pycache__/
+*.pyc
+
 # OS artifacts
 .DS_Store
 Thumbs.db
