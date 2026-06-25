@@ -104,13 +104,24 @@ def _identity(entry: dict) -> str:
 # Quellauflösung: pending-Eintrag → transcribe_bulk-Item
 # ---------------------------------------------------------------------------
 
+def extract_url(pw_output: str) -> str:
+    """Erste http(s)-URL aus playwright-cli-Output ziehen.
+
+    `playwright-cli eval` wrappt den Rückgabewert als `### Result\\n"<url>"\\n### Ran …`.
+    Den Blob direkt zu klassifizieren scheitert (das schließende `"` hängt hinter `.mp4`,
+    sodass `_MEDIA_URL_RE` nicht greift). Also die nackte URL extrahieren (stoppt am `"`).
+    """
+    m = re.search(r"https?://[^\s\"'<>]+", pw_output or "")
+    return m.group(0) if m else ""
+
+
 def _pw_open_and_loc(url) -> str:
     """playwright-cli: URL headless öffnen (gespeicherte Cookies) und finale location.href lesen."""
     subprocess.run(["playwright-cli", "-s=tuda", "open", "--browser=chromium",
                     "--persistent", url], capture_output=True, text=True, timeout=150)
     ev = subprocess.run(["playwright-cli", "-s=tuda", "eval", "() => location.href"],
                         capture_output=True, text=True, timeout=60)
-    return ev.stdout
+    return extract_url(ev.stdout)
 
 
 def resolve_panopto_guid(cmid) -> str:
