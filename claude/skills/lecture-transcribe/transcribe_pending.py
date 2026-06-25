@@ -287,7 +287,9 @@ def main():
             mark = {"OK": "✓", "SUSPECT": "⚠", "FAIL": "✗", "SKIP": "·"}.get(res["status"], "?")
             print(f"[{processed}] {mark} {res['key']} — {res['note']}", flush=True)
             done_total[res["status"]] = done_total.get(res["status"], 0) + 1
-            if res["status"] in ("OK", "SUSPECT", "SKIP"):
+            # Nur sauber Fertige aus der Queue nehmen. SUSPECT (z.B. abgeschnitten/
+            # Prompt-Echo) + FAIL bleiben pending → Retry beim nächsten Lauf.
+            if res["status"] in ("OK", "SKIP"):
                 done_ids.add(_identity(entry))
         if done_ids:
             remove_from_queue(pend, done_ids)  # Queue konvergiert auf die echt offenen

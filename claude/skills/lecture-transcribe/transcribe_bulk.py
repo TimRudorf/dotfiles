@@ -57,6 +57,19 @@ def verify(out_path, dur):
     text=re.sub(r'^#.*$','',text,flags=re.M); text=re.sub(r'>.*$','',text,flags=re.M)
     chars=len(text.strip())
     if "[FEHLER" in body: return "FAIL",chars,"enthält [FEHLER]-Marker (API/Netz)"
+    # Coverage-Check: letzte Chunk-Zeitmarke (## [HH:MM:SS]) vs Audiodauer. Eine große
+    # Lücke = abgeschnittenes Transkript — typisch bei unvollständigem Download: ffprobe
+    # liest die volle Dauer aus den mp4-Metadaten, ffmpeg extrahiert aber nur den real
+    # heruntergeladenen Teil. Chunks sind 300s, der letzte Chunk-Start liegt bei vollem
+    # Transkript also <5min vor dem Ende → Lücke >7min = fehlende Chunks. Sonst würde so
+    # ein Torso als OK durchrutschen (chars/Metadaten-Dauer bleibt über der cpm-Schwelle).
+    if dur>0:
+        tss=re.findall(r'^## \[(\d+):(\d+):(\d+)\]',body,flags=re.M)
+        if tss:
+            h,m,s=map(int,tss[-1]); last=h*3600+m*60+s
+            if dur-last>420:
+                return "SUSPECT",chars,(f"abgeschnitten? letzte Marke {last//60}min, "
+                                        f"Audio {int(dur//60)}min (Lücke {(dur-last)/60:.0f}min)")
     mins=max(dur/60.0,0.5)
     cpm=chars/mins
     if chars<200: return "FAIL",chars,f"quasi leer ({chars} chars)"
