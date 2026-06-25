@@ -33,6 +33,26 @@ class TestClassify(unittest.TestCase):
         self.assertEqual(tp.classify_resolved_url(""), (None, None))
 
 
+class TestExtractUrl(unittest.TestCase):
+    def test_strips_playwright_result_wrapper(self):
+        # genau das Format, an dem der erste Live-Lauf scheiterte
+        out = ('### Result\n'
+               '"https://moodleload.hrz.tu-darmstadt.de/FB18_RMR/SDRT3/Vorlesung_4.mp4"\n'
+               '### Ran Playwright code\n```js\nawait page.evaluate(\'() => location.href\');\n```')
+        url = tp.extract_url(out)
+        self.assertEqual(url, "https://moodleload.hrz.tu-darmstadt.de/FB18_RMR/SDRT3/Vorlesung_4.mp4")
+        # und die extrahierte URL klassifiziert sauber als direct
+        self.assertEqual(tp.classify_resolved_url(url), ("direct", url))
+
+    def test_panopto_wrapper(self):
+        out = '### Result\n"https://tu-darmstadt.cloud.panopto.eu/Panopto/Pages/Embed.aspx?id=64311577-06c3-458f-a6e2-af3801217dfb"\n'
+        self.assertEqual(tp.classify_resolved_url(tp.extract_url(out)),
+                         ("panopto", "64311577-06c3-458f-a6e2-af3801217dfb"))
+
+    def test_no_url(self):
+        self.assertEqual(tp.extract_url("### Result\nnull\n"), "")
+
+
 class TestIdentity(unittest.TestCase):
     def test_lti_cmid(self):
         self.assertEqual(tp._identity({"modname": "lti", "cmid": 1630442, "url": "v"}), "cmid:1630442")

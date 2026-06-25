@@ -23,6 +23,9 @@ keys.txt
 __pycache__/
 *.pyc
 
+# playwright-cli persistentes Profil (lokaler Skill-Lauf, nie versionieren)
+.playwright-cli/
+
 # OS artifacts
 .DS_Store
 Thumbs.db
