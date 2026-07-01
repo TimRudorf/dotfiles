@@ -106,7 +106,7 @@ Wenn ja: `status: aktiv` ins Frontmatter, `updated: <today>` setzen.
 | `ppm-seminar` | PPM |
 | `entrepreneurial` | Entrep |
 | `modern-firm` | MF |
-| `international-economics` | IntEco |
+| `international-economics` | International-Economics |
 | `rvcps` | RVCPS |
 | `mldl-auto` | ML/DL |
 | `praktikum-rt2` | P-RT2 |

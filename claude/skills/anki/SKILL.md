@@ -32,11 +32,12 @@ Argument 1 ist der Sub-Command (`cards`, `status`, `setup`). Bei unbekanntem ode
 
 `<modul-slug>` muss einer der 12 Slugs sein (Mapping unten). Bei Fehler: Liste anzeigen und stoppen.
 
-### 2.2 Phase auslesen
+### 2.2 Fokus-Modus + Klausur-Hygiene prüfen
 
-Aus `$VAULT/projekte/lernplan/<modul-slug>/plan.md` Frontmatter `phasen:` die Phase mit `status: aktiv` finden → `aktive_phase_id`.
+> Es gibt seit der LE-Migration (Big-Bang 2026-05-13) **kein `plan.md`/`phasen:`** mehr — Module laufen datumslos über `modul.md` + `tracker.md` + `lerneinheiten/`.
 
-**Wenn `aktive_phase_id == 4`**: blockt mit Warnung *"Phase 4 = Klausur-Hygiene, keine neuen Karten. Mit `--force` überschreibbar."* User muss explizit `--force` angeben.
+1. **Fokus-Modus:** Wenn `$VAULT/projekte/lernplan/fokus-business-klausuren-2026-07.md` (bzw. eine `fokus-*`-Note mit `status: aktiv` und `gilt_bis` in der Zukunft) existiert, dürfen nur die dort gelisteten Module bekartet werden. Anderes Modul → Warnung *"Modul X ist im Fokus-Modus pausiert (bis <gilt_bis>). Mit `--force` überschreibbar."*, stoppen außer `--force`.
+2. **Klausur-Hygiene:** `klausur`-Datum aus `<modul-slug>/modul.md` lesen. Wenn die Klausur **≤ 2 Tage** entfernt ist → Warnung *"Klausur in <n> Tagen — keine neuen Karten mehr (Hygiene). Mit `--force` überschreibbar."*, stoppen außer `--force`.
 
 ### 2.3 Modul-Kontext laden
 
@@ -92,7 +93,7 @@ Akzeptierte Karten als JSON-Datei zusammenstellen, dann `bash scripts/add_cards.
 ]
 ```
 
-`add_cards.sh` legt das Deck an (idempotent), schreibt die Karten via `addNotes`, prüft Duplikate (allowDuplicate=false).
+`add_cards.sh` legt das Deck an (idempotent), schreibt die Karten via `addNotes`, prüft Duplikate (allowDuplicate=false) und ruft danach automatisch das **Deck-Config-Normalize-Skript** (`$VAULT/projekte/lernplan/anki-deck-config.py`) auf — damit das (ggf. neu angelegte) Deck nicht auf „Default" (20/Tag) hängenbleibt, sondern das Modul-Preset erbt. Pattern: [[tim/feedback/anki-deck-config-pattern]].
 
 ### 2.9 Bestätigung
 
@@ -120,7 +121,7 @@ Nach erfolgreichem Snapshot kurz zusammenfassen: Top-3 Module mit den meisten `d
 | `ppm-seminar` | `Uni::PPM-Seminar` |
 | `entrepreneurial` | `Uni::Entrepreneurial` |
 | `modern-firm` | `Uni::Modern-Firm` |
-| `international-economics` | `Uni::International-Economics` |
+| `international-economics` | `Uni::International-Economics` (kanonisch seit Schema-Migration 2026-06-29; das frühere `Uni::IntEco` + IMF-Subdecks wurden flachgezogen und gelöscht) |
 | `rvcps` | `Uni::RVCPS` |
 | `mldl-auto` | `Uni::ML-DL-Auto` |
 | `praktikum-rt2` | `Uni::Praktikum-RT2` |
@@ -131,6 +132,9 @@ Nach erfolgreichem Snapshot kurz zusammenfassen: Top-3 Module mit den meisten `d
 
 Mapping ist auch in `scripts/anki_call.sh` als Bash-Funktion `slug_to_deck` hinterlegt.
 
+> [!important] Einheitliches Schema: flach pro Modul, KEINE Subdecks (seit 2026-06-29)
+> Jedes Modul ist **genau ein flaches Deck** `Uni::<Modul>`. **Nie ein Kapitel-/VO-/LE-Subdeck anlegen** — Kapitel/VO/Übung leben ausschließlich im `source::<modul>::<kapitel>`-Tag (+ `phase::<n>`). Kapitel-Cramming pre-Klausur = temporäres Filtered Deck (`deck:Uni::<Modul> tag:source::*::<kapitel>*`). Falls ein LE-Karten-Plan einen Subdeck-Namen nennt (`Uni::SDRT3::Ü3`, `Uni::Sensortechnik::VO07`, `Uni::Entrep::ef-01`, …) → ignorieren, flach ins Modul-Deck schreiben. Schema + Why: [[projekte/lernplan/anki-schema-migration]] · [[tim/feedback/anki-karten-deck-kanonisch]].
+
 ## Stolperfallen
 
 - **Anki Desktop muss offen sein** — AnkiConnect lauscht nur dann auf 8765. Wenn der Mac aus ist oder Anki nicht läuft: Skill bricht ab, kein Retry.
@@ -140,5 +144,6 @@ Mapping ist auch in `scripts/anki_call.sh` als Bash-Funktion `slug_to_deck` hint
 - **AnkiConnect Add-on Code**: `2055492159`. Repo seit 2025-11 nicht mehr auf GitHub-FooSoft, sondern `git.sr.ht/~foosoft/anki-connect` — Add-on-Code bleibt aber identisch.
 - **FSRS-Re-Optimization**: alle 1–2 Monate manuell `Tools → FSRS Helper → Optimize FSRS parameters` in Anki Desktop ausführen, sonst hängen die Parameter.
 - **Snapshot-Alter**: wenn `anki-stats.md` älter als 36 h ist, gibt der Heartbeat eine Notification raus. Tim soll dann kurz Anki Desktop öffnen und `/anki status` triggern.
+- **Deck-Config / new-cards-Limit**: jedes flache Modul-Deck braucht sein eigenes Preset, **kein Uni-Deck auf „Default" (20/Tag)**. `add_cards.sh` ruft deshalb am Ende `anki-deck-config.py` auf. Wenn Karten **anders als über `add_cards.sh`** gebaut werden (z.B. `anki-io-build.py`, manueller `addNotes`), danach **manuell** `python3 $VAULT/projekte/lernplan/anki-deck-config.py` laufen lassen. Pattern + Why: [[tim/feedback/anki-deck-config-pattern]]. Bug-Präzedenz 2026-06-29 (strukturell gelöst durch die Flach-Migration): IntEco-Karten lagen in `IMF::*`-Subdecks auf Default → trotz 120er-Preset auf dem Top-Deck bei 20/Tag gedeckelt; seit der Migration gibt es keine Subdecks mehr, die auf Default zurückfallen könnten.
 
 Abschließend `skill-optimize` mit `anki` aufrufen.
