@@ -1,8 +1,8 @@
 ---
 name: anki
-description: User invokes /anki for spaced-repetition card workflow with Anki Desktop. Three sub-commands - `cards <modul>` for interactive card creation (Tim sends source material like screenshot/text/PDF excerpt, Jarvis proposes Cloze/Basic cards atomically with MathJax, Tim approves/edits/rejects, accepted cards go via AnkiConnect into Uni::<Module> deck with source+phase tags); `status [--modul=<slug>]` for snapshot of due/retention per module deck written to vault; `setup` for one-time deck initialization. Big-Bang: no FB18-imports, no inbox-decks, direct write after approval. Phase 4 blocks new cards (klausur-hygiene). Trigger keywords - anki, karte, karteikarte, /anki, anki status, "neue anki karten", "wieviel due", spaced repetition, cloze.
+description: User invokes /anki for spaced-repetition card workflow with Anki Desktop. Four sub-commands - `build <le-slug>` (STANDARD since 2026-07-01) builds the pre-written, klausur-kalibrierten Gold-Standard card plan from a Lerneinheit's '🎴 Anki-Karten-Plan' section into Anki — plans live IN the LE, Tim triggers the build AFTER working through that LE (never pre-build; see [[tim/feedback/anki-erst-nach-le-durchgearbeitet]]); `cards <modul>` for ad-hoc/legacy interactive card creation (Tim sends source material like screenshot/text/PDF excerpt, Jarvis proposes Cloze/Basic cards atomically with MathJax, Tim approves/edits/rejects, accepted cards go via AnkiConnect into Uni::<Module> deck with source+phase tags); `status [--modul=<slug>]` for snapshot of due/retention per module deck written to vault; `setup` for one-time deck initialization. Big-Bang: no FB18-imports, no inbox-decks, direct write after approval. Phase 4 blocks new cards (klausur-hygiene). Trigger keywords - anki, karte, karteikarte, /anki, "erstelle die karten für LE", anki build, anki status, "neue anki karten", "wieviel due", spaced repetition, cloze.
 disable-model-invocation: true
-argument-hint: <cards|status|setup> [modul-slug]
+argument-hint: <build|cards|status|setup> [le-slug|modul-slug]
 ---
 
 # Anki — Karten + Lernfortschritt
@@ -26,7 +26,30 @@ Voraussetzungen gemäß `requirement-checker` Skill validieren. Bei Fehlschlag a
 
 Argument 1 ist der Sub-Command (`cards`, `status`, `setup`). Bei unbekanntem oder fehlendem Sub-Command: knappe Usage anzeigen und stoppen.
 
-## Sub-Command: `cards <modul-slug> [kapitel-hinweis...]`
+## Sub-Command: `build <le-slug>` — Karten aus dem LE-Plan bauen (STANDARD seit 2026-07-01)
+
+**Modell (IntEco-Pilot, künftig alle Module):** Die Karten-Pläne stehen **fertig im „🎴 Anki-Karten-Plan"-Bereich jeder LE** — lean, klausur-kalibriert, gegen das Content-PDF verifiziert (Gold-Standard, siehe [[projekte/lernplan/anki-kartendesign]]). Tim arbeitet die LE durch und **triggert dann den Bau** („erstelle die Karten für LE X"). Kein interaktives Vorschlagen mehr — der Plan IST die Vorlage; nur Feinschliff passiert beim Bau. **Nie vorab bauen** ([[tim/feedback/anki-erst-nach-le-durchgearbeitet]]).
+
+Ablauf:
+
+1. **LE lokalisieren:** `<le-slug>` → `$VAULT/projekte/lernplan/<modul>/lerneinheiten/<le-slug>.md` (Modul aus Slug-Präfix, z.B. `iti-*`/`imf-*` → `international-economics`; sonst explizit).
+2. **Durcharbeitungs-Check:** Lernablauf-Checkboxen der LE lesen — „Lernzettel-lesen"/„Mini-Essay" ✅? Wenn klar noch nicht durchgearbeitet → knapp rückfragen statt bauen (Regel: erst nach Durcharbeiten).
+3. **Plan parsen:** die nummerierten Karten im „🎴 Anki-Karten-Plan"-Block lesen:
+   - **Cloze** / **Overlapping Cloze** → Notetype `Cloze`, Feld `Text` = Content inkl. `{{cN::…}}`. Overlapping = **ein** Note mit mehreren `cN` (Sibling-Burying zeigt pro Review ein Blank — nicht in Einzelnotes splitten).
+   - **Basic** → Notetype `Basic`, `Front`/`Back`.
+   - **Image Occlusion 🖼️** → NICHT über `add_cards.sh`; via `python3 $VAULT/projekte/lernplan/anki-io-build.py` bauen (Skizze aus Content-PDF/Folie rendern → Masken → Pillow-Self-Check → `addNote` Modell „Image Occlusion"). Skizze-Quelle + Masken-Hinweis stehen in der Karte.
+4. **Dedup-Guard:** existieren schon Karten mit `tag:source::<modul>::<le-slug>`? Wenn ja (Re-Build) → erst archivieren + löschen, dann neu bauen (idempotent). Bei leerem/neuem Stand einfach neu.
+5. **Bauen (aktiv):** Karten-JSON zusammenstellen, `bash scripts/add_cards.sh Uni::<Modul> <karten.json>`. Tags **`phase::<aktive-phase>` + `source::<modul>::<le-slug>`**. Karten gehen **aktiv** ins Deck (nicht suspendiert) — Tim kennt den Stoff jetzt. `add_cards.sh` ruft am Ende `anki-deck-config.py` (kein Default-Preset).
+6. **IO-Karten** separat via `anki-io-build.py` (gleiche Tags + Deck).
+7. **Verify (`schreib-verify`):** pre/post AnkiWeb-Sync; Read-back `findNotes`/`findCards` per `source::`-Tag gegen Plan-Soll.
+8. **LE + Tracker nachziehen:** Lernablauf-Checkbox „Karten-erstellen" ✅ + Datum, Sessions-Block, Frontmatter (`karten-notes`/`karten-ist`), Tracker-Zeile (🔄-Ampel + Karten-Count).
+
+> [!tip] Feinschliff beim Bau
+> Der Plan ist ein geprüfter Vorschlag, kein Dogma. Fällt beim Bauen eine offensichtlich zu tiefe/überzählige Karte auf (Trivia, das nie in einer 5-Sätze-5-P-Antwort landet) → kurz mit Tim abstimmen und straffen (Lean-Prinzip). Bekanntes Beispiel: `imf-08-sanctions` ist am schwersten (Karten 12–14 grenzwertig).
+
+## Sub-Command: `cards <modul-slug> [kapitel-hinweis...]` — Ad-hoc / Legacy
+
+> Für spontane Einzelkarten außerhalb des LE-Plan-Modells (anderes Modul, Lücken-Karte aus einem Fehler). Für IntEco + alle Module mit fertigem LE-Karten-Plan gilt `build <le-slug>`.
 
 ### 2.1 Modul validieren
 
