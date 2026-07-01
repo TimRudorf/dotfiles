@@ -57,3 +57,11 @@ echo "$added Karten in '$DECK' angelegt."
 if [ "$skipped" -gt 0 ]; then
   echo "$skipped Karten als Duplikat übersprungen."
 fi
+
+# Deck-Config normalisieren: jedes flache Modul-Deck auf eigenem Preset, kein Uni-Deck auf "Default".
+# Pattern: tim/feedback/anki-deck-config-pattern. Idempotent.
+NORMALIZE="$HOME/Documents/jarvis-wiki/projekte/lernplan/anki-deck-config.py"
+if [[ "$DECK" == Uni::* ]] && [ -f "$NORMALIZE" ]; then
+  echo ""
+  python3 "$NORMALIZE" | tail -1
+fi
