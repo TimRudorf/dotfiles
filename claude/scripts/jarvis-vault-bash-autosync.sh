@@ -58,7 +58,19 @@ fi
   git commit -m "$MSG" --quiet 2>/dev/null || exit 0
 
   # Pull --rebase davor, falls Peer in der Zwischenzeit gepusht hat.
-  git pull --rebase --autostash --quiet 2>/dev/null || true
+  # Schlägt der Rebase fehl (Konflikt), NICHT still verschlucken (|| true) —
+  # das ließe den Vault im Mid-Rebase hängen (unmerged paths), der Push liefe
+  # leer durch und der Peer sähe die neuen Files nie. Stattdessen sauber
+  # abbrechen + Breadcrumb loggen (#95).
+  if ! git pull --rebase --autostash --quiet 2>/dev/null; then
+    git rebase --abort 2>/dev/null || true
+    git merge --abort  2>/dev/null || true
+    {
+      echo "vault bash-autosync pull --rebase fehlgeschlagen bei ${AFFECTED} (${HOST}, $(date -Iseconds))"
+      echo "git status:"
+      git status --short
+    } >> "$VAULT_DIR/.vault-sync-incidents.log" 2>/dev/null || true
+  fi
 
   # Push asynchron im Hintergrund.
   ( git push origin main --quiet 2>/dev/null & disown ) || true
