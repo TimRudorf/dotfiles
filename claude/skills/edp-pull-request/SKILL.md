@@ -54,7 +54,7 @@ Einen **Subagent** (`git-expert`) starten, der alle benötigten Informationen be
 - `diff_stats`: `git diff dev...HEAD --stat`
 - `user_login`: GitHub-Login (`gh api user --jq .login`)
 - `projects`: `gh project list --owner edp` — Liste mit Nummer + Titel
-- [Edit-Modus] `pr`: Bestehender PR via `gh pr view <nummer> -R edp/<repo> --json title,body,assignees,reviewRequests`
+- [Edit-Modus] `pr`: Bestehender PR via `gh pr view <nummer> -R einsatzleitsoftware.ghe.com/edp/<repo> --json title,body,assignees,reviewRequests`
 
 **Nicht benötigt:** Commit-Hashes (außer im Oneline-Format), vollständige Diffs, Branch-Topologie.
 
@@ -123,14 +123,28 @@ git push -u origin <branch>
 **6b: PR erstellen**
 
 ```bash
-gh pr create -R edp/<repo> --title "<titel>" --body "<body>" --head <branch> --base dev
+gh pr create -R einsatzleitsoftware.ghe.com/edp/<repo> --title "<titel>" --body "<body>" --head <branch> --base dev
 ```
 
-**6c: Assignee, Reviewer & Copilot**
+**6c: Assignee & Copilot-Review**
+
+Assignee setzen:
 
 ```bash
-gh pr edit <pr-nummer> -R edp/<repo> --add-assignee tim-rudorf --add-reviewer patrick-vogel --add-reviewer copilot-pull-request-reviewer
+gh pr edit <pr-nummer> -R einsatzleitsoftware.ghe.com/edp/<repo> --add-assignee tim-rudorf
 ```
+
+Copilot als Reviewer anfordern — **nicht** über `gh --add-reviewer` (der Handle `copilot-pull-request-reviewer` wird von `gh` still ignoriert / no-op). Stattdessen per GraphQL `requestReviews` mit der Copilot-Bot-Node-ID:
+
+```bash
+H=einsatzleitsoftware.ghe.com
+PRID=$(gh api graphql --hostname "$H" -f query='query{repository(owner:"edp",name:"<repo>"){pullRequest(number:<pr-nummer>){id}}}' --jq '.data.repository.pullRequest.id')
+# Copilot-Bot-Node-ID aus einem beliebigen frueheren Review holen (stabil pro Instanz):
+CID=$(gh api graphql --hostname "$H" -f query='query{repository(owner:"edp",name:"<repo>"){pullRequest(number:<alter-pr-mit-copilot-review>){reviews(first:20){nodes{author{login __typename ... on Bot{id}}}}}}}' --jq '[.data.repository.pullRequest.reviews.nodes[].author|select(.login=="copilot-pull-request-reviewer")][0].id')
+gh api graphql --hostname "$H" -f query="mutation{requestReviews(input:{pullRequestId:\"$PRID\",botIds:[\"$CID\"],union:true}){pullRequest{id}}}"
+```
+
+`patrick-vogel` wird **nicht** automatisch als Reviewer gesetzt — nur wenn der User es ausdruecklich sagt (dann zusaetzlich `--add-reviewer patrick-vogel`).
 
 **6d: Project zuordnen (optional)**
 
@@ -145,14 +159,16 @@ gh pr edit <pr-nummer> --add-project "<project>"
 **6a: PR aktualisieren**
 
 ```bash
-gh pr edit <nummer> -R edp/<repo> --title "<titel>" --body "<body>"
+gh pr edit <nummer> -R einsatzleitsoftware.ghe.com/edp/<repo> --title "<titel>" --body "<body>"
 ```
 
 **6b: Assignee & Reviewer**
 
 ```bash
-gh pr edit <nummer> -R edp/<repo> --add-assignee tim-rudorf --add-reviewer patrick-vogel --add-reviewer copilot-pull-request-reviewer
+gh pr edit <nummer> -R einsatzleitsoftware.ghe.com/edp/<repo> --add-assignee tim-rudorf
 ```
+
+Copilot-Review wie im Create-Modus (6c) per GraphQL `requestReviews` anfordern, falls noch nicht gesetzt. `patrick-vogel` nur auf ausdrueckliche Ansage.
 
 **6c: Project zuordnen (optional)**
 
@@ -171,7 +187,7 @@ Falls eine Ticket-Nummer aus dem Branch extrahiert wurde (Schritt 1):
 **7a: Issue-Body auf Zammad-Referenz prüfen**
 
 ```bash
-gh issue view <nummer> -R edp/<repo> --json body --jq .body
+gh issue view <nummer> -R einsatzleitsoftware.ghe.com/edp/<repo> --json body --jq .body
 ```
 
 Im Body nach dem Pattern `EDP#<zammad-nummer>` suchen. Falls gefunden → weiter mit 7b. Falls nicht → Schritt überspringen.
@@ -199,7 +215,8 @@ Die Bestätigung aus dem /zammad-write Skill **überspringen** — der User hat 
 - **Keine Labels** zuweisen
 - Base-Branch ist immer `dev`
 - Assignee ist immer `tim-rudorf`
-- Reviewer sind immer `patrick-vogel` und `copilot-pull-request-reviewer`
+- Reviewer ist standardmaessig **nur** `copilot-pull-request-reviewer` (per GraphQL `requestReviews`, siehe 6c — `gh --add-reviewer` no-op't den Copilot-Handle). `patrick-vogel` NICHT automatisch — nur wenn der User es ausdruecklich verlangt.
+- Alle `gh`-Aufrufe mit vollem GHE-Host: `-R einsatzleitsoftware.ghe.com/edp/<repo>` bzw. `--hostname einsatzleitsoftware.ghe.com` (sonst loest `gh` gegen github.com auf → "Could not resolve to a Repository")
 - **Fehlertoleranz**: Fehlende GitHub-Scopes oder API-Fehler bei optionalen Schritten (Projects) überspringen statt abbrechen
 - Bei Unsicherheiten den User fragen
 
