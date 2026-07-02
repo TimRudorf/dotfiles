@@ -213,13 +213,16 @@ _edp_detect_test_dproj() {
 
 # Baut + führt das DUnitX-Test-Projekt auf der VM aus, gated über den Exit-Code.
 # Kein Service-Bounce: die Test-EXE blockiert die Service-EXE nicht.
-# Build immer Release/Win64 (edpweb-Konvention) — via -cfg:/-p: überschreibbar.
+# Tests bauen Release/Win32 als Default — via -cfg:/-p: überschreibbar.
+# Win32, weil DUnitX-Suiten das Idiom Assert.AreEqual(<IntLiteral>, Length(dynarray))
+# nutzen: auf Win64 liefert Length NativeInt/Int64, die Overload-Auflösung kippt in
+# die generische AreEqual<T> und wirft E2532. Auf Win32 (Length=Integer) sauber.
 _edp_test() {
   local project="$1"
   shift
 
   local target_host="$EDP_VM_HOST"
-  local plat="Win64"
+  local plat="Win32"
   local cfg="Release"
   local args=()
 
