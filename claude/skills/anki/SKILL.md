@@ -161,7 +161,8 @@ Mapping ist auch in `scripts/anki_call.sh` als Bash-Funktion `slug_to_deck` hint
 ## Stolperfallen
 
 - **Anki Desktop muss offen sein** — AnkiConnect lauscht nur dann auf 8765. Wenn der Mac aus ist oder Anki nicht läuft: Skill bricht ab, kein Retry.
-- **Cloze-Marker nicht in Formeln**: `\[{{c1::P = A^T P A...}}\]` bricht den MathJax-Parser. Stattdessen: `Was ist {{c1::die Lösung der DARE}}? \[P = A^T P A...\]` — Cloze drumherum, Formel sichtbar.
+- **Cloze-Marker nicht IN eine Formel mit inneren `{}`-Braces**: `\(w_i={{c1::w_0\beta^{n-i}}}\)` bricht — das `}` von `^{n-i}` bildet mit dem Cloze-`}}` ein `}}}`, das der Parser falsch schließt. **Fix: ganze Formel inkl. Delimiter clozen** → `{{c1::\(w_i=w_0\beta^{n-i}\)}}`, sichtbarer Cue als statischer Span davor (`Wage \(w_i=\) {{c1::\(w_0\beta^{n-i}\)}}`). Prüf-Regel: im fertigen `{{cN::…}}` darf **kein `}}` vor dem gewollten Ende** stehen. (Alternativ Q-A: `Was ist {{c1::die Lösung der DARE}}? \[P = A^T P A...\]` — Cloze drumherum, Formel sichtbar.)
+- **MathJax-Delimiter `\(...\)` / `\[...\]`, NIE `$...$`**: Anki rendert `$…$` per Default nicht → literale Dollarzeichen. Beim `build` einen Plan mit `$…$` oder `\\(` (Doppel-Backslash) vor dem `addNotes` normalisieren. (`\$` für Geldbeträge bleibt.) Vollregel: [[projekte/lernplan/anki-kartendesign]] „MathJax-Cloze-Syntax".
 - **Sync-Race vor Bulk-Inserts**: Bei vielen Karten gleichzeitig vorher in Anki cmd+Y drücken (Sync mit AnkiWeb), dann Karten via Skill schreiben, dann nochmal syncen. Sonst kann ein Full-Sync vom iPhone die neuen Karten verlieren.
 - **Phase-4-Override nur bewusst**: `--force` überspringt den Phase-4-Block — sollte selten gebraucht werden, weil keine-neuen-Karten-vor-Klausur ein Lerngesetz ist.
 - **AnkiConnect Add-on Code**: `2055492159`. Repo seit 2025-11 nicht mehr auf GitHub-FooSoft, sondern `git.sr.ht/~foosoft/anki-connect` — Add-on-Code bleibt aber identisch.
