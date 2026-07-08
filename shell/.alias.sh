@@ -3,6 +3,7 @@ alias ls="eza -la"
 alias lg="lazygit"
 alias lsql="lazysql"
 alias cat="bat"
+alias claudia="claude --dangerously-skip-permissions"
 
 # Edit shared sops-encrypted dotenv. If the canonical file changed, auto-commits
 # and pushes — uses an ephemeral branch + auto-merged PR when on main (because
