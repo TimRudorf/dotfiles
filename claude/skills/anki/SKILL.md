@@ -39,7 +39,7 @@ Ablauf:
    - **Basic** → Notetype `Basic`, `Front`/`Back`.
    - **Image Occlusion 🖼️** → NICHT über `add_cards.sh`; via `python3 $VAULT/projekte/lernplan/anki-io-build.py` bauen (Skizze aus Content-PDF/Folie rendern → Masken → Pillow-Self-Check → `addNote` Modell „Image Occlusion"). Skizze-Quelle + Masken-Hinweis stehen in der Karte.
 4. **Dedup-Guard:** existieren schon Karten mit `tag:source::<modul>::<le-slug>`? Wenn ja (Re-Build) → erst archivieren + löschen, dann neu bauen (idempotent). Bei leerem/neuem Stand einfach neu.
-5. **Bauen (aktiv):** Karten-JSON zusammenstellen, `bash scripts/add_cards.sh Uni::<Modul> <karten.json>`. Tags **`phase::<aktive-phase>` + `source::<modul>::<le-slug>`**. Karten gehen **aktiv** ins Deck (nicht suspendiert) — Tim kennt den Stoff jetzt. `add_cards.sh` ruft am Ende `anki-deck-config.py` (kein Default-Preset).
+5. **Bauen (aktiv):** Karten-JSON zusammenstellen, `bash scripts/add_cards.sh Uni::<Modul> <karten.json>`. Tags **`phase::<aktive-phase>` + `source::<modul>::<le-slug>`**. Karten gehen **aktiv** ins Deck (nicht suspendiert) — Tim kennt den Stoff jetzt. **Deck-Config/new-cards-Limit wird nicht angefasst** — Tim pflegt die Presets selbst.
 6. **IO-Karten** separat via `anki-io-build.py` (gleiche Tags + Deck).
 7. **Verify (`schreib-verify`):** pre/post AnkiWeb-Sync; Read-back `findNotes`/`findCards` per `source::`-Tag gegen Plan-Soll.
 8. **LE + Tracker nachziehen:** Lernablauf-Checkbox „Karten-erstellen" ✅ + Datum, Sessions-Block, Frontmatter (`karten-notes`/`karten-ist`), Tracker-Zeile (🔄-Ampel + Karten-Count).
@@ -116,7 +116,7 @@ Akzeptierte Karten als JSON-Datei zusammenstellen, dann `bash scripts/add_cards.
 ]
 ```
 
-`add_cards.sh` legt das Deck an (idempotent), schreibt die Karten via `addNotes`, prüft Duplikate (allowDuplicate=false) und ruft danach automatisch das **Deck-Config-Normalize-Skript** (`$VAULT/projekte/lernplan/anki-deck-config.py`) auf — damit das (ggf. neu angelegte) Deck nicht auf „Default" (20/Tag) hängenbleibt, sondern das Modul-Preset erbt. Pattern: [[tim/feedback/anki-deck-config-pattern]].
+`add_cards.sh` legt das Deck an (idempotent), schreibt die Karten via `addNotes` und prüft Duplikate (allowDuplicate=false). **Deck-Presets / new-cards-Limit werden dabei nicht verändert** — Tim setzt die „neue Karten/Tag"-Werte pro Preset selbst von Hand in Anki. (Der frühere Auto-Normalizer wurde am 2026-07-07 entfernt, weil er manuelle Preset-Änderungen bei jedem Kartenbau still zurücksetzte.)
 
 ### 2.9 Bestätigung
 
@@ -168,6 +168,6 @@ Mapping ist auch in `scripts/anki_call.sh` als Bash-Funktion `slug_to_deck` hint
 - **AnkiConnect Add-on Code**: `2055492159`. Repo seit 2025-11 nicht mehr auf GitHub-FooSoft, sondern `git.sr.ht/~foosoft/anki-connect` — Add-on-Code bleibt aber identisch.
 - **FSRS-Re-Optimization**: alle 1–2 Monate manuell `Tools → FSRS Helper → Optimize FSRS parameters` in Anki Desktop ausführen, sonst hängen die Parameter.
 - **Snapshot-Alter**: wenn `anki-stats.md` älter als 36 h ist, gibt der Heartbeat eine Notification raus. Tim soll dann kurz Anki Desktop öffnen und `/anki status` triggern.
-- **Deck-Config / new-cards-Limit**: jedes flache Modul-Deck braucht sein eigenes Preset, **kein Uni-Deck auf „Default" (20/Tag)**. `add_cards.sh` ruft deshalb am Ende `anki-deck-config.py` auf. Wenn Karten **anders als über `add_cards.sh`** gebaut werden (z.B. `anki-io-build.py`, manueller `addNotes`), danach **manuell** `python3 $VAULT/projekte/lernplan/anki-deck-config.py` laufen lassen. Pattern + Why: [[tim/feedback/anki-deck-config-pattern]]. Bug-Präzedenz 2026-06-29 (strukturell gelöst durch die Flach-Migration): IntEco-Karten lagen in `IMF::*`-Subdecks auf Default → trotz 120er-Preset auf dem Top-Deck bei 20/Tag gedeckelt; seit der Migration gibt es keine Subdecks mehr, die auf Default zurückfallen könnten.
+- **Deck-Config / new-cards-Limit**: **Jarvis fasst die new/day-Limits und Presets nie automatisch an** — Tim pflegt die „neue Karten/Tag"-Werte pro Preset selbst von Hand in Anki (Beschluss 2026-07-07). Der Kartenbau (`add_cards.sh` / `anki-io-build.py`) schreibt nur Karten, rührt keine Config an. Wenn ein neu entstandenes Deck mal auf „Default" landen sollte, stellt Tim das Preset selbst um. Why: [[tim/feedback/anki-deck-config-pattern]].
 
 Abschließend `skill-optimize` mit `anki` aufrufen.
