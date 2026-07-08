@@ -14,7 +14,9 @@ Die Lerneinheit kann auf drei Wegen übergeben werden — erkenne selbst, welche
 
 - **Inline-Text**: Der LE-Inhalt steht direkt in `$ARGUMENTS`.
 - **Datei-Pfad**: `$ARGUMENTS` ist ein Pfad (PDF, Folien, Markdown, Skript) → Datei lesen.
-- **Vault-Note**: `$ARGUMENTS` verweist auf eine Note im jarvis-wiki (z.B. unter `projekte/lernplan/`) → Note lesen. Vault-Root host-abhängig (Mac: `~/Documents/jarvis-wiki/`, Container: `/workspace/wiki/`).
+- **Vault-Note**: `$ARGUMENTS` verweist auf eine Note im jarvis-wiki → Note lesen. Vault-Root host-abhängig (Mac: `~/Documents/jarvis-wiki/`, Container: `/workspace/wiki/`).
+  - **Ist `$ARGUMENTS` eine LE-`einheit-id`** (Muster `<modul-kürzel>-NN-slug`, z.B. `mf-09-theory-of-firm`): direkt `$VAULT/projekte/lernplan/*/lerneinheiten/$ARGUMENTS.md` lesen — kein vault-weites Grep nötig, der Modulordner ergibt sich aus dem Glob.
+  - Bleibt die Note unauffindbar oder ist `$ARGUMENTS` kein id-Muster → `grep -ril` als Fallback, sonst kurz nachfragen.
 
 Ist nichts übergeben oder unklar, welche LE gemeint ist: kurz nachfragen, welche Lerneinheit zusammengefasst werden soll (Titel/Pfad/Text).
 
