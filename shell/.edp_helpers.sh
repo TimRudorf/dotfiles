@@ -10,13 +10,21 @@ EDP_PROJECT_ROOT="${EDP_PROJECT_ROOT:-$HOME/dev/EDP}"
 EDP_RSVARS='C:\Program Files (x86)\Embarcadero\Studio\37.0\bin\rsvars.bat'
 EDP_MSBUILD='C:\Windows\Microsoft.NET\Framework\v4.0.30319\MSBuild.exe'
 
+# SSH-Optionen fuer alle VM-Aufrufe: schnell scheitern statt unbegrenzt haengen.
+# - BatchMode=yes    -> keine interaktiven Prompts (Host-Key/Passwort), sofortiger Fehler
+# - ConnectTimeout   -> Verbindungsaufbau nach 10s abbrechen
+# - ServerAlive*     -> tote/stehende Session nach ~15s (5s*3) erkennen und trennen
+# Ohne diese Optionen kann ein einzelner haengender ssh-Aufruf (z.B. beim Dienst-Stop)
+# den gesamten Compile unbegrenzt blockieren.
+EDP_SSH_OPTS=(-o BatchMode=yes -o ConnectTimeout=10 -o ServerAliveInterval=5 -o ServerAliveCountMax=3)
+
 # --- Internal helpers ---
 
 # Run a command on a host via SSH
 _edp_vm_cmd() {
   local host="$1"
   shift
-  ssh "$host" "$*" | iconv -f CP850 -t UTF-8 2>/dev/null
+  ssh "${EDP_SSH_OPTS[@]}" "$host" "$*" | iconv -f CP850 -t UTF-8 2>/dev/null
 }
 
 # Auto-detect .dproj file in project directory
@@ -59,10 +67,10 @@ _edp_target_dir() {
 _edp_svc_stop() {
   local host="$1" svc="$2"
   echo "Stoppe Dienst $svc..."
-  ssh "$host" "net stop $svc 2>nul" 2>/dev/null | iconv -f CP850 -t UTF-8 2>/dev/null
+  ssh "${EDP_SSH_OPTS[@]}" "$host" "sc stop $svc >nul 2>nul" 2>/dev/null | iconv -f CP850 -t UTF-8 2>/dev/null
   local i state
   for i in {1..20}; do
-    state="$(ssh "$host" "sc query $svc" 2>/dev/null | iconv -f CP850 -t UTF-8 2>/dev/null)"
+    state="$(ssh "${EDP_SSH_OPTS[@]}" "$host" "sc query $svc" 2>/dev/null | iconv -f CP850 -t UTF-8 2>/dev/null)"
     if [[ -z "$state" ]] || echo "$state" | grep -q "STOPPED"; then break; fi
     echo "  Warte auf Stoppen..."
     sleep 2
@@ -73,7 +81,7 @@ _edp_svc_stop() {
 _edp_svc_start() {
   local host="$1" svc="$2"
   echo "Starte Dienst $svc..."
-  ssh "$host" "net start $svc" 2>/dev/null | iconv -f CP850 -t UTF-8 2>/dev/null
+  ssh "${EDP_SSH_OPTS[@]}" "$host" "net start $svc" 2>/dev/null | iconv -f CP850 -t UTF-8 2>/dev/null
 }
 
 # Map project → Windows service name that locks its EXE.
@@ -178,7 +186,7 @@ edp() {
     compilelog)
       local target_dir
       target_dir="$(_edp_target_dir "$project")"
-      LC_ALL=C ssh "$EDP_VM_HOST" "powershell -NoProfile -Command \"Get-Content -Path '${target_dir}\\compile.log' -Tail 200 -Wait\"" \
+      LC_ALL=C ssh "${EDP_SSH_OPTS[@]}" "$EDP_VM_HOST" "powershell -NoProfile -Command \"Get-Content -Path '${target_dir}\\compile.log' -Tail 200 -Wait\"" \
         | LC_ALL=C awk 'NR==1 { system("printf \"\\033c\"") } { sub(/\r$/,""); print; fflush() }'
       ;;
     *)
@@ -271,7 +279,7 @@ _edp_test() {
 
   echo "Kompiliere Tests..."
   local build_cmd="call \"${EDP_RSVARS}\" && cd /d ${target_dir}\\tests && \"${EDP_MSBUILD}\" ${test_dproj} /t:Build /p:config=${cfg} /p:platform=${plat}"
-  ssh "$target_host" "$build_cmd" > /tmp/edp_test_build_$$.log 2>&1
+  ssh "${EDP_SSH_OPTS[@]}" "$target_host" "$build_cmd" > /tmp/edp_test_build_$$.log 2>&1
   rc=$?
   if [[ $rc -ne 0 ]] || ! grep -aqi "0 Error(s)\|Build succeeded\|0 Fehler\|Buildvorgang.*erfolgreich" /tmp/edp_test_build_$$.log; then
     echo "FEHLER beim Kompilieren der Tests! Output:" >&2
@@ -289,7 +297,7 @@ _edp_test() {
   # nativen Load-Time-DLLs wie der Service (libcrypto/libmariadb/...), die
   # neben der Haupt-EXE im Projekt-Root liegen, nicht im tests\-Output.
   # Ohne das: Startup-Crash ohne Output (Exit 53 = DLL nicht gefunden).
-  ssh "$target_host" "cd /d ${target_dir}\\tests && set PATH=${target_dir};%PATH% && ${test_exe}" > /tmp/edp_test_run_$$.log 2>&1
+  ssh "${EDP_SSH_OPTS[@]}" "$target_host" "cd /d ${target_dir}\\tests && set PATH=${target_dir};%PATH% && ${test_exe}" > /tmp/edp_test_run_$$.log 2>&1
   rc=$?
   iconv -f CP850 -t UTF-8 /tmp/edp_test_run_$$.log 2>/dev/null || cat /tmp/edp_test_run_$$.log
   rm -f /tmp/edp_test_run_$$.log
@@ -359,15 +367,15 @@ _edp_git_sync_vm() {
   local dir_forward="${target_dir//\\//}"
 
   local have_git
-  have_git="$(ssh "$host" "if exist \"${target_dir}\\.git\" (echo yes) else (echo no)" 2>/dev/null | tr -d '\r' | tr -d '\n')"
+  have_git="$(ssh "${EDP_SSH_OPTS[@]}" "$host" "if exist \"${target_dir}\\.git\" (echo yes) else (echo no)" 2>/dev/null | tr -d '\r' | tr -d '\n')"
 
   if [[ "$have_git" != "yes" ]]; then
     echo "Klone Repo auf VM: ${target_dir}..."
-    ssh "$host" "if exist \"${target_dir}\" rmdir /s /q \"${target_dir}\"" 2>/dev/null
-    ssh "$host" "git clone --quiet --branch ${branch} ${clone_url} \"${target_dir}\"" || return 1
+    ssh "${EDP_SSH_OPTS[@]}" "$host" "if exist \"${target_dir}\" rmdir /s /q \"${target_dir}\"" 2>/dev/null
+    ssh "${EDP_SSH_OPTS[@]}" "$host" "git clone --quiet --branch ${branch} ${clone_url} \"${target_dir}\"" || return 1
   else
     echo "Synchronisiere Repo auf VM (branch ${branch})..."
-    ssh "$host" "cd /d \"${target_dir}\" && git fetch --quiet origin && git checkout --quiet -B ${branch} origin/${branch} && git reset --hard --quiet origin/${branch}" || return 1
+    ssh "${EDP_SSH_OPTS[@]}" "$host" "cd /d \"${target_dir}\" && git fetch --quiet origin && git checkout --quiet -B ${branch} origin/${branch} && git reset --hard --quiet origin/${branch}" || return 1
   fi
 }
 
@@ -378,7 +386,7 @@ _edp_scss_build_vm() {
   local host="$1" target_dir="$2"
 
   local has_pkg
-  has_pkg="$(ssh "$host" "if exist \"${target_dir}\\package.json\" (echo yes) else (echo no)" 2>/dev/null | tr -d '\r\n')"
+  has_pkg="$(ssh "${EDP_SSH_OPTS[@]}" "$host" "if exist \"${target_dir}\\package.json\" (echo yes) else (echo no)" 2>/dev/null | tr -d '\r\n')"
   if [[ "$has_pkg" != "yes" ]]; then
     return 0
   fi
@@ -387,10 +395,10 @@ _edp_scss_build_vm() {
 
   # node_modules nur installieren wenn noch nicht vorhanden
   local has_nm
-  has_nm="$(ssh "$host" "if exist \"${target_dir}\\node_modules\" (echo yes) else (echo no)" 2>/dev/null | tr -d '\r\n')"
+  has_nm="$(ssh "${EDP_SSH_OPTS[@]}" "$host" "if exist \"${target_dir}\\node_modules\" (echo yes) else (echo no)" 2>/dev/null | tr -d '\r\n')"
   if [[ "$has_nm" != "yes" ]]; then
     echo "  npm install (erstmalig)..."
-    ssh "$host" "cd /d \"${target_dir}\" && npm install" > /tmp/edp_npm_$$.log 2>&1
+    ssh "${EDP_SSH_OPTS[@]}" "$host" "cd /d \"${target_dir}\" && npm install" > /tmp/edp_npm_$$.log 2>&1
     local rc=$?
     if [[ $rc -ne 0 ]]; then
       echo "FEHLER beim npm install! Output:" >&2
@@ -401,7 +409,7 @@ _edp_scss_build_vm() {
     rm -f /tmp/edp_npm_$$.log
   fi
 
-  ssh "$host" "cd /d \"${target_dir}\" && npm run scss:build" > /tmp/edp_scss_$$.log 2>&1
+  ssh "${EDP_SSH_OPTS[@]}" "$host" "cd /d \"${target_dir}\" && npm run scss:build" > /tmp/edp_scss_$$.log 2>&1
   local rc=$?
   if [[ $rc -ne 0 ]]; then
     echo "FEHLER beim SCSS-Build! Output:" >&2
@@ -472,9 +480,9 @@ _edp_compile_go() {
     return $rc
   fi
 
-  if ssh "$target_host" "findstr /S /C:\"//go:generate\" ${target_dir}\\*.go" >/dev/null 2>&1; then
+  if ssh "${EDP_SSH_OPTS[@]}" "$target_host" "findstr /S /C:\"//go:generate\" ${target_dir}\\*.go" >/dev/null 2>&1; then
     echo "go generate..."
-    ssh "$target_host" "cd /d ${target_dir} && go generate ./..." > /tmp/edp_go_$$.log 2>&1
+    ssh "${EDP_SSH_OPTS[@]}" "$target_host" "cd /d ${target_dir} && go generate ./..." > /tmp/edp_go_$$.log 2>&1
     rc=$?
     if [[ $rc -ne 0 ]]; then
       echo "FEHLER bei go generate:" >&2
@@ -486,7 +494,7 @@ _edp_compile_go() {
   fi
 
   echo "go build..."
-  ssh "$target_host" "cd /d ${target_dir} && go build ./..." > /tmp/edp_go_$$.log 2>&1
+  ssh "${EDP_SSH_OPTS[@]}" "$target_host" "cd /d ${target_dir} && go build ./..." > /tmp/edp_go_$$.log 2>&1
   rc=$?
   if [[ $rc -ne 0 ]]; then
     echo "FEHLER bei go build:" >&2
@@ -498,7 +506,7 @@ _edp_compile_go() {
 
   if [[ $do_test -eq 1 ]]; then
     echo "go test..."
-    ssh "$target_host" "cd /d ${target_dir} && go test ./..." > /tmp/edp_go_$$.log 2>&1
+    ssh "${EDP_SSH_OPTS[@]}" "$target_host" "cd /d ${target_dir} && go test ./..." > /tmp/edp_go_$$.log 2>&1
     rc=$?
     if [[ $rc -ne 0 ]]; then
       echo "FEHLER bei go test:" >&2
@@ -514,7 +522,7 @@ _edp_compile_go() {
     # -H=windowsgui: kein CMD-Fenster beim Start der EXE — gleiches Verhalten wie
     # die Delphi-GUI-Schnittstellen. Relevant nur für den Konfig-UI-Modus; als
     # Windows-Service gibt's ohnehin keine Interactive-Session.
-    ssh "$target_host" "cd /d ${target_dir} && go build -ldflags=\"-s -w -H=windowsgui\" -o ${exe_name} ." > /tmp/edp_go_$$.log 2>&1
+    ssh "${EDP_SSH_OPTS[@]}" "$target_host" "cd /d ${target_dir} && go build -ldflags=\"-s -w -H=windowsgui\" -o ${exe_name} ." > /tmp/edp_go_$$.log 2>&1
     rc=$?
     if [[ $rc -ne 0 ]]; then
       echo "FEHLER beim EXE-Build:" >&2
@@ -622,7 +630,7 @@ _edp_compile() {
   # Step 3: MSBuild via SSH
   echo "Kompiliere..."
   local compile_cmd="call \"${EDP_RSVARS}\" && cd /d ${target_dir} && \"${EDP_MSBUILD}\" ${proj_name} /t:${target} /p:config=${cfg} /p:platform=${plat}"
-  ssh "$target_host" "$compile_cmd" > /tmp/edp_compile_$$.log 2>&1
+  ssh "${EDP_SSH_OPTS[@]}" "$target_host" "$compile_cmd" > /tmp/edp_compile_$$.log 2>&1
   rc=$?
 
   if [[ $rc -ne 0 ]]; then
@@ -681,7 +689,7 @@ _edp_log() {
   done
   local filter="${text_parts[*]}"
 
-  LC_ALL=C ssh "$EDP_VM_HOST" "powershell -NoProfile -Command \"Get-Content -Path '${logpath}' -Tail 200 -Wait\"" \
+  LC_ALL=C ssh "${EDP_SSH_OPTS[@]}" "$EDP_VM_HOST" "powershell -NoProfile -Command \"Get-Content -Path '${logpath}' -Tail 200 -Wait\"" \
     | LC_ALL=C awk -v f="$filter" -v lvl="$level" '
       BEGIN {
         use    = (length(f)   > 0)
