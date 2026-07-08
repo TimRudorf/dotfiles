@@ -58,10 +58,7 @@ if [ "$skipped" -gt 0 ]; then
   echo "$skipped Karten als Duplikat übersprungen."
 fi
 
-# Deck-Config normalisieren: jedes flache Modul-Deck auf eigenem Preset, kein Uni-Deck auf "Default".
-# Pattern: tim/feedback/anki-deck-config-pattern. Idempotent.
-NORMALIZE="$HOME/Documents/jarvis-wiki/projekte/lernplan/anki-deck-config.py"
-if [[ "$DECK" == Uni::* ]] && [ -f "$NORMALIZE" ]; then
-  echo ""
-  python3 "$NORMALIZE" | tail -1
-fi
+# Deck-Config (new/day-Limits, Presets) wird NICHT mehr automatisch angefasst.
+# Tim pflegt die „neue Karten/Tag"-Werte pro Preset selbst von Hand in Anki.
+# (Entfernt 2026-07-07: der frühere Auto-Normalizer setzte manuelle Änderungen bei
+#  jedem Kartenbau still zurück — genau das war unerwünscht.)
