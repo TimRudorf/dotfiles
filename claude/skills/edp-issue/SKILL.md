@@ -81,7 +81,9 @@ Aus Issue + Kontext entscheiden. Bei Bug → Schritt 3. Bei Feature → Schritt 
 
 **Ziel: Erst beweisen, dass der Bug real ist — automatisch durch dich —, dann die Quelle finden.**
 
-**3a — Repro planen.** Vorhandenes Test-/Repro-Wissen zuerst nutzen (nicht neu erfinden):
+**3a — Repro planen.** Reproduktion läuft **in der Dev-Umgebung** (Stand via `/edp-develop` auf die Dev-VM
+deployen, dann dort reproduzieren) — nur dort herrschen reale Bedingungen; kein rein lokaler Nachbau
+([[tim/feedback/code-self-check-vor-review]]). Vorhandenes Test-/Repro-Wissen zuerst nutzen (nicht neu erfinden):
 - Backend deterministisch per HTTP-Form-POST: `$VAULT/referenz/edpweb-testing/index.md` (Hub → `setup`, `auth`,
   `snippets`, `actions-<bereich>`, `db-kerntabellen`).
 - UI-Reproduktion/Verifikation: `/edp-design-loop` bzw. direkt `/playwright-cli` (Login/Cache-Fallen:
@@ -130,6 +132,14 @@ Frontend = Repo-Standard. Vor jedem Commit/Deploy die **gesamte Suite grün**. B
 Vor jeder Rücklaufmeldung selbst beweisen, dass der Fix die Problematik löst bzw. das Feature alle
 Gütekriterien erfüllt — **CI-grün genügt nicht** ([[tim/feedback/code-self-check-vor-review]]):
 
+> **Zwingend: Test/Verify NUR in der Dev-Umgebung.** Jede Verifikation läuft gegen den **frisch auf die
+> Dev-VM deployten** Stand — Delphi/Frontend via `/edp-develop` (`edp <projekt> compile`, baut inkl.
+> `scss:build`), UI via `/edp-design-loop`, Backend via HTTP-POST/DB-Read-Back **gegen die VM**. Ein lokales
+> Render-Harness, ein lokaler Build oder „CI ist grün" sind **KEIN Ersatz** — nur auf der Dev-VM herrschen
+> reale Bedingungen, und nur so kann Tim die Änderung **selbst** live ansehen. Also **immer erst deployen,
+> dann verifizieren**. Geht der Deploy nicht (VM down, Compile hängt) → transparent melden, nicht mit einer
+> lokalen Ersatz-Verifikation kaschieren.
+
 - Bug: den in Schritt 3 etablierten Repro erneut fahren → Fehler **weg**; Regressionsnachbarn stichprobenartig ok.
 - Feature: Akzeptanzkriterien real durchspielen (Backend-POST + DB-Read-Back und/oder `/edp-design-loop` UI).
 - Concurrency: unter echtem parallelem Szenario ([[tim/feedback/concurrency-fix-baseline-verify]]).
@@ -171,6 +181,10 @@ Verifikations-Beleg, PR-URL + Mergebarkeits-Status. Kompakt, deutsch, echte Umla
 
 - **Autonom bis mergebar.** Nur unterbrechen, wenn ein echter Blocker eine Entscheidung von Tim braucht oder ein
   Repro-Schritt nur manuell durch Tim geht (Schritt 3c). Reine Reads/interne Systeme: einfach machen.
+- **Testen/Verifizieren/Reproduzieren IMMER nur in der Dev-Umgebung** (`/edp-develop`-Deploy auf die Dev-VM,
+  dann `/edp-design-loop` bzw. Backend-POST/DB-Read-back gegen die VM). Lokales Render-Harness / lokaler Build /
+  CI-grün sind KEIN Ersatz — nur die Dev-VM hat reale Bedingungen und lässt Tim selbst nachschauen
+  ([[tim/feedback/code-self-check-vor-review]]).
 - **Kein Hardcode, kein Duplikat.** Fakten immer aus der verlinkten SSoT ziehen und ihr folgen.
 - **Nach jeder externen Mutation Read-back** ([[tim/feedback/schreib-verify]]).
 - **Kein Hinweis auf AI** in Issue/PR/Zammad/Reviews. Deutsch mit echten Umlauten.
