@@ -30,8 +30,11 @@ source <(fzf --zsh)
 # Aliases
 source ~/.alias.sh
 
-# Work helpers (optional, skip if missing)
-[[ -f ~/.edp_helpers.sh ]] && source ~/.edp_helpers.sh
+# EDP Dev-VM — die alte edp()-Shell wurde durch das `edp-ctrl`-CLI abgeloest
+# (edp-ctrl dev compile/test/log/service). edp-ctrl selbst nutzt sein Profil; diese
+# beiden Vars bleiben fuer edp-design-loop/playwright (rohe VM-IP + lokaler Projektpfad).
+export EDP_VM_HOST="${EDP_VM_HOST:-eifert-dev}"
+export EDP_PROJECT_ROOT="${EDP_PROJECT_ROOT:-$HOME/dev/EDP}"
 
 # sops + age (where to find the age private key — macOS default is elsewhere)
 export SOPS_AGE_KEY_FILE="$HOME/.config/sops/age/keys.txt"

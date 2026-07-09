@@ -7,12 +7,12 @@ argument-hint: "[projekt] design-ziel"
 
 # EDP Design-Loop (Ralph-Loop)
 
-Autonome Iterations-Schleife für UI-/Design-Änderungen an EDP-Web-Projekten. Ändert Code, kompiliert via `edp compile`, verifiziert das Ergebnis per `playwright-cli` und iteriert eigenständig.
+Autonome Iterations-Schleife für UI-/Design-Änderungen an EDP-Web-Projekten. Ändert Code, kompiliert via `edp-ctrl dev compile`, verifiziert das Ergebnis per `playwright-cli` und iteriert eigenständig.
 
 ## Voraussetzungen
 
-- Env: `EDP_VM_HOST`, `EDP_PROJECT_ROOT` (definiert in Tims `~/.zshrc` — in non-interactive bash leer; bei `requirement-checker`-Lauf ggf. mit `zsh -i -c 'echo $VAR'` gegenchecken oder Fallback `vm-eifert-develop` für `EDP_VM_HOST` nutzen)
-- Tools: `ssh`, `playwright-cli`, `edp`, `git`
+- Env: `EDP_VM_HOST`, `EDP_PROJECT_ROOT` (exportiert in Tims `~/.zshrc` — in non-interactive bash leer; bei `requirement-checker`-Lauf ggf. mit `zsh -i -c 'echo $VAR'` gegenchecken oder Fallback `eifert-dev`/`172.16.0.2` für `EDP_VM_HOST` nutzen)
+- Tools: `ssh`, `playwright-cli`, `edp-ctrl`, `git`
 - Projekt: `$EDP_PROJECT_ROOT/<projekt>` (Git-Repo, sauber oder mit ungestagten Änderungen — siehe Schritt 1)
 
 Voraussetzungen gemäß `requirement-checker` Skill validieren. Bei Fehlschlag abbrechen.
@@ -111,22 +111,20 @@ Pro Runde `N = 1..5`:
 git commit -am "wip: design-loop round N"
 ```
 
-**4c — Deploy via `edp compile`.** `edp deploy` wurde entfernt; `edp compile` ist der einzige Transport (Git-Push + SCSS-Build + MSBuild + Service-Restart; bei Template-/SCSS-/JS-only-Änderungen bleibt MSBuild effektiv ein No-Op).
-
-Die `edp`-Shellfunktion ist in Tims Zsh-Profil definiert und braucht eine interaktive Zsh-Shell — sonst schlägt sie mit `_edp_compile: command not found` fehl. In Claude-Sessions deshalb immer so:
+**4c — Deploy via `edp-ctrl dev compile`.** Das ist der einzige Transport (Git-Push + SCSS-Build + MSBuild + Service-Restart; bei Template-/SCSS-/JS-only-Änderungen bleibt MSBuild effektiv ein No-Op). Details siehe `/edp-develop`.
 
 ```bash
-zsh -i -c 'edp <projekt> compile'
+edp-ctrl dev compile <projekt>
 ```
 
-**Hinweis:** `edp compile` startet den Delphi-Service neu — die Browser-Session geht dabei verloren. In 4d steht ggf. wieder der Login-Screen an. Dann vor dem Re-Check einmal per `snapshot` die neuen refs holen und identisch zu Schritt 3 einloggen, bevor mit der Cache-Buster-URL die Zielseite aufgerufen wird.
+**Hinweis:** `edp-ctrl dev compile` startet den Delphi-Service neu — die Browser-Session geht dabei verloren. In 4d steht ggf. wieder der Login-Screen an. Dann vor dem Re-Check einmal per `snapshot` die neuen refs holen und identisch zu Schritt 3 einloggen, bevor mit der Cache-Buster-URL die Zielseite aufgerufen wird.
 
 **4d — Re-Check im Browser.**
 
 Vor dem Re-Check entscheiden, ob Browser-Session neu gestartet werden muss:
 
 - **Reine JS/CSS/Template-Änderungen ohne Pascal-Diff** → Browser-Session **immer neu starten**. Der `?v={VERSION}`-Cache-Buster der `<script>`/`<link>`-Tags ist Delphi-exe-versionsgebunden und ändert sich bei reinen Frontend-Edits **nicht** — eine URL-Cache-Buster-Query (`?v=$TS`) hilft nur für die HTML-Seite selbst, nicht für die referenzierten Assets. Ohne Restart sieht der nächste Screenshot zwangsläufig den alten Stand und die Runde ist verschwendet.
-- **Pascal-Änderung mit dabei** → `edp compile` bumpt die Version, `<script>`-Tags bekommen neue URLs, normaler Reload reicht. Direkt mit `goto` fortfahren.
+- **Pascal-Änderung mit dabei** → `edp-ctrl dev compile` bumpt die Version, `<script>`-Tags bekommen neue URLs, normaler Reload reicht. Direkt mit `goto` fortfahren.
 
 Browser-Restart-Pattern (bei reinen Frontend-Edits vor dem Re-Check ausführen):
 
@@ -219,10 +217,10 @@ Screenshots und Snapshots bleiben unter `.playwright-cli/` im Projekt liegen (f�
 
 - **Nie auf `main` committen.** Vor Schritt 1 prüfen und ggf. abbrechen.
 - **Nur WIP-Commits.** Squash/Amend bleibt User-Hoheit.
-- **Keine manuellen `git push`.** Implizite Pushes durch `edp compile` auf dem Feature-Branch sind OK.
+- **Keine manuellen `git push`.** Implizite Pushes durch `edp-ctrl dev compile` auf dem Feature-Branch sind OK.
 - **Hard-Cap 5 Runden.** Danach fragt der Skill den User, ob weiter iteriert werden soll.
 - **2× keine Verbesserung** → abbrechen und User fragen.
-- **Screenshots + Snapshots immer nach `.playwright-cli/`** — dieser Ordner ist projektweit gitignored. Nackte Dateinamen (z.B. `--filename=baseline.png`) landen im Projekt-Root und verschmutzen das Working Tree, was den nächsten `edp compile` blockiert. Absolute Pfade außerhalb des Projekt-Roots werden von `playwright-cli` mit `outside allowed roots` verweigert.
+- **Screenshots + Snapshots immer nach `.playwright-cli/`** — dieser Ordner ist projektweit gitignored. Nackte Dateinamen (z.B. `--filename=baseline.png`) landen im Projekt-Root und verschmutzen das Working Tree, was den nächsten `edp-ctrl dev compile` blockiert. Absolute Pfade außerhalb des Projekt-Roots werden von `playwright-cli` mit `outside allowed roots` verweigert.
 - **Für Inputs `fill` benutzen, nicht `type`** — `type` schreibt Zeichen ohne input-Event auszulösen, Live-Such-Handler und Formulare reagieren nicht. `fill` ist der verlässliche Weg.
 - **`eval` statt `evaluate`** — der playwright-cli-Subcommand heißt `eval`; `evaluate` wirft einen Help-Screen-Error.
 - **Deutsche User-Kommunikation** mit echten Umlauten, kein AI-Hinweis.

@@ -64,6 +64,6 @@ Alle werden beim Container-Start per Symlink aus den Dotfiles eingehängt. Quell
 
 ## Tech-Kontext, den Jarvis kennt
 
-- **Beruflich:** Tim arbeitet bei EDP (Einsatzleitsoftware GmbH) — Delphi, MariaDB, Zammad-Ticketsystem, GHE (einsatzleitsoftware.ghe.com). Interne Tools: `edp()`-Shell-Funktion, Dokuwiki, Skills wie `edp-develop`, `edp-database`, `zammad-*`.
+- **Beruflich:** Tim arbeitet bei EDP (Einsatzleitsoftware GmbH) — Delphi, MariaDB, Zammad-Ticketsystem, GHE (einsatzleitsoftware.ghe.com). Interne Tools: `edp-ctrl`-CLI (Dev-Schiene + edpweb), Dokuwiki, Skills wie `edp-develop`, `edp-database`, `zammad-*`.
 - **Privat:** Proxmox-Server zu Hause, Debian-VM `172.16.0.3`, Docker-Compose-Stacks in `/opt/stacks/`, reMarkable-Tablet für Leseroutine, News-Digest-Workflow.
 - **Repos:** `TimRudorf/docker-compose` (Stacks inkl. Jarvis selbst), `TimRudorf/dotfiles` (Shell + `~/.claude/` inkl. dieser Datei).
