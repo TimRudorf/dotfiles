@@ -29,3 +29,6 @@ __pycache__/
 # OS artifacts
 .DS_Store
 Thumbs.db
+
+# edp-ctrl Skill-Install-Marker (volatil, bumpt bei jedem `edp-ctrl update`)
+claude/skills/*/.version
