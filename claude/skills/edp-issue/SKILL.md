@@ -133,7 +133,7 @@ Vor jeder Rücklaufmeldung selbst beweisen, dass der Fix die Problematik löst b
 Gütekriterien erfüllt — **CI-grün genügt nicht** ([[tim/feedback/code-self-check-vor-review]]):
 
 > **Zwingend: Test/Verify NUR in der Dev-Umgebung.** Jede Verifikation läuft gegen den **frisch auf die
-> Dev-VM deployten** Stand — Delphi/Frontend via `/edp-develop` (`edp <projekt> compile`, baut inkl.
+> Dev-VM deployten** Stand — Delphi/Frontend via `/edp-develop` (`edp-ctrl dev compile <projekt>`, baut inkl.
 > `scss:build`), UI via `/edp-design-loop`, Backend via HTTP-POST/DB-Read-Back **gegen die VM**. Ein lokales
 > Render-Harness, ein lokaler Build oder „CI ist grün" sind **KEIN Ersatz** — nur auf der Dev-VM herrschen
 > reale Bedingungen, und nur so kann Tim die Änderung **selbst** live ansehen. Also **immer erst deployen,
