@@ -25,7 +25,7 @@ theoretisch mergebar ist (oder ein echter Blocker eine Entscheidung von Tim brau
 ## Voraussetzungen
 
 - Env: `EDP_VM_HOST`, `EDP_PROJECT_ROOT` (Mac-Setup + Fallen: `$VAULT/referenz/edp-project-root-mac.md`)
-- Tools: `gh`, `git`, `ssh`, `edp`, `playwright-cli`
+- Tools: `gh`, `git`, `ssh`, `edp-ctrl`, `playwright-cli`
 - Projekt: lokales EDP-Repo-Checkout (Pfad-Muster laut `$VAULT/referenz/edp-project-root-mac.md`)
 
 Voraussetzungen gemäß `requirement-checker` Skill validieren. Bei Fehlschlag abbrechen.
