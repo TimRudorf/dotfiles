@@ -56,7 +56,11 @@ Host, Projektpfade und Delphi-Toolchain kommen aus dem **aktiven Profil**
 - Lokales Projektverzeichnis muss ein Git-Repo mit `origin`-Remote sein.
 - Working tree muss sauber sein (uncommittete Änderungen → `compile` verweigert).
 - Branch darf nicht hinter `origin/<branch>` sein (divergente History → verweigert).
-- Branch ahead of remote → wird auto-gepusht.
+- Branch ahead of remote → wird auto-gepusht. **Aber:** ein **brandneuer** Branch, den es
+  auf `origin` noch gar nicht gibt, wird **nicht** angelegt — der Auto-Push vergleicht
+  `HEAD..origin/<branch>` und scheitert dann mit „origin/<branch> … unknown revision /
+  Commit(s) die lokal fehlen". Fix: den Branch vor dem ersten `compile` einmal explizit
+  pushen (`git push -u origin <branch>`).
 - Die VM muss gegen `origin` authentifizieren können. Für GHE über HTTPS, einmal pro VM konfigurieren:
   ```cmd
   git config --global --unset-all credential.helper
