@@ -67,6 +67,9 @@ aktuelles Repo). GHE-Host/`gh`-Aufruf-Quirks: `$VAULT/referenz/ghe-instance-quir
 - **Allen Verlinkungen folgen**, bis der Sachverhalt vollständig verstanden ist: verlinkte/Sub-Issues, PRs,
   externe URLs, und **jede erwähnte Zammad-Nummer** (`EDP#<nr>`) via `/zammad-read` (inkl. Kunden-Artikel,
   Screenshots, exakter Trigger-Beschreibung). Bei Bedarf Web-Quellen via `/defuddle`.
+- **GHE-Bildanhänge sind SSO-gated:** `/user-attachments/assets/...` liefert per `curl`/Token die Login-HTML
+  statt des Bildes (kein API-Token-Zugriff). Screenshot-Inhalt nicht so beschaffen wollen — stattdessen den
+  gemeldeten Ist-Zustand direkt in der Dev-Umgebung reproduzieren (Schritt 3) und dort visuell erfassen.
 - **Nicht benötigt:** Kommentar-Rauschen ohne Sachbezug, geschlossene unverwandte Issues.
 
 Ergebnis: präzises Verständnis von **was genau** passiert, **wo** (welcher Branch/Kunde/Stand) und **welcher
