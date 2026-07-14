@@ -16,6 +16,7 @@ Die Lerneinheit kann auf drei Wegen übergeben werden — erkenne selbst, welche
 - **Datei-Pfad**: `$ARGUMENTS` ist ein Pfad (PDF, Folien, Markdown, Skript) → Datei lesen.
 - **Vault-Note**: `$ARGUMENTS` verweist auf eine Note im jarvis-wiki → Note lesen. Vault-Root host-abhängig (Mac: `~/Documents/jarvis-wiki/`, Container: `/workspace/wiki/`).
   - **Ist `$ARGUMENTS` eine LE-`einheit-id`** (Muster `<modul-kürzel>-NN-slug`, z.B. `mf-09-theory-of-firm`): direkt `$VAULT/projekte/lernplan/*/lerneinheiten/$ARGUMENTS.md` lesen — kein vault-weites Grep nötig, der Modulordner ergibt sich aus dem Glob.
+  - **Content-als-PDF-Pattern beachten:** Viele Lernplan-LE-Notes enthalten den eigentlichen Stoff NICHT im Markdown, sondern in einem verlinkten Content-PDF (Frontmatter `le-pdf-de` / `le-pdf`, Callout „Content-PDF"). Die Note liefert dann nur Lernziele, Ablauf und Anki-Karten. In diesem Fall zwingend das PDF lesen (deutsche Fassung `le-pdf-de` bevorzugt) — die Zusammenfassung muss auf dem PDF-Inhalt basieren, nicht auf der Note allein.
   - Bleibt die Note unauffindbar oder ist `$ARGUMENTS` kein id-Muster → `grep -ril` als Fallback, sonst kurz nachfragen.
 
 Ist nichts übergeben oder unklar, welche LE gemeint ist: kurz nachfragen, welche Lerneinheit zusammengefasst werden soll (Titel/Pfad/Text).
@@ -41,11 +42,22 @@ Gib die Zusammenfassung in **genau dieser Struktur** aus. Durchgehend leicht ver
 warum es relevant ist. Kein Fachjargon ohne Erklärung.
 
 ## 🧠 Kerninhalte — leicht erklärt
-Die wichtigsten Konzepte, je eines als kurzer Absatz oder Bullet mit
-**fettem Stichwort** vorne. Jeden Begriff so erklären, als hörte man ihn
-zum ersten Mal. Analogien einsetzen, wo sie das Verständnis erleichtern.
-- **Begriff A** — was es ist, in einfachen Worten.
-- **Begriff B** — ...
+Jedes Kernkonzept als **eigener, abgesetzter Block** — NICHT als flacher
+Stichpunkt in einer langen Liste (das wird unübersichtlich, gerade dieser
+Teil ist der wichtigste). Pro Konzept dieses Muster:
+
+#### <Nr-Emoji> Begriff (englischer Term, falls EN-Modul)
+> **Kernaussage in EINEM Satz** — ggf. die Formel/Kennzahl fett.
+
+2–3 kurze Erklärsätze in einfachen Worten, als hörte man den Begriff zum
+ersten Mal; Analogie wo sie hilft.
+**Merke:** die eine Zahl/Faustregel, die hängenbleiben muss · **Beispiel:** …
+
+Zwischen den Blöcken eine Leerzeile. Faustregeln zur Darstellung:
+- Kernaussage immer als `> Blockquote` oben — das ist der Anker beim Scannen.
+- Aufzählungen (z.B. mehrere Implikationen) als eingerückte Bullets INNERHALB des Blocks, nicht als Fließtext.
+- Passt der Inhalt in ein Raster (Problem→Ursache→Lösung, Begriff→Definition), eine **Markdown-Tabelle** statt Prosa.
+- Lieber wenige, klar getrennte Blöcke (3–7) als eine dichte Bullet-Wand.
 
 ## 🧩 Einordnung ins Modul
 Wo steht diese LE im Modul? Baut sie auf etwas auf, worauf führt sie hin,
@@ -54,6 +66,7 @@ das offen sagen statt zu raten.
 ```
 
 Regeln für die Ausgabe:
+- **Klausursprache Englisch → englische Fachbegriffe mitführen.** Ist das Modul/die LE auf Englisch (Detektor: Frontmatter `klausur-sprache: EN`, englisches Content-PDF, oder erkennbar englischer Stoff), dann bei **jedem** Fachbegriff den englischen Originalterm in Klammern mitgeben — auch wenn die Erklärung auf Deutsch ist (z.B. „reibungsfreie Gravity (**frictionless gravity**)", „Grenzeffekt (**border effect**)"). Tim muss den Stoff in der Klausur auf Englisch abrufen können; die deutsche Erklärung dient nur dem Verständnis. Im Zweifel (Sprache unklar) englische Begriffe lieber mitführen als weglassen.
 - **Kein vorausgesetztes Vorwissen** — die Zielperson kennt das Thema nicht. Wenn du einen Begriff nutzt, den die LE selbst als bekannt annimmt, erkläre ihn trotzdem.
 - **Treu zur Quelle** — nichts dazu erfinden, was nicht in der LE steht. Fehlt Information für die Modul-Einordnung, das transparent machen statt zu halluzinieren.
 - **Kompakt** — im Zweifel lieber ein klares Bild als vollständige Detailtiefe; das ist eine Zusammenfassung, kein Skript-Ersatz.
