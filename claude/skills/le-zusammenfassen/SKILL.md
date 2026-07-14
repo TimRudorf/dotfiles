@@ -42,11 +42,22 @@ Gib die Zusammenfassung in **genau dieser Struktur** aus. Durchgehend leicht ver
 warum es relevant ist. Kein Fachjargon ohne Erklärung.
 
 ## 🧠 Kerninhalte — leicht erklärt
-Die wichtigsten Konzepte, je eines als kurzer Absatz oder Bullet mit
-**fettem Stichwort** vorne. Jeden Begriff so erklären, als hörte man ihn
-zum ersten Mal. Analogien einsetzen, wo sie das Verständnis erleichtern.
-- **Begriff A** — was es ist, in einfachen Worten.
-- **Begriff B** — ...
+Jedes Kernkonzept als **eigener, abgesetzter Block** — NICHT als flacher
+Stichpunkt in einer langen Liste (das wird unübersichtlich, gerade dieser
+Teil ist der wichtigste). Pro Konzept dieses Muster:
+
+#### <Nr-Emoji> Begriff (englischer Term, falls EN-Modul)
+> **Kernaussage in EINEM Satz** — ggf. die Formel/Kennzahl fett.
+
+2–3 kurze Erklärsätze in einfachen Worten, als hörte man den Begriff zum
+ersten Mal; Analogie wo sie hilft.
+**Merke:** die eine Zahl/Faustregel, die hängenbleiben muss · **Beispiel:** …
+
+Zwischen den Blöcken eine Leerzeile. Faustregeln zur Darstellung:
+- Kernaussage immer als `> Blockquote` oben — das ist der Anker beim Scannen.
+- Aufzählungen (z.B. mehrere Implikationen) als eingerückte Bullets INNERHALB des Blocks, nicht als Fließtext.
+- Passt der Inhalt in ein Raster (Problem→Ursache→Lösung, Begriff→Definition), eine **Markdown-Tabelle** statt Prosa.
+- Lieber wenige, klar getrennte Blöcke (3–7) als eine dichte Bullet-Wand.
 
 ## 🧩 Einordnung ins Modul
 Wo steht diese LE im Modul? Baut sie auf etwas auf, worauf führt sie hin,
