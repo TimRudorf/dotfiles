@@ -16,6 +16,7 @@ Die Lerneinheit kann auf drei Wegen übergeben werden — erkenne selbst, welche
 - **Datei-Pfad**: `$ARGUMENTS` ist ein Pfad (PDF, Folien, Markdown, Skript) → Datei lesen.
 - **Vault-Note**: `$ARGUMENTS` verweist auf eine Note im jarvis-wiki → Note lesen. Vault-Root host-abhängig (Mac: `~/Documents/jarvis-wiki/`, Container: `/workspace/wiki/`).
   - **Ist `$ARGUMENTS` eine LE-`einheit-id`** (Muster `<modul-kürzel>-NN-slug`, z.B. `mf-09-theory-of-firm`): direkt `$VAULT/projekte/lernplan/*/lerneinheiten/$ARGUMENTS.md` lesen — kein vault-weites Grep nötig, der Modulordner ergibt sich aus dem Glob.
+  - **Content-als-PDF-Pattern beachten:** Viele Lernplan-LE-Notes enthalten den eigentlichen Stoff NICHT im Markdown, sondern in einem verlinkten Content-PDF (Frontmatter `le-pdf-de` / `le-pdf`, Callout „Content-PDF"). Die Note liefert dann nur Lernziele, Ablauf und Anki-Karten. In diesem Fall zwingend das PDF lesen (deutsche Fassung `le-pdf-de` bevorzugt) — die Zusammenfassung muss auf dem PDF-Inhalt basieren, nicht auf der Note allein.
   - Bleibt die Note unauffindbar oder ist `$ARGUMENTS` kein id-Muster → `grep -ril` als Fallback, sonst kurz nachfragen.
 
 Ist nichts übergeben oder unklar, welche LE gemeint ist: kurz nachfragen, welche Lerneinheit zusammengefasst werden soll (Titel/Pfad/Text).
@@ -54,6 +55,7 @@ das offen sagen statt zu raten.
 ```
 
 Regeln für die Ausgabe:
+- **Klausursprache Englisch → englische Fachbegriffe mitführen.** Ist das Modul/die LE auf Englisch (Detektor: Frontmatter `klausur-sprache: EN`, englisches Content-PDF, oder erkennbar englischer Stoff), dann bei **jedem** Fachbegriff den englischen Originalterm in Klammern mitgeben — auch wenn die Erklärung auf Deutsch ist (z.B. „reibungsfreie Gravity (**frictionless gravity**)", „Grenzeffekt (**border effect**)"). Tim muss den Stoff in der Klausur auf Englisch abrufen können; die deutsche Erklärung dient nur dem Verständnis. Im Zweifel (Sprache unklar) englische Begriffe lieber mitführen als weglassen.
 - **Kein vorausgesetztes Vorwissen** — die Zielperson kennt das Thema nicht. Wenn du einen Begriff nutzt, den die LE selbst als bekannt annimmt, erkläre ihn trotzdem.
 - **Treu zur Quelle** — nichts dazu erfinden, was nicht in der LE steht. Fehlt Information für die Modul-Einordnung, das transparent machen statt zu halluzinieren.
 - **Kompakt** — im Zweifel lieber ein klares Bild als vollständige Detailtiefe; das ist eine Zusammenfassung, kein Skript-Ersatz.
