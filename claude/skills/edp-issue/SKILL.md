@@ -47,6 +47,15 @@ Voraussetzungen gemäß `requirement-checker` Skill validieren. Bei Fehlschlag a
 Aus `$ARGUMENTS` Repo und Issue-Nummer ableiten (URL-Muster `.../edp/<repo>/issues/<nr>` oder bloße Nummer +
 aktuelles Repo). GHE-Host/`gh`-Aufruf-Quirks: `$VAULT/referenz/ghe-instance-quirks.md`.
 
+**Sofort `status:active` setzen (Bearbeitungs-Signal).** Sobald Repo + Issue-Nummer feststehen und die Bearbeitung
+beginnt, am Issue das Label `status:active` setzen und **jedes andere `status:*`-Label entfernen** (aktuell nur
+`status:paused`). So sieht das Team live, dass das Issue in Umsetzung ist. Per `gh`:
+```bash
+gh issue edit <nr> --repo edp/<repo> --add-label "status:active" --remove-label "status:paused"
+```
+(`--remove-label` für ein nicht gesetztes Label ist ein No-op — unkritisch.) Read-back nicht nötig, aber bei
+Fehler transparent melden ([[tim/feedback/schreib-verify]]).
+
 **Was gebraucht wird** (Leseabfrage — beschaffen wie es am besten passt, gern per Subagent):
 
 ```json
@@ -165,6 +174,25 @@ Nicht bestanden → zurück zu Schritt 5 (bzw. 3d), iterieren bis sauber.
 **8a — PR** via `/edp-pull-request` (Titel/Body/Zammad-Notiz/Assignee `tim-rudorf`/Copilot-Reviewer per dessen
 Konvention). Im **Autonomie-Modus** den Entwurf ohne Zwischenbestätigung erstellen. `Closes/Fixes #<nr>` je
 vollständig erledigtem Issue in den Body ([[tim/feedback/pr-issues-auto-schliessen]]).
+
+**PR-Label automatisch setzen** (nach dem Erstellen, per `gh pr edit <nr> --repo edp/<repo> --add-label "..."`):
+
+- **Ein `merge:*`-Label** — nach eigener Einschätzung der Art der Änderung (bestimmt die Release-Notes-Kategorie):
+  - `merge:bug` — Fehler in einer bereits implementierten Funktion behoben (der Standard-Fall aus Schritt 3).
+  - `merge:feature` — Erweiterung/Anpassung einer bereits existierenden Funktion.
+  - `merge:core-feature` — komplett neue, große/relevante Funktion oder große Überarbeitung.
+  - `merge:design/usability` — reine Bedienbarkeits-/UI-Überarbeitung ohne neue Funktion.
+  - `merge:refactoring` — Code-Umbau ohne Funktionsänderung.
+  - `merge:tests` — ausschließlich neue automatisierte Tests für vorhandene Funktion.
+  - `merge:documentation` — nur Doku (Feature-/Projekt-/Code-Doku).
+
+  Genau **ein** passendes wählen (im Zweifel das dominante Änderungsmotiv des PRs). Bewusst reine Release-Notes-
+  Flags (`merge:no-release-note`, `merge:release-note-etc`) nur setzen, wenn das erkennbar gewollt ist.
+
+- **`todo:*`-Label** — was nach dem Merge-Ready-Zustand noch an **menschlicher** Arbeit offen ist:
+  - `todo:review` — praktisch immer setzen (Code/Konzept braucht menschliches Review über Copilot hinaus).
+  - `todo:testing` — zusätzlich setzen, wenn die Änderung sinnvoll noch einen **manuellen** Funktionstest durch
+    einen Menschen braucht (typisch bei UI-/Workflow-Änderungen; bei reinem Refactoring/Doku i.d.R. nicht nötig).
 
 **8b — CI beobachten** ([[tim/feedback/ci-nach-push-beobachten]]): Run-Status abwarten; bei Fehlschlag Logs
 ziehen, Ursache fixen (zurück zu Schritt 5, Suite grün halten), pushen, erneut prüfen.
