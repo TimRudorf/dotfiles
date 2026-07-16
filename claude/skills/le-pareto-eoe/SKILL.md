@@ -1,14 +1,14 @@
 ---
 name: le-pareto-eoe
-description: Erzeugt aus einer eoe-Lerneinheit (Modul Modern Firm, Part B / Rode — Entrepreneurship) das klausur-priorisierte Muss-Minimum nach Pareto (20/80), zugeschnitten auf die Paper-Struktur des Moduls. Anders als das generische le-pareto stellt dieser Skill den Stoff paper-für-paper als einheitliche, scanbare 4-Achsen-Karte dar (Forschungsfrage+ID · Findings+Magnitude · Mechanismus · 2 Limitationen), mit einer Topic-Landkarte vorweg und nach Klausur-Relevanz sortiert. Use when Tim das Klausur-Minimum, die Pareto-Punkte oder „was muss ich zum Bestehen können" einer eoe-Einheit (Modern Firm Part B) übersichtlich haben will. Trigger keywords - "Pareto für die eoe-LE", "Klausur-Minimum eoe", "was muss ich für Modern Firm Part B können", "le-pareto-eoe", "/le-pareto-eoe".
+description: Erzeugt aus einer eoe-Lerneinheit (Modul Modern Firm, Part B / Rode — Entrepreneurship) eine minimale, klausur-fokussierte Paper-Übersicht. Pro Paper genau drei Felder auf Deutsch (mit englischen Fachbegriffen in Klammern) — Was wurde untersucht? · Findings · Limitations (stichpunktartig). Nach Klausur-Relevanz sortiert. Bewusst knapper als das generische le-pareto oder eine 4-Achsen-Karte. Use when Tim das Klausur-Minimum, die Kernpunkte oder „was muss ich zum Bestehen können" einer eoe-Einheit (Modern Firm Part B) übersichtlich und schnell haben will. Trigger keywords - "Pareto für die eoe-LE", "Klausur-Minimum eoe", "was muss ich für Modern Firm Part B können", "le-pareto-eoe", "/le-pareto-eoe".
 argument-hint: [eoe-einheit-id | LE-Text | Datei-Pfad]
 ---
 
-# eoe-Lerneinheit — Pareto-Klausurminimum (paper-strukturiert)
+# eoe-Lerneinheit — minimale Paper-Übersicht (Klausur-Minimum)
 
-Erzeugt aus einer **eoe-Lerneinheit** (Modul *Modern Firm*, **Part B** / Rode — Entrepreneurship) das **Muss-Minimum für die Klausur** nach Pareto: die ~20 % Inhalt, die ~80 % der Punkte bringen. Zugeschnitten auf die Modul-Realität — **Part B besteht aus Paper-Fragen**, jedes Topic bündelt mehrere Paper. Zielperson: Tim, kurz vor der Klausur.
+Erzeugt aus einer **eoe-Lerneinheit** (Modul *Modern Firm*, **Part B** / Rode — Entrepreneurship) eine bewusst **minimale** Klausur-Übersicht: pro Paper genau drei Felder. Zielperson: Tim, kurz vor der Klausur, wenig Zeit.
 
-**Kern-Mehrwert gegenüber `le-pareto`:** Die Darstellung ist **paper-optimiert und übersichtlich** — eine Topic-Landkarte vorweg, dann pro Paper eine *einheitliche, immer gleich aufgebaute* 4-Achsen-Karte. Man scannt statt zu lesen; jedes Paper sieht gleich aus, also findet man schnell die Achse, die man braucht.
+**Kern-Mehrwert gegenüber `le-pareto`:** maximal knapp und paper-strukturiert. Kein Fließtext, keine 4-Achsen-Tiefe, keine Eselsbrücken-Deko — nur *Was wurde untersucht? · Findings · Limitations* je Paper, auf Deutsch mit englischen Fachbegriffen in Klammern (Klausursprache EN).
 
 ## Schritt 1: LE + Content-PDF beschaffen
 
@@ -19,111 +19,68 @@ Die eoe-Einheit kann übergeben werden als:
 
 Vault-Root host-abhängig (Mac: `~/Documents/jarvis-wiki/`, Container: `/workspace/wiki/`) — den existierenden als `$VAULT` merken.
 
-**Content-als-PDF-Pattern (bei eoe fast immer):** Der eigentliche Stoff steht NICHT im Markdown, sondern im verlinkten Content-PDF (Frontmatter `le-pdf` / `le-pdf-de`, Callout „Content-PDF"). Zwingend das PDF lesen. **Sprachwahl = Klausursprache:** eoe ist `klausur-sprache: EN` → das **englische** `le-pdf` lesen (nur bei Verständnisbedarf zusätzlich `le-pdf-de`). Tim muss die Fachbegriffe englisch abrufen können.
+**Content-als-PDF-Pattern (bei eoe fast immer):** Der eigentliche Stoff steht NICHT im Markdown, sondern im verlinkten Content-PDF (Frontmatter `le-pdf` / `le-pdf-de`, Callout „Content-PDF"). Zwingend das PDF lesen — das **englische** `le-pdf` (Klausursprache EN), damit die Fachbegriffe stimmen. Bei umfangreichen PDFs vollständig lesen (`plan-quellen-tiefenanalyse`).
 
-Bei umfangreichen PDFs den **vollständigen** Inhalt lesen (`plan-quellen-tiefenanalyse`), nicht nur den Anfang.
+## Schritt 2: Relevanz-Sortierung (leichtgewichtig)
 
-## Schritt 2: Klausur-Relevanz je Paper bestimmen (nur zur Priorisierung)
+`$VAULT/projekte/lernplan/modern-firm/mock-frageformen.md` lesen, nur um die Paper zu **sortieren**: mock-belegte + *starred* Paper zuerst, reine Distraktor-/unbelegte Paper ganz ans Ende (dort genügt ein Einzeiler). Mehr wird daraus nicht gebraucht — keine Frageform-Aufspaltung.
 
-`$VAULT/projekte/lernplan/modern-firm/mock-frageformen.md` lesen — die Ground-Truth aus allen 7 echten Mock-Klausuren. **Nur zwei Dinge** daraus ziehen, rein zur Sortierung/Gewichtung der Paper (nicht um die Darstellung nach Frageform aufzuspalten):
+## Schritt 3: Pro Paper drei Felder füllen
 
-- **Welche Paper der LE sind klausur-belegt** (in einem echten Mock aufgetaucht) bzw. *starred* → diese kommen als volle Karten, oben.
-- **Welche Paper sind nur Distraktoren / unbelegt** → gebündelt ans Ende, minimal.
+Für jedes relevante Paper aus dem Content-PDF genau diese drei Punkte destillieren:
 
-Die Frageform (MC vs. Long) ist für die Darstellung **nachrangig** — sie darf höchstens als kleines Label an der Karte stehen, steuert aber nicht den Detailgrad. Jedes relevante Paper bekommt die gleiche 4-Achsen-Karte.
+1. **Was wurde untersucht?** — Forschungsfrage + kurz Daten/Modell (**research question**, welche Methode/Sample).
+2. **Findings** — die Kernergebnisse mit den echten Zahlen, verbatim aus dem PDF.
+3. **Limitations** — stichpunktartig, die 2–3 wichtigsten (**threats to validity**).
 
-> ⚠️ Datenbasis-Vorbehalt (einmal knapp im Output nennen): Part B war nur in **2 von 7** Mocks ausgefüllt (Winter 24/25 + Summer 24), keine Musterlösungen. „Nicht im Mock gesehen" ≠ „kommt nicht dran".
+Deutsch formulieren, die stehenden Fachbegriffe in Klammern auf Englisch mitführen (z.B. „Ausgründungen (spawning)", „risikokapital-finanziert (VC-backed)", „nicht kausal (correlation only)"), weil Tim sie in der EN-Klausur so abrufen muss. Nichts erfinden — nur was im PDF steht.
 
-## Schritt 3: Die 4 Achsen als einheitliches Karten-Raster
+## Schritt 4: Ausgabe
 
-Rode prüft jedes Paper entlang **4 Achsen**. Diese vier sind das feste Gerüst jeder Paper-Karte — immer in dieser Reihenfolge, damit alle Karten gleich aussehen:
-
-1. **Forschungsfrage + Identifikation** — welche Frage, welche Daten/welches Modell, und **„is it causal?"** (bei Empirik-Papern meist *nein* → reine Korrelation, Rodes Dauer-Trap).
-2. **Findings + Magnitude** — die echten Zahlen (Richtung *und* Größenordnung), verbatim aus dem PDF.
-3. **Mechanismus / Extra-Result** — warum der Effekt zustande kommt.
-4. **2 Limitationen** — Rodes Standard-Block, oft „two criticisms".
-
-Zusatz-Zeilen pro Karte nur wenn im PDF vorhanden:
-- **⚠️ Falle** — der klassische Trap dieses Papers (invertierte Aussage, Zahlen-Verwechslung, Autor-Verwechslung wie AT94↔AT97).
-- **📊 Tabelle** — wenn das Paper eine Regressionstabelle hat: sign → `|t|>2` → magnitude (`e^β−1`, nicht β) → ökonomisch vs. statistisch.
-- **🔑 Merker** — eine Eselsbrücke, nur wenn sie trägt.
-
-## Schritt 4: Priorisieren
-
-Reihenfolge der Paper-Karten nach **Klausur-Relevanz** (aus Schritt 2): mock-belegte + starred Paper zuerst (untereinander egal ob MC oder Long), Companions/Distraktoren gebündelt ans Ende. Mut zur Lücke — unbelegte Sekundärpaper und Detailtiefe ohne Klausur-Anker kommen nicht als volle Karte.
-
-## Schritt 5: Ausgabe — Topic-Landkarte + einheitliche Paper-Karten
-
-Gib das Ergebnis in **genau dieser Struktur** aus (Deutsch als Erklärsprache, Fachbegriffe/abrufbare Antworten **englisch**, weil Klausursprache EN):
+Gib das Ergebnis in **genau dieser Struktur** aus — knapp, scanbar, ein Block je Paper, nach Relevanz sortiert:
 
 ```markdown
-# 🎯 <eoe-NN · Topic-Titel> — Klausur-Minimum (Part B, Pareto 20/80)
+# 🎯 <eoe-NN · Topic-Titel> — Klausur-Minimum (Part B)
 
-> 🧭 **Worum geht's:** <1–2 Sätze roter Faden des Topics in Alltagssprache.>
-
-**Format:** Part B = MC + 2 Long-Essays. Kein Rechnen. Klausursprache **EN**. <Datenbasis-Vorbehalt in einem Halbsatz.>
-
-## 🗺️ Landkarte — die Paper dieses Topics auf einen Blick
-
-| # | Paper | Relevanz | Kernaussage in einem Satz |
-|:-:|---|:--:|---|
-| 1 | **<Paper A>** | 🥇 belegt | <the one-liner> |
-| 2 | **<Paper B>** | 🥈 starred | <the one-liner> |
-| 3 | **<Paper C>** | 📎 companion | <the one-liner> |
-
-*Faustregel: Karten 1–2 sitzen müssen; Companions nur erkennen.*
+> 🧭 <1 Satz roter Faden des Topics.> · Klausursprache **EN**.
 
 ---
 
-## 1 · <Paper A> <Journal Jahr>   ·   🥇
-> **In einem Satz:** <die eine Kernaussage, EN.>
+## <Paper A> (<Journal Jahr>)
 
-| Achse | Inhalt |
-|---|---|
-| **① Frage + ID** | <Frage; Daten/Modell; **causal? ja/nein — warum**> |
-| **② Findings + Magnitude** | <echte Zahlen, verbatim> |
-| **③ Mechanismus** | <warum der Effekt> |
-| **④ 2 Limitationen** | (1) <…> · (2) <…> |
+**Was wurde untersucht?**
+<1–3 Sätze: Forschungsfrage + Daten/Modell, DE mit EN-Begriffen in Klammern.>
 
-⚠️ **Falle:** <der typische Trap.>
-📊 **Tabelle:** <nur wenn Table-Paper.>
-🔑 **Merker:** <nur wenn sie trägt.>
+**Findings**
+<1–3 Sätze / Bullets mit den echten Zahlen.>
+
+**Limitations**
+- <Stichpunkt>
+- <Stichpunkt>
 
 ---
 
-## 2 · <Paper B> <Journal Jahr>   ·   🥈
-> **In einem Satz:** <…>
+## <Paper B> (<Journal Jahr>)
 
-| Achse | Inhalt |
-|---|---|
-| **① Frage + ID** | <…> |
-| **② Findings + Magnitude** | <…> |
-| **③ Mechanismus** | <…> |
-| **④ 2 Limitationen** | (1) <…> · (2) <…> |
+**Was wurde untersucht?**
+…
 
-⚠️ **Falle:** <…>
+**Findings**
+…
 
----
-
-## 📎 Companions (nur erkennen, nicht ausformulieren)
-- **<Paper C> <Jahr>:** <ein Erkennungssatz + womit es in MC verwechselt wird.>
+**Limitations**
+- …
 
 ---
 
-### ✅ Self-Test (kurz vor der Klausur)
-1. <prüft Paper 1, tiefste Achse>
-2. <prüft Paper 2, Kernaussage + Falle>
-3. <prüft einen Verwechslungs-Trap>
-
-Wenn alle ja → Topic sitzt.
+## Nebenrolle (nur erkennen)
+- **<Paper C> (<Jahr>):** <ein Satz.>
 ```
 
-Regeln für die Ausgabe:
-- **Landkarte zuerst, dann einheitliche Karten** — das ist der Kern-Mehrwert. Jede Paper-Karte hat *dieselbe* 4-Achsen-Tabelle in *derselben* Reihenfolge, sodass Tim quer über die Paper dieselbe Achse vergleichen kann.
-- **Konsistenz vor Vollständigkeit** — lieber alle Karten gleich knapp als eine Karte ausufernd. Die Tabellenform zwingt zur Kürze pro Zelle (1–2 Sätze / Zahlen).
-- **Nach Relevanz sortiert** (🥇 belegt → 🥈 starred → 📎 companion), nicht nach PDF-Reihenfolge.
-- **Treu zur Quelle** — Inhalt strikt aus dem Content-PDF, Relevanz-Einstufung strikt aus mock-frageformen.md. Nichts erfinden, keine Zahl/Mock-Angabe raten.
-- **Fachbegriffe/abrufbare Antworten EN**, Erklärungen drumherum deutsch.
-- **Companions bewusst kurz** — ein Satz reicht.
+Regeln:
+- **Nur die drei Felder** pro Paper — nichts dazwischen, keine Mechanismus-Achse, keine Merksätze, keine Landkarten-Tabelle. Genau so knapp halten.
+- **Nach Relevanz sortiert** (wichtigste Paper oben), Distraktor-Paper als „Nebenrolle" mit einem Satz.
+- **Deutsch + EN-Fachbegriffe in Klammern** durchgängig.
+- **Treu zur Quelle** — Inhalt strikt aus dem Content-PDF, nichts erfinden, keine Zahl raten.
 
 Abschließend `skill-optimize` mit `le-pareto-eoe` aufrufen.
