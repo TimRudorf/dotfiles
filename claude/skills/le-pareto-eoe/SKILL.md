@@ -1,14 +1,14 @@
 ---
 name: le-pareto-eoe
-description: Erzeugt aus einer eoe-Lerneinheit (Modul Modern Firm, Part B / Rode — Entrepreneurship) eine minimale, klausur-fokussierte Paper-Übersicht. Pro Paper genau drei Felder auf Deutsch (mit englischen Fachbegriffen in Klammern) — Was wurde untersucht? · Findings · Limitations (stichpunktartig). Nach Klausur-Relevanz sortiert. Bewusst knapper als das generische le-pareto oder eine 4-Achsen-Karte. Use when Tim das Klausur-Minimum, die Kernpunkte oder „was muss ich zum Bestehen können" einer eoe-Einheit (Modern Firm Part B) übersichtlich und schnell haben will. Trigger keywords - "Pareto für die eoe-LE", "Klausur-Minimum eoe", "was muss ich für Modern Firm Part B können", "le-pareto-eoe", "/le-pareto-eoe".
+description: Erzeugt aus einer eoe-Lerneinheit (Modul Modern Firm, Part B / Rode — Entrepreneurship) eine kurze, leicht verständliche Paper-Übersicht fürs Klausur-Minimum. Pro Paper ein knapper Block in Alltagssprache (Frage · Antwort · ggf. Der Trick · Haken · ggf. Falle), deutsch formuliert mit den englischen Fachbegriffen in Klammern, weil die Klausur EN ist. Nach Klausur-Relevanz sortiert. Bewusst knapper und einfacher als das generische le-pareto oder eine 4-Achsen-Karte. Use when Tim das Klausur-Minimum, die Kernpunkte oder „was muss ich zum Bestehen können" einer eoe-Einheit (Modern Firm Part B) übersichtlich und schnell haben will. Trigger keywords - "Pareto für die eoe-LE", "Klausur-Minimum eoe", "was muss ich für Modern Firm Part B können", "le-pareto-eoe", "/le-pareto-eoe".
 argument-hint: [eoe-einheit-id | LE-Text | Datei-Pfad]
 ---
 
-# eoe-Lerneinheit — minimale Paper-Übersicht (Klausur-Minimum)
+# eoe-Lerneinheit — kurze Paper-Übersicht (Klausur-Minimum)
 
-Erzeugt aus einer **eoe-Lerneinheit** (Modul *Modern Firm*, **Part B** / Rode — Entrepreneurship) eine bewusst **minimale** Klausur-Übersicht: pro Paper genau drei Felder. Zielperson: Tim, kurz vor der Klausur, wenig Zeit.
+Erzeugt aus einer **eoe-Lerneinheit** (Modul *Modern Firm*, **Part B** / Rode — Entrepreneurship) eine bewusst **kurze und leicht verständliche** Klausur-Übersicht: pro Paper ein knapper Frage-/Antwort-Block. Zielperson: Tim, kurz vor der Klausur, wenig Zeit.
 
-**Kern-Mehrwert gegenüber `le-pareto`:** maximal knapp und paper-strukturiert. Kein Fließtext, keine 4-Achsen-Tiefe, keine Eselsbrücken-Deko — nur *Was wurde untersucht? · Findings · Limitations* je Paper, auf Deutsch mit englischen Fachbegriffen in Klammern (Klausursprache EN).
+**Kern-Mehrwert gegenüber `le-pareto`:** maximal knapp, paper-strukturiert und in **Alltagssprache** — Tim soll es beim ersten Lesen verstehen, nicht entschlüsseln. Kein Fließtext-Essay, keine 4-Achsen-Tiefe, keine Deko. Die **englischen Fachbegriffe stehen in Klammern**, damit er denselben Inhalt in der EN-Klausur wiedergeben kann.
 
 ## Schritt 1: LE + Content-PDF beschaffen
 
@@ -23,64 +23,72 @@ Vault-Root host-abhängig (Mac: `~/Documents/jarvis-wiki/`, Container: `/workspa
 
 ## Schritt 2: Relevanz-Sortierung (leichtgewichtig)
 
-`$VAULT/projekte/lernplan/modern-firm/mock-frageformen.md` lesen, nur um die Paper zu **sortieren**: mock-belegte + *starred* Paper zuerst, reine Distraktor-/unbelegte Paper ganz ans Ende (dort genügt ein Einzeiler). Mehr wird daraus nicht gebraucht — keine Frageform-Aufspaltung.
+`$VAULT/projekte/lernplan/modern-firm/mock-frageformen.md` lesen, nur um die Paper zu **sortieren**: mock-belegte + *starred* Paper zuerst, danach die supporting-Paper, ganz ans Ende die unbelegten (dort genügt ein Einzeiler unter „Nebenrolle"). Mehr wird daraus nicht gebraucht — keine Frageform-Aufspaltung.
 
-## Schritt 3: Pro Paper drei Felder füllen
+**Supporting-Paper mit MC-Beleg bekommen einen vollen Block**, keinen Einzeiler — auch wenn die Mock-Tabelle sie als Distraktor führt (z.B. Baumol 1990: Distraktor *und* konzeptionelle Grundlage des Topics). „Nebenrolle" ist nur für Paper **ohne jeden Mock-Beleg**, etwa Rodes moderne Follow-ups.
 
-Für jedes relevante Paper aus dem Content-PDF genau diese drei Punkte destillieren:
+## Schritt 3: Pro Paper den Block füllen
 
-1. **Was wurde untersucht?** — Forschungsfrage + kurz Daten/Modell (**research question**, welche Methode/Sample).
-2. **Findings** — die Kernergebnisse mit den echten Zahlen, verbatim aus dem PDF.
-3. **Limitations** — stichpunktartig, die 2–3 wichtigsten (**threats to validity**).
+Für jedes relevante Paper aus dem Content-PDF diese Felder destillieren — **in Alltagssprache, als würdest du es jemandem erklären, der das Paper nie gesehen hat**:
 
-Deutsch formulieren, die stehenden Fachbegriffe in Klammern auf Englisch mitführen (z.B. „Ausgründungen (spawning)", „risikokapital-finanziert (VC-backed)", „nicht kausal (correlation only)"), weil Tim sie in der EN-Klausur so abrufen muss. Nichts erfinden — nur was im PDF steht.
+1. **Frage** — die Forschungsfrage (**research question**) in 1–2 einfachen Sätzen. Kein Methoden-Jargon.
+2. **Antwort** — der Kernbefund **mit den echten Zahlen**, verbatim aus dem PDF.
+3. **Der Trick** *(nur wenn es einen gibt)* — die Identifikationsstrategie (**identification strategy**) in einem Satz: *warum* ist das kausal? Weglassen, wenn das Paper rein korrelativ oder anekdotisch ist.
+4. **Haken** — die 1–3 wichtigsten Limitationen (**threats to validity**), knapp.
+5. **⚠ Falle** *(nur wenn es eine gibt)* — die konkrete Klausurfalle: falscher Name, invertiertes Finding, verwechselter Begriff.
+
+Deutsch formulieren, die stehenden Fachbegriffe in Klammern auf Englisch mitführen (z.B. „Talent-Allokation (allocation of talent)", „Ausgründungen (spawning)", „risikokapital-finanziert (VC-backed)", „nicht kausal (correlation only)") — Tim muss sie in der EN-Klausur so abrufen. Nichts erfinden — nur was im PDF steht.
 
 ## Schritt 4: Ausgabe
 
-Gib das Ergebnis in **genau dieser Struktur** aus — knapp, scanbar, ein Block je Paper, nach Relevanz sortiert:
+Gib das Ergebnis in **genau dieser Struktur** aus — kurz, scanbar, ein Block je Paper, nach Relevanz sortiert:
 
 ```markdown
-# 🎯 <eoe-NN · Topic-Titel> — Klausur-Minimum (Part B)
+# <eoe-NN · Topic-Titel> in Kurzform — was jedes Paper sagt
 
-> 🧭 <1 Satz roter Faden des Topics.> · Klausursprache **EN**.
-
----
-
-## <Paper A> (<Journal Jahr>)
-
-**Was wurde untersucht?**
-<1–3 Sätze: Forschungsfrage + Daten/Modell, DE mit EN-Begriffen in Klammern.>
-
-**Findings**
-<1–3 Sätze / Bullets mit den echten Zahlen.>
-
-**Limitations**
-- <Stichpunkt>
-- <Stichpunkt>
+**Die eine Idee des Topics:** <1–2 Sätze roter Faden, in Alltagssprache.>
 
 ---
 
-## <Paper B> (<Journal Jahr>)
+## <Autoren Jahr> — <Merk-Schlagzeile in Tims Worten>
 
-**Was wurde untersucht?**
-…
+**Frage:** <1–2 einfache Sätze.>
 
-**Findings**
-…
+**Antwort:** <Kernbefund mit den echten Zahlen, die Zahlen fett.>
 
-**Limitations**
-- …
+**Der Trick:** <1 Satz Identifikation — nur wenn kausal.>
+
+**Haken:** <1–2 Sätze Limitationen.>
+
+**⚠ Falle:** <nur wenn es eine gibt.>
+
+---
+
+## <Autoren Jahr> — <Merk-Schlagzeile>
+
+**Frage:** …
+
+**Antwort:** …
+
+**Haken:** …
 
 ---
 
 ## Nebenrolle (nur erkennen)
-- **<Paper C> (<Jahr>):** <ein Satz.>
+- **<Paper> (<Jahr>):** <ein Satz.>
+
+---
+
+**Die Kette in einem Satz:** <alle Paper des Topics als eine Erzählung verbunden.>
 ```
 
 Regeln:
-- **Nur die drei Felder** pro Paper — nichts dazwischen, keine Mechanismus-Achse, keine Merksätze, keine Landkarten-Tabelle. Genau so knapp halten.
-- **Nach Relevanz sortiert** (wichtigste Paper oben), Distraktor-Paper als „Nebenrolle" mit einem Satz.
+- **Leicht verständlich schlägt vollständig.** Kurze Sätze, Alltagssprache, keine Schachtelsätze. Wenn ein Satz zweimal gelesen werden muss, umschreiben.
+- **Nur die genannten Felder** — nichts dazwischen, keine Mechanismus-Achse, keine Landkarten-Tabelle. „Der Trick" und „⚠ Falle" nur, wenn inhaltlich vorhanden.
+- **Merk-Schlagzeile pro Paper** — ein einprägsamer Halbsatz statt nur „Autor Jahr" (z.B. „engineers good, lawyers bad", „nimm dem Erfinder das Patent, und er erfindet nicht mehr").
+- **Zahlen immer mit** — die Magnituden sind der Punkte-Träger in Part B; nie „signifikant positiv" schreiben, wo die echte Zahl im PDF steht.
 - **Deutsch + EN-Fachbegriffe in Klammern** durchgängig.
+- **Kette am Ende** — ein Satz, der alle Paper des Topics zu Rodes Erzählbogen verbindet.
 - **Treu zur Quelle** — Inhalt strikt aus dem Content-PDF, nichts erfinden, keine Zahl raten.
 
 Abschließend `skill-optimize` mit `le-pareto-eoe` aufrufen.
