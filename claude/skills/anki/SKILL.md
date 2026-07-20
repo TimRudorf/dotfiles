@@ -33,16 +33,15 @@ Argument 1 ist der Sub-Command (`cards`, `status`, `setup`). Bei unbekanntem ode
 Ablauf:
 
 1. **LE lokalisieren:** `<le-slug>` → `$VAULT/projekte/lernplan/<modul>/lerneinheiten/<le-slug>.md` (Modul aus Slug-Präfix, z.B. `iti-*`/`imf-*` → `international-economics`; sonst explizit).
-2. **Durcharbeitungs-Check:** Lernablauf-Checkboxen der LE lesen — „Lernzettel-lesen"/„Mini-Essay" ✅? Wenn klar noch nicht durchgearbeitet → knapp rückfragen statt bauen (Regel: erst nach Durcharbeiten).
-3. **Plan parsen:** die nummerierten Karten im „🎴 Anki-Karten-Plan"-Block lesen:
+2. **Plan parsen:** die nummerierten Karten im „🎴 Anki-Karten-Plan"-Block lesen:
    - **Cloze** / **Overlapping Cloze** → Notetype `Cloze`, Feld `Text` = Content inkl. `{{cN::…}}`. Overlapping = **ein** Note mit mehreren `cN` (Sibling-Burying zeigt pro Review ein Blank — nicht in Einzelnotes splitten).
    - **Basic** → Notetype `Basic`, `Front`/`Back`.
    - **Image Occlusion 🖼️** → NICHT über `add_cards.sh`; via `python3 $VAULT/projekte/lernplan/anki-io-build.py` bauen (Skizze aus Content-PDF/Folie rendern → Masken → Pillow-Self-Check → `addNote` Modell „Image Occlusion"). Skizze-Quelle + Masken-Hinweis stehen in der Karte.
-4. **Dedup-Guard:** existieren schon Karten mit `tag:source::<modul>::<le-slug>`? Wenn ja (Re-Build) → erst archivieren + löschen, dann neu bauen (idempotent). Bei leerem/neuem Stand einfach neu.
-5. **Bauen (aktiv):** Karten-JSON zusammenstellen, `bash scripts/add_cards.sh Uni::<Modul> <karten.json>`. Tags **`phase::<aktive-phase>` + `source::<modul>::<le-slug>`**. Karten gehen **aktiv** ins Deck (nicht suspendiert) — Tim kennt den Stoff jetzt. **Deck-Config/new-cards-Limit wird nicht angefasst** — Tim pflegt die Presets selbst.
-6. **IO-Karten** separat via `anki-io-build.py` (gleiche Tags + Deck).
-7. **Verify (`schreib-verify`):** pre/post AnkiWeb-Sync; Read-back `findNotes`/`findCards` per `source::`-Tag gegen Plan-Soll.
-8. **LE + Tracker nachziehen:** Lernablauf-Checkbox „Karten-erstellen" ✅ + Datum, Sessions-Block, Frontmatter (`karten-notes`/`karten-ist`), Tracker-Zeile (🔄-Ampel + Karten-Count).
+3. **Dedup-Guard:** existieren schon Karten mit `tag:source::<modul>::<le-slug>`? Wenn ja (Re-Build) → erst archivieren + löschen, dann neu bauen (idempotent). Bei leerem/neuem Stand einfach neu.
+4. **Bauen (aktiv):** Karten-JSON zusammenstellen, `bash scripts/add_cards.sh Uni::<Modul> <karten.json>`. Tags **`phase::<aktive-phase>` + `source::<modul>::<le-slug>`**. Karten gehen **aktiv** ins Deck (nicht suspendiert) — Tim kennt den Stoff jetzt. **Deck-Config/new-cards-Limit wird nicht angefasst** — Tim pflegt die Presets selbst.
+5. **IO-Karten** separat via `anki-io-build.py` (gleiche Tags + Deck).
+6. **Verify (`schreib-verify`):** pre/post AnkiWeb-Sync; Read-back `findNotes`/`findCards` per `source::`-Tag gegen Plan-Soll.
+7. **LE + Tracker nachziehen:** Lernablauf-Checkbox „Karten-erstellen" ✅ + Datum, Sessions-Block, Frontmatter (`karten-notes`/`karten-ist`), Tracker-Zeile (🔄-Ampel + Karten-Count).
 
 > [!tip] Feinschliff beim Bau
 > Der Plan ist ein geprüfter Vorschlag, kein Dogma. Fällt beim Bauen eine offensichtlich zu tiefe/überzählige Karte auf (Trivia, das nie in einer 5-Sätze-5-P-Antwort landet) → kurz mit Tim abstimmen und straffen (Lean-Prinzip). Bekanntes Beispiel: `imf-08-sanctions` ist am schwersten (Karten 12–14 grenzwertig).

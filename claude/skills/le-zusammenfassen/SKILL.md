@@ -16,7 +16,7 @@ Die Lerneinheit kann auf drei Wegen übergeben werden — erkenne selbst, welche
 - **Datei-Pfad**: `$ARGUMENTS` ist ein Pfad (PDF, Folien, Markdown, Skript) → Datei lesen.
 - **Vault-Note**: `$ARGUMENTS` verweist auf eine Note im jarvis-wiki → Note lesen. Vault-Root host-abhängig (Mac: `~/Documents/jarvis-wiki/`, Container: `/workspace/wiki/`).
   - **Ist `$ARGUMENTS` eine LE-`einheit-id`** (Muster `<modul-kürzel>-NN-slug`, z.B. `mf-09-theory-of-firm`): direkt `$VAULT/projekte/lernplan/*/lerneinheiten/$ARGUMENTS.md` lesen — kein vault-weites Grep nötig, der Modulordner ergibt sich aus dem Glob.
-  - **Content-als-PDF-Pattern beachten:** Viele Lernplan-LE-Notes enthalten den eigentlichen Stoff NICHT im Markdown, sondern in einem verlinkten Content-PDF (Frontmatter `le-pdf-de` / `le-pdf`, Callout „Content-PDF"). Die Note liefert dann nur Lernziele, Ablauf und Anki-Karten. In diesem Fall zwingend das PDF lesen (deutsche Fassung `le-pdf-de` bevorzugt) — die Zusammenfassung muss auf dem PDF-Inhalt basieren, nicht auf der Note allein.
+  - **Content-als-PDF-Pattern beachten:** Viele Lernplan-LE-Notes enthalten den eigentlichen Stoff NICHT im Markdown, sondern in einem verlinkten Content-PDF (Frontmatter `le-pdf-de` / `le-pdf`, Callout „Content-PDF"). Die Note liefert dann nur Lernziele, Ablauf und Anki-Karten. In diesem Fall zwingend das PDF lesen — die Zusammenfassung muss auf dem PDF-Inhalt basieren, nicht auf der Note allein. **Sprachwahl des PDF = Modul-/Klausursprache:** Lies die Content-PDF-Fassung in der Sprache, in der das Modul unterrichtet/geprüft wird (Detektor: Frontmatter `klausur-sprache`). Bei `klausur-sprache: EN` das englische `le-pdf`, bei DE (oder fehlendem Feld) `le-pdf-de` bzw. das einzige vorhandene PDF. So arbeitest du im Original-Vokabular, das Tim in der Klausur abrufen muss — die Zusammenfassung selbst ist davon unabhängig immer deutsch (siehe Schritt 3).
   - Bleibt die Note unauffindbar oder ist `$ARGUMENTS` kein id-Muster → `grep -ril` als Fallback, sonst kurz nachfragen.
 
 Ist nichts übergeben oder unklar, welche LE gemeint ist: kurz nachfragen, welche Lerneinheit zusammengefasst werden soll (Titel/Pfad/Text).
@@ -46,7 +46,9 @@ Jedes Kernkonzept als **eigener, abgesetzter Block** — NICHT als flacher
 Stichpunkt in einer langen Liste (das wird unübersichtlich, gerade dieser
 Teil ist der wichtigste). Pro Konzept dieses Muster:
 
-#### <Nr-Emoji> Begriff (englischer Term, falls EN-Modul)
+#### <Nr-Emoji> Begriff (Fachterm in Klausursprache, falls fremdsprachiges Modul)
+
+(⚠️ Immer ein **Leerzeichen** zwischen Zahl-Emoji und Begriff — `1️⃣ Begriff`, nicht `1️⃣Begriff` — sonst klebt das Emoji am Text.)
 > **Kernaussage in EINEM Satz** — ggf. die Formel/Kennzahl fett.
 
 2–3 kurze Erklärsätze in einfachen Worten, als hörte man den Begriff zum
@@ -66,7 +68,8 @@ das offen sagen statt zu raten.
 ```
 
 Regeln für die Ausgabe:
-- **Klausursprache Englisch → englische Fachbegriffe mitführen.** Ist das Modul/die LE auf Englisch (Detektor: Frontmatter `klausur-sprache: EN`, englisches Content-PDF, oder erkennbar englischer Stoff), dann bei **jedem** Fachbegriff den englischen Originalterm in Klammern mitgeben — auch wenn die Erklärung auf Deutsch ist (z.B. „reibungsfreie Gravity (**frictionless gravity**)", „Grenzeffekt (**border effect**)"). Tim muss den Stoff in der Klausur auf Englisch abrufen können; die deutsche Erklärung dient nur dem Verständnis. Im Zweifel (Sprache unklar) englische Begriffe lieber mitführen als weglassen.
+- **Zusammenfassung IMMER auf Deutsch** — egal in welcher Sprache das Content-PDF/Modul ist. Erklärungen, Überschriften, Merksätze: durchgehend deutsch, weil das die Verständnissprache ist.
+- **Fremdsprachige Klausur → Fachbegriffe in Klammern in der Klausursprache mitführen.** Ist das Modul/die LE nicht deutsch geprüft (Detektor: Frontmatter `klausur-sprache` ≠ DE, fremdsprachiges Content-PDF, oder erkennbar fremdsprachiger Stoff), dann bei **jedem** Fachbegriff den Originalterm in Klammern mitgeben — die deutsche Erklärung bleibt, aber Tim muss den Term in der Klausur abrufen können (z.B. „reibungsfreie Gravity (**frictionless gravity**)", „Grenzeffekt (**border effect**)"). Im Zweifel (Sprache unklar) den Originalterm lieber mitführen als weglassen. Bei deutsch geprüftem Modul entfällt die Klammer.
 - **Kein vorausgesetztes Vorwissen** — die Zielperson kennt das Thema nicht. Wenn du einen Begriff nutzt, den die LE selbst als bekannt annimmt, erkläre ihn trotzdem.
 - **Treu zur Quelle** — nichts dazu erfinden, was nicht in der LE steht. Fehlt Information für die Modul-Einordnung, das transparent machen statt zu halluzinieren.
 - **Kompakt** — im Zweifel lieber ein klares Bild als vollständige Detailtiefe; das ist eine Zusammenfassung, kein Skript-Ersatz.
