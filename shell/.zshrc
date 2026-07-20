@@ -67,7 +67,14 @@ export ENABLE_LSP_TOOL=1
 # OS-specific config
 [[ -f ~/.zshrc.$(uname | tr '[:upper:]' '[:lower:]') ]] && source ~/.zshrc.$(uname | tr '[:upper:]' '[:lower:]')
 
-export LC_CTYPE=en_US.UTF-8
+# UTF-8-ctype erzwingen. macOS braucht en_US.UTF-8; auf Linux-Hosts, die diese Locale
+# nicht generiert haben (z.B. Arch/Poseidon mit nur de_DE.UTF-8), wuerde das Setzen dazu
+# fuehren, dass Tools wie manpath waehrend der Init auf die Konsole warnen ("can't set the
+# locale") — was den p10k-Instant-Prompt stoert. Daher nur setzen, wenn wirklich vorhanden;
+# sonst greift das (ebenfalls UTF-8-faehige) System-Locale.
+if (( $+commands[locale] )) && locale -a 2>/dev/null | grep -qiE '^en_US\.utf-?8$'; then
+  export LC_CTYPE=en_US.UTF-8
+fi
 
 # zoxide — muss laut eigener Prüfung als letztes initialisiert werden.
 # _ZO_DOCTOR=0 unterdrückt den False-Positive-Doctor-Check: Claude Codes
