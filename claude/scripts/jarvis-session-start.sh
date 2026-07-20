@@ -44,7 +44,8 @@ elif [ "$(uname 2>/dev/null)" = "Darwin" ]; then
   HOST="mac"
   PEER="Container + Poseidon"
 else
-  HOST="$(hostname 2>/dev/null | tr '[:upper:]' '[:lower:]')"
+  # uname -n statt hostname: auf Arch fehlt das inetutils-hostname-Binary oft
+  HOST="$(uname -n 2>/dev/null | tr '[:upper:]' '[:lower:]')"
   [ -z "$HOST" ] && HOST="linux-desktop"
   PEER="Mac + Container"
 fi
