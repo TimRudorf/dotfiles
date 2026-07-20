@@ -35,10 +35,14 @@ source "$ZSH/oh-my-zsh.sh"
 # Powerlevel10k
 [[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
 
-# NVM (lazy loaded via shell init)
+# NVM — beim Sourcen ruft nvm (via nvm_auto) `manpath` auf; auf Hosts mit
+# unvollstaendiger Locale gibt das intermittierend "can't set the locale" auf die
+# Konsole aus, was den Powerlevel10k-Instant-Prompt eine Warnung ausloest
+# ("console I/O after instant prompt preamble"). Init-Output wird daher unterdrueckt
+# (nvm richtet nur PATH/Funktionen ein — kein relevanter stdout/stderr).
 export NVM_DIR="$HOME/.nvm"
-[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
-[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"
+[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh" >/dev/null 2>&1
+[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion" >/dev/null 2>&1
 
 # fzf
 source <(fzf --zsh)
