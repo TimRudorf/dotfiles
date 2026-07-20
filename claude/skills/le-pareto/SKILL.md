@@ -46,6 +46,8 @@ Gib das Ergebnis in **genau dieser Struktur** aus — scanbar, lernfreundlich, p
 ```markdown
 # 🎯 <Modul/LE-Kürzel> — Klausur-Minimum (Pareto 20/80)
 
+> 🧭 **Worum geht's:** <1–2 Sätze, die in Alltagssprache sagen, worum die LE eigentlich geht — der rote Faden, bevor es an die Priorisierung geht. Nicht die Klausur-Sicht, sondern das Big Picture.>
+
 Das sind die **~20 % Inhalt, die ~80 % der Punkte** bringen. Wenn du nur das kannst, bestehst du <diesen Topic / diese LE>.
 
 ---
@@ -80,6 +82,7 @@ Wenn 3× ja → <Topic/LE> sitzt.
 ```
 
 Regeln für die Ausgabe:
+- **Kurzer Kontext-Einstieg zuerst** — der `🧭 Worum geht's`-Callout gibt in 1–2 Sätzen den roten Faden der LE (Big Picture, Alltagssprache), damit die Priorisierung danach eingeordnet werden kann. Knapp halten, keine Inhalte vorwegnehmen, die unten als Muss-Block kommen.
 - **Priorisierung ist der ganze Wert** — nicht alles gleich gewichten. Was die Quelle explizit als Prüfungsstoff markiert, steht ganz oben und wird als solches begründet („⭐ Warum zuerst").
 - **Output IMMER auf Deutsch** — Erklärungen, Überschriften, Merksätze durchgehend deutsch, weil das die Verständnissprache ist.
 - **Fremdsprachige Klausur → Fachbegriffe in der Klausursprache mitführen.** Ist das Modul nicht deutsch geprüft (Detektor: `klausur-sprache` ≠ DE, fremdsprachiges Content-PDF), muss Tim die Terme in der Klausursprache abrufen können — führe sie im Original mit (die abrufbare Antwort selbst ggf. komplett in der Klausursprache, wenn es eine Frei-Text-Frage ist).

@@ -130,6 +130,13 @@ Lösung so entwerfen, dass sie sich sauber in bestehenden Code fügt (kein Paral
 `$VAULT/projekte/edpweb/architektur.md` (Branching) und [[tim/feedback/issue-fix-branch-cascade-festhalten]].
 Fix-Branch von der korrekten Basis anlegen (nie auf Default-Branch direkt committen).
 
+> ⚠️ **Ein Branch-Hinweis im Issue-Titel/-Text (z.B. `[... (dev)]`) ist nur der Melde-Kontext, NICHT
+> zwangsläufig der niedrigste betroffene Branch.** Immer aktiv per `docs/GIT.md` + Cross-Branch-Prüfung
+> verifizieren, auf welchem Branch der Bug **tatsächlich zuerst** auftritt (er kann tiefer liegen als
+> gemeldet, oder sich seit Ticket-Erstellung verschoben haben). Bei Bugs heißt das: prüfen, ob das
+> fehlerhafte Verhalten auch auf `release`/`beta` reproduzierbar ist bzw. ob das betroffene Feature dort
+> überhaupt existiert — erst dann steht der Fix-Branch fest.
+
 **5b — Umsetzen.** Fix bzw. Feature implementieren. Datei-Encoding strikt beachten
 ([[tim/feedback/datei-encoding]], `$VAULT/referenz/edp-cascade-encoding-check.md`) — v.a. Win-1252 bei Delphi.
 Echte Umlaute. Regelverstöße im berührten Code mitkorrigieren ([[tim/feedback/regelverstoesse-immer-korrigieren]]).

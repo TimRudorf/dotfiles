@@ -4,7 +4,7 @@
 # in die Session.
 #
 # Wird von ~/dotfiles/claude/settings.json als hooks.SessionStart eingebunden.
-# Läuft auf Mac und im jarvis-workspace Container.
+# Läuft auf Mac, im jarvis-workspace Container und auf dem Linux-Desktop (Poseidon).
 #
 # Fail-safe: bei jedem Fehler exit 0 mit minimalem Output, damit die Session
 # trotzdem startet.
@@ -34,12 +34,19 @@ fi
 [ -z "$CWD" ] && CWD="$PWD"
 
 # --- Host-Detection ---
+# Drei Hosts: Container (jarvis-workspace), Mac, und Linux-Desktop (Poseidon).
+# Container erkennt sich via /.dockerenv oder explizit gesetztem JARVIS_HOST,
+# Mac via Darwin, jeder andere Linux-Host via Hostname (z.B. poseidon).
 if [ "${JARVIS_HOST:-}" = "container" ] || [ -f /.dockerenv ]; then
   HOST="container"
-  PEER="Mac"
-else
+  PEER="Mac + Poseidon"
+elif [ "$(uname 2>/dev/null)" = "Darwin" ]; then
   HOST="mac"
-  PEER="Container"
+  PEER="Container + Poseidon"
+else
+  HOST="$(hostname 2>/dev/null | tr '[:upper:]' '[:lower:]')"
+  [ -z "$HOST" ] && HOST="linux-desktop"
+  PEER="Mac + Container"
 fi
 
 # --- Vault-Detection (host-abhängig, siehe CLAUDE.md) ---
