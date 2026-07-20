@@ -3,3 +3,10 @@ export PATH="/opt/homebrew/opt/dotnet@9/bin:$PATH"
 
 # Mac-specific overrides for shared sops-managed .env (paths differ from VM)
 export EDP_PROJECT_ROOT="$HOME/dev/EDP"
+
+# Homebrew sbin (openvpn u.a. liegen hier, standardmaessig nicht im PATH)
+export PATH="/opt/homebrew/sbin:$PATH"
+
+# EDP-VPN (YubiKey/PKCS#11) — Direktverbindung via openvpn-CLI, da Tunnelblick
+# ohne PKCS#11 gebaut ist. Braucht sudo-PW -> YubiKey-PIN -> VPN-User/Passwort.
+alias edp-vpn='sudo /opt/homebrew/sbin/openvpn --config $HOME/edp-vpn/edp-vpn-mac.ovpn'
