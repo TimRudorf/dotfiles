@@ -14,6 +14,22 @@ plugins=(
   zsh-syntax-highlighting
 )
 
+# edp-ctrl Shell-Completions (cobra) — gecacht auf fpath, auto-regeneriert wenn das
+# Binary neuer ist als der Cache (z.B. nach `edp-ctrl update`). Muss VOR compinit laufen
+# (oh-my-zsh.sh, direkt darunter). Absoluter Pfad, da ~/.local/bin erst spaeter in PATH kommt.
+# Kein-op auf Hosts ohne edp-ctrl.
+_edpctrl_bin="$HOME/.local/bin/edp-ctrl"
+if [[ -x "$_edpctrl_bin" ]]; then
+  _edpctrl_compdir="${XDG_DATA_HOME:-$HOME/.local/share}/zsh/completions"
+  if [[ ! -s "$_edpctrl_compdir/_edp-ctrl" || "$_edpctrl_bin" -nt "$_edpctrl_compdir/_edp-ctrl" ]]; then
+    mkdir -p "$_edpctrl_compdir"
+    "$_edpctrl_bin" completion zsh > "$_edpctrl_compdir/_edp-ctrl" 2>/dev/null \
+      && rm -f "$HOME"/.zcompdump* 2>/dev/null   # Dump verwerfen, damit die Completion sofort greift
+  fi
+  fpath=("$_edpctrl_compdir" $fpath)
+  unset _edpctrl_bin _edpctrl_compdir
+fi
+
 source "$ZSH/oh-my-zsh.sh"
 
 # Powerlevel10k
