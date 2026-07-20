@@ -13,8 +13,9 @@ Tim und Jarvis teilen sich ein persistentes Wiki-Vault (Git-Repo `TimRudorf/jarv
 **Vault-Pfad ist host-abhängig:**
 - **Container** (Linux, JARVIS_HOST=container): `/workspace/wiki/`
 - **Mac** (Darwin): `/Users/timrudorf/Documents/jarvis-wiki/`
+- **Poseidon** (Arch-Linux-Desktop): `/home/tim/Documents/jarvis-wiki/`
 
-Bestimme den richtigen Pfad zu Beginn: prüfe welcher der beiden existiert (`test -d`). Speichere den als `VAULT` für die Session, alle weiteren Pfade in dieser Doku sind relativ zu diesem Root.
+Bestimme den richtigen Pfad zu Beginn: prüfe welcher der Kandidaten existiert (`test -d`). Speichere den als `VAULT` für die Session, alle weiteren Pfade in dieser Doku sind relativ zu diesem Root.
 
 **Beim Session-Start lesen:**
 1. `$VAULT/SCHEMA.md` — Konventionen, Schreibrechte, Workflows
