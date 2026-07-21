@@ -96,6 +96,7 @@ Diese Regeln gelten in **jeder** Session, jedem Skill, jeder Routine. Volltext m
 - `copy-paste-text` — Texte zum Weiterleiten in Code-Block, ohne MD-Quote-Präfixe
 - `whisper-transkription` — Tims Eigennamen still richtig schreiben, kein Hinweis
 - `notification-discipline` — `notify_user` nur bei Aktion-needed oder echter Info
+- `keine-jarvis-referenzen-extern` — nie „jarvis"/„jarvis-wiki"/Vault-Verweise in Kollegen-sichtbaren Dateien (Commits, PR-Bodies, Code-Kommentare, Repo-Descriptions, Issues, Zammad); Sachgrund inline statt Vault-Link. Vor jedem Arbeits-Repo-Write kurz `grep -i jarvis` übers Diff/den Text. Volltext: [[tim/feedback/keine-jarvis-referenzen-extern]]
 
 **Arbeitsphilosophie**
 - `pareto` — 80/20-Default, kein Over-Engineering
