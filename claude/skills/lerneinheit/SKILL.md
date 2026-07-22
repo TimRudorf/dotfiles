@@ -1,6 +1,6 @@
 ---
 name: lerneinheit
-description: User invokes /lerneinheit to start a new study session for an existing LE (Lerneinheit) OR to create a new LE skeleton. LE files live datumslos under projekte/lernplan/<modul>/lerneinheiten/<einheit-slug>.md with 4 sections (🎯 Lernziele / 📖 Stoffaufnahme / 🔄 Aktiver Abruf / 🩺 Self-Test). Skill prepares reMarkable material if applicable, appends a session entry to the LE, and returns the obsidian:// URL. Todoist-link integration happens automatically via lernplan_eval Heartbeat — NOT via this skill. Konzept-Doku - /workspace/wiki/projekte/lernplan/lerneinheit-konzept.md. Trigger keywords - lerneinheit, /lerneinheit, "ich fang an mit", "lass mich auf X vorbereiten", "session starten für".
+description: User invokes /lerneinheit to start a new study session for an existing LE (Lerneinheit) OR to create a new LE skeleton. LE files live datumslos under projekte/lernplan/<modul>/lerneinheiten/<einheit-slug>.md with 4 sections (🎯 Lernziele / 📖 Stoffaufnahme / 🔄 Aktiver Abruf / 🩺 Self-Test). Skill prepares reMarkable material if applicable, appends a session entry to the LE, and returns the obsidian:// URL. Keine Todoist-Integration — Lernsteuerung ist Tims Sache (tim/feedback/lernblock-4h-keine-lernsteuerung). Konzept-Doku - /workspace/wiki/projekte/lernplan/lerneinheit-konzept.md. Trigger keywords - lerneinheit, /lerneinheit, "ich fang an mit", "lass mich auf X vorbereiten", "session starten für".
 disable-model-invocation: true
 argument-hint: <modul-slug> <einheit-slug> [--session-min=N]
 ---
@@ -9,7 +9,7 @@ argument-hint: <modul-slug> <einheit-slug> [--session-min=N]
 
 LEs (Lerneinheiten) sind **datumslose, deadline-getriebene logische Einheiten** mit 4 Sektionen (🎯 Lernziele / 📖 Stoffaufnahme / 🔄 Aktiver Abruf / 🩺 Self-Test). Pro Modul leben sie unter `projekte/lernplan/<modul>/lerneinheiten/<einheit-slug>.md`. Eine LE kann über mehrere Tage gehen — der Skill startet eine neue Session in einer existierenden LE oder legt eine neue LE als Skelett an.
 
-**Wichtig:** Die Todoist-Integration läuft jetzt **vollautomatisch über den Heartbeat** (`lernplan_eval.py --mode=morning`) — der Heartbeat setzt den Obsidian-Deep-Link direkt im Todoist-Task, ohne diesen Skill. Dieser Skill ist nur noch für **Session-Vorbereitung** zuständig: reMarkable-Material, Lernziele-Recap, Session-Tagebuch-Eintrag.
+**Wichtig:** Es gibt **keine Todoist-Integration** mehr (Routinen-Verschlankung 2026-07-23, [[tim/feedback/lernblock-4h-keine-lernsteuerung]]) — Tim steuert seine Lerninhalte selbst und hakt direkt in den LEs ab. Dieser Skill ist für **Session-Vorbereitung** zuständig: reMarkable-Material, Lernziele-Recap, Session-Tagebuch-Eintrag.
 
 Konzept-Kontext: [[projekte/lernplan/lerneinheit-konzept]], [[projekte/lernplan/methodik]], [[projekte/lernplan/anki-konzept]].
 
@@ -121,7 +121,7 @@ Wenn ja: `status: aktiv` ins Frontmatter, `updated: <today>` setzen.
 - **Frontmatter-Schema neu** — `deadline`, `modul-phase`, `unit-typ`, `geplante-minuten` (siehe Konzept-Doku Sektion 3)
 - **4-Sektionen-Body** statt Block-Plan + Material + Self-Test — entspricht Lernforschung (Retrieval × Spacing)
 - **plan.md → strategie.md** als Referenz
-- **Todoist-Patch entfällt** — `lernplan_eval --mode=morning` setzt den Obsidian-Link beim Push direkt
+- **Todoist-Patch entfällt** — seit 2026-07-23 gibt es gar keine Todoist-Integration mehr (kein Push, kein Link-Patch)
 - **Varianten A/B/C eliminiert** — eine universelle LE-Struktur statt Stoff/Anki-Bau/Setup-Varianten. Anki-Bau ist Block 🔄 in der Stoff-LE, Setup-Mikrotasks wandern in eine separate LE mit `unit-typ: setup` ohne Modul-Phase-Bindung.
 
 ## Stolperfallen
