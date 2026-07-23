@@ -171,12 +171,16 @@ Gütekriterien erfüllt — **CI-grün genügt nicht** ([[tim/feedback/code-self
 > lokalen Ersatz-Verifikation kaschieren.
 
 > **Ausnahme — die Änderung IST eine CI-/Delivery-Workflow-Datei** (z.B. `.github/workflows/delivery.yml`
-> selbst): Die lässt sich nicht via `/edp-develop` auf die Dev-VM deployen — hier ist der `workflow_dispatch`-
-> **Testlauf** die Dev-Umgebungs-Entsprechung. `gh workflow run <workflow>.yml --ref <feature-branch>` läuft
-> für einen Feature-Branch im **Test-Modus** (kein Release-Upload, kein externer Effekt) und baut alle Assets
-> als Workflow-Artefakt zum Download + Inspektion. So real (gegen die echte Pipeline) verifizieren, dass das
-> Artefakt korrekt gebaut wird, dann nach Merge den echten Lauf abwarten. Trigger + Vor-Merge-Verifikation für
-> edpweb: `$VAULT/referenz/edpweb-delivery-pipeline.md`. (Ein PR triggert `delivery.yml` **nicht**.)
+> selbst): Die lässt sich nicht via `/edp-develop` auf die Dev-VM deployen. Verifikation dann **artefakt-basiert**:
+> `branch-build.yml` baut bei jedem Feature-Push die `.exe` als Workflow-Artefakt (kein Release); für den
+> Installer-/Delivery-Pfad die `delivery-assets`-**Workflow-Artefakte** inspizieren, danach den echten Lauf
+> nach Merge abwarten. ⚠️ **NIEMALS naiv `gh workflow run delivery.yml --ref <feature-branch>` als „harmlosen
+> Testlauf" annehmen:** der `publish`-Job legt via `delphi-release`-Action ein rollendes `<branch>-latest`-
+> **Waisen-Release** an (nur der Installer-Job ist test-gated) — das bleibt nach Merge/Branch-Delete zurück und
+> muss manuell weg. Wenn ein Dispatch nötig war: **immer** `gh release list --repo edp/<repo>` prüfen + jede
+> `<branch>-latest`-Leiche mit `gh release delete <tag> --cleanup-tag --yes` entfernen. Volltext:
+> [[tim/feedback/keine-workflow-dispatch-waisen-releases]], `$VAULT/referenz/edpweb-delivery-pipeline.md`.
+> (Ein PR triggert `delivery.yml` **nicht**.)
 
 - Bug: den in Schritt 3 etablierten Repro erneut fahren → Fehler **weg**; Regressionsnachbarn stichprobenartig ok.
 - Feature: Akzeptanzkriterien real durchspielen (Backend-POST + DB-Read-Back und/oder `/edp-design-loop` UI).
