@@ -51,7 +51,7 @@ aktuelles Repo). GHE-Host/`gh`-Aufruf-Quirks: `$VAULT/referenz/ghe-instance-quir
 beginnt, am Issue das Label `status:active` setzen und **jedes andere `status:*`-Label entfernen** (aktuell nur
 `status:paused`). So sieht das Team live, dass das Issue in Umsetzung ist. Per `gh`:
 ```bash
-gh issue edit <nr> --repo edp/<repo> --add-label "status:active" --remove-label "status:paused"
+gh issue edit <nr> -R einsatzleitsoftware.ghe.com/edp/<repo> --add-label "status:active" --remove-label "status:paused"
 ```
 (`--remove-label` für ein nicht gesetztes Label ist ein No-op — unkritisch.) Read-back nicht nötig, aber bei
 Fehler transparent melden ([[tim/feedback/schreib-verify]]).
@@ -177,7 +177,7 @@ Gütekriterien erfüllt — **CI-grün genügt nicht** ([[tim/feedback/code-self
 > nach Merge abwarten. ⚠️ **NIEMALS naiv `gh workflow run delivery.yml --ref <feature-branch>` als „harmlosen
 > Testlauf" annehmen:** der `publish`-Job legt via `delphi-release`-Action ein rollendes `<branch>-latest`-
 > **Waisen-Release** an (nur der Installer-Job ist test-gated) — das bleibt nach Merge/Branch-Delete zurück und
-> muss manuell weg. Wenn ein Dispatch nötig war: **immer** `gh release list --repo edp/<repo>` prüfen + jede
+> muss manuell weg. Wenn ein Dispatch nötig war: **immer** `gh release list -R einsatzleitsoftware.ghe.com/edp/<repo>` prüfen + jede
 > `<branch>-latest`-Leiche mit `gh release delete <tag> --cleanup-tag --yes` entfernen. Volltext:
 > [[tim/feedback/keine-workflow-dispatch-waisen-releases]], `$VAULT/referenz/edpweb-delivery-pipeline.md`.
 > (Ein PR triggert `delivery.yml` **nicht**.)
@@ -205,7 +205,7 @@ Nicht bestanden → zurück zu Schritt 5 (bzw. 3d), iterieren bis sauber.
 Konvention). Im **Autonomie-Modus** den Entwurf ohne Zwischenbestätigung erstellen. `Closes/Fixes #<nr>` je
 vollständig erledigtem Issue in den Body ([[tim/feedback/pr-issues-auto-schliessen]]).
 
-**PR-Label automatisch setzen** (nach dem Erstellen, per `gh pr edit <nr> --repo edp/<repo> --add-label "..."`):
+**PR-Label automatisch setzen** (nach dem Erstellen, per `gh pr edit <nr> -R einsatzleitsoftware.ghe.com/edp/<repo> --add-label "..."`):
 
 - **Ein `merge:*`-Label** — nach eigener Einschätzung der Art der Änderung (bestimmt die Release-Notes-Kategorie):
   - `merge:bug` — Fehler in einer bereits implementierten Funktion behoben (der Standard-Fall aus Schritt 3).
