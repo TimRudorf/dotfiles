@@ -137,6 +137,17 @@ Fix-Branch von der korrekten Basis anlegen (nie auf Default-Branch direkt commit
 > fehlerhafte Verhalten auch auf `release`/`beta` reproduzierbar ist bzw. ob das betroffene Feature dort
 > überhaupt existiert — erst dann steht der Fix-Branch fest.
 
+> **Manche Issues erfordern Änderungen in mehreren Repos** (z.B. Verbraucher/Consumer eines geteilten
+> Mechanismus umbauen, **bevor** die eigentliche edpweb-Änderung sicher ist — Beispiel: Redist-Bundle
+> #452, wo CI-Runner + edp-ctrl vor der DLL-Entfernung provisionieren mussten). Dann **pro Repo** einen
+> eigenen Branch + PR (Schritt 8) und die **Merge-Reihenfolge** explizit bestimmen und im Report (8e)
+> festhalten: ein edpweb-PR, dessen CI eine geteilte Action/Engine auf `@main`/`@dev` auscheckt (z.B.
+> `delphi-devsetup`), wird erst grün, wenn die Vorbedingungs-PRs dort gemergt sind — bis dahin ist seine
+> rote CI erwartungsgemäß (transparent dokumentieren, nicht als eigenen Fehler fehldeuten). Verifikation
+> je Repo mit dem passenden Mittel: nicht-edpweb-Consumer sind ggf. nicht via `/edp-develop` deploybar
+> (z.B. eine PowerShell-CI-Engine) → dort die Engine-Tests/den echten Stand auf der Dev-VM fahren bzw. den
+> realen CI-Lauf nach dem Merge abwarten.
+
 **5b — Umsetzen.** Fix bzw. Feature implementieren. Datei-Encoding strikt beachten
 ([[tim/feedback/datei-encoding]], `$VAULT/referenz/edp-cascade-encoding-check.md`) — v.a. Win-1252 bei Delphi.
 Echte Umlaute. Regelverstöße im berührten Code mitkorrigieren ([[tim/feedback/regelverstoesse-immer-korrigieren]]).
@@ -158,6 +169,14 @@ Gütekriterien erfüllt — **CI-grün genügt nicht** ([[tim/feedback/code-self
 > reale Bedingungen, und nur so kann Tim die Änderung **selbst** live ansehen. Also **immer erst deployen,
 > dann verifizieren**. Geht der Deploy nicht (VM down, Compile hängt) → transparent melden, nicht mit einer
 > lokalen Ersatz-Verifikation kaschieren.
+
+> **Ausnahme — die Änderung IST eine CI-/Delivery-Workflow-Datei** (z.B. `.github/workflows/delivery.yml`
+> selbst): Die lässt sich nicht via `/edp-develop` auf die Dev-VM deployen — hier ist der `workflow_dispatch`-
+> **Testlauf** die Dev-Umgebungs-Entsprechung. `gh workflow run <workflow>.yml --ref <feature-branch>` läuft
+> für einen Feature-Branch im **Test-Modus** (kein Release-Upload, kein externer Effekt) und baut alle Assets
+> als Workflow-Artefakt zum Download + Inspektion. So real (gegen die echte Pipeline) verifizieren, dass das
+> Artefakt korrekt gebaut wird, dann nach Merge den echten Lauf abwarten. Trigger + Vor-Merge-Verifikation für
+> edpweb: `$VAULT/referenz/edpweb-delivery-pipeline.md`. (Ein PR triggert `delivery.yml` **nicht**.)
 
 - Bug: den in Schritt 3 etablierten Repro erneut fahren → Fehler **weg**; Regressionsnachbarn stichprobenartig ok.
 - Feature: Akzeptanzkriterien real durchspielen (Backend-POST + DB-Read-Back und/oder `/edp-design-loop` UI).
