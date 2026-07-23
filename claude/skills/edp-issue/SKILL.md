@@ -170,6 +170,15 @@ Gütekriterien erfüllt — **CI-grün genügt nicht** ([[tim/feedback/code-self
 > dann verifizieren**. Geht der Deploy nicht (VM down, Compile hängt) → transparent melden, nicht mit einer
 > lokalen Ersatz-Verifikation kaschieren.
 
+> **Dev-VM-Verifikation — zwei wiederkehrende Vorbedingungen:**
+> 1. **Feature-Branch vorher auf `origin` pushen** (alle Repos) — der Git-Sync von `edp-ctrl dev compile`/
+>    `test` vergleicht `HEAD..origin/<branch>`; ein nie gepushter Branch bricht mit „unbekannter Commit …
+>    origin/<branch>" ab (nicht als VM-/Compile-Fehler fehldeuten).
+> 2. **edpweb-DUnitX-Suite mit `--platform Win64` fahren, nach einem vorherigen `compile`** — das
+>    Test-`.dproj` ist Win64-orientiert und reused die `..\Win64\Release`-DCUs des Haupt-Builds (inkl.
+>    CCR.Exif). Der `edp-ctrl dev test`-Default Win32 scheitert sonst mit `F2048`/`F2613`, was **nichts**
+>    mit dem Fix zu tun hat. Details: [[projekte/edpweb/dunitx-test-harness-pickup]].
+
 > **Ausnahme — die Änderung IST eine CI-/Delivery-Workflow-Datei** (z.B. `.github/workflows/delivery.yml`
 > selbst): Die lässt sich nicht via `/edp-develop` auf die Dev-VM deployen. Verifikation dann **artefakt-basiert**:
 > `branch-build.yml` baut bei jedem Feature-Push die `.exe` als Workflow-Artefakt (kein Release); für den
