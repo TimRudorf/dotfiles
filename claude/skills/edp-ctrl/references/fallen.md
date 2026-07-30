@@ -15,12 +15,12 @@ edpweb-Server zugreifen. Ergänzt die verbindlichen Regeln in `SKILL.md`.
 
 - edpweb (Pascal/FireDAC) verschluckt **4-Byte-UTF-8** (Emojis werden zu `?`).
 - In Freitextfeldern (Meldung, Bemerkung, Eintrag …) **keine Emojis**. Stattdessen
-  Marker: `[KI]`, `[BOT]`, `[Jarvis-Test]`.
+  Marker: `[KI]`, `[BOT]`, `[KI-Test]`.
 - 3-Byte-Zeichen (Umlaute ä/ö/ü/ß, typografische Anführungszeichen) sind unkritisch.
 
 ## Testdaten
 
-- Testeinsätze mit Präfix **`Jarvis-Test`** kennzeichnen — leicht identifizier- und
+- Testeinsätze mit Präfix **`KI-Test`** kennzeichnen — leicht identifizier- und
   aufräumbar.
 - **Reservierte Einsatznummern-Bereiche meiden.** Bestimmte Nummernkreise sind für
   automatisierte Auswertungen (LLM-Evals) reserviert und dürfen nicht mit manuellen
