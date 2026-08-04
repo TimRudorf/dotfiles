@@ -9,6 +9,13 @@ argument-hint: "[projekt] design-ziel"
 
 Autonome Iterations-Schleife für UI-/Design-Änderungen an EDP-Web-Projekten. Ändert Code, kompiliert via `edp-ctrl dev compile`, verifiziert das Ergebnis per `playwright-cli` und iteriert eigenständig.
 
+> **Die Design-Sprache kommt aus `edp-frontend-design` — diesen Skill zuerst laden.** Er hält den
+> verbindlichen EDP-Kanon (Fluent 2 als Vorbild, Primary abgeschafft zugunsten von Secondary, keine
+> Versalien/Sperrung, Gruppierung über Weißraum statt Linien, gedrückt = dunkler statt tiefer) und
+> verweist auf die belegten Fluent-2-Werte in `$VAULT/referenz/fluent2-design.md`. **Nicht** den
+> generischen `frontend-design:frontend-design` direkt anwenden — dessen freie Stilwahl ist hier
+> durch den Kanon ersetzt; `edp-frontend-design` zieht ihn selbst als Basis heran.
+
 ## Voraussetzungen
 
 - Env: `EDP_VM_HOST`, `EDP_PROJECT_ROOT` (exportiert in Tims `~/.zshrc` — in non-interactive bash leer; bei `requirement-checker`-Lauf ggf. mit `zsh -i -c 'echo $VAR'` gegenchecken oder Fallback `eifert-dev`/`172.16.0.2` für `EDP_VM_HOST` nutzen)
@@ -95,7 +102,7 @@ Verifikation: Nach Login ist oben rechts ein Button mit dem Muster `"<user> (<fu
 
 Pro Runde `N = 1..5`:
 
-**4a — Analyse.** Aktuellen Snapshot + Designziel gegenüberstellen. Entscheiden, welche Dateien zu ändern sind:
+**4a — Analyse.** Aktuellen Snapshot + Designziel gegenüberstellen — **gegen den Kanon aus `edp-frontend-design`**, nicht gegen den eigenen Geschmack. Typische Befunde: Versalien/Sperrung, Monospace-Überschriften, Zierlinien und dekorative Punkte, Primary-Rot als Akzent, Fokus-Glow, Card-in-Card, Inset-Schatten beim Drücken. Entscheiden, welche Dateien zu ändern sind:
 
 | Bereich        | Typische Pfade               |
 | -------------- | ---------------------------- |
@@ -153,7 +160,7 @@ playwright-cli -s=edpdesign eval "async () => {
 }"
 ```
 
-**4e — Urteil.** Screenshot und DOM-Snapshot gegen das Designziel prüfen. Drei Kategorien:
+**4e — Urteil.** Screenshot und DOM-Snapshot gegen das Designziel **und den Kanon** prüfen. Nicht „sieht gut aus" urteilen, sondern messen — die konkreten Prüfausdrücke stehen in `edp-frontend-design`, Schritt 5 (`textTransform`, `letterSpacing`, Treffer für `bs-primary`, Anzahl dekorativer Trenner, Fokus bei Maus vs. Tastatur). Screenshots in **hell und dunkel**. Drei Kategorien:
 
 - **Fertig** — Ziel erreicht → Loop verlassen, weiter zu Schritt 5.
 - **Nächster Schritt klar** — kurz notieren, was noch fehlt, und Runde `N+1` starten.

@@ -122,6 +122,12 @@ Feature-Anforderung vollständig gegen die bestehende Architektur planen: `$VAUL
 und repo-eigene Doku. Integrationspunkte, Datenmodell, Schnittstellen-/Rechte-Auswirkungen, Edge-Cases festlegen.
 Lösung so entwerfen, dass sie sich sauber in bestehenden Code fügt (kein Parallelkonzept, keine Altlast).
 
+> **Berührt das Issue eine Oberfläche, ist `edp-frontend-design` verbindlich** — auch bei einem
+> reinen „Feld ergänzen". Er hält den EDP-Kanon (Fluent 2 als Vorbild, Primary abgeschafft zugunsten
+> von Secondary, keine Versalien/Sperrung, Weißraum statt Linien) und verweist auf die belegten
+> Fluent-2-Werte in `$VAULT/referenz/fluent2-design.md`. Nicht den generischen
+> `frontend-design:frontend-design` direkt nutzen — `edp-frontend-design` zieht ihn selbst als Basis heran.
+
 ## Schritt 5: Branch + Cascade bestimmen, Fix umsetzen, Tests
 
 **5a — Repo lokal + Branch/Cascade.** Repo-Checkout gemäß `$VAULT/referenz/edp-project-root-mac.md`. Den
