@@ -61,6 +61,19 @@ Host, Projektpfade und Delphi-Toolchain kommen aus dem **aktiven Profil**
   `HEAD..origin/<branch>` und scheitert dann mit „origin/<branch> … unknown revision /
   Commit(s) die lokal fehlen". Fix: den Branch vor dem ersten `compile` einmal explizit
   pushen (`git push -u origin <branch>`).
+- **Aus einem Worktree heraus:** `compile`/`test` leiten den Branch aus `<project-root>/<projekt>` ab —
+  das ist per Default `~/dev/EDP/edpweb`, also der **Haupt-Checkout** und nicht der Worktree. Ohne
+  Gegenmaßnahme baut die VM den falschen Branch. `--project-root` erwartet das **Elternverzeichnis**, dessen
+  Kind exakt `<projekt>` heisst — ein Worktree unter `.claude/worktrees/issue-519` passt also nicht direkt.
+  Zwei Wege:
+  - Worktree gleich als `.claude/worktrees/<name>/edpweb` anlegen (so ist `w2/edpweb` im Repo entstanden),
+    dann `--project-root <…>/worktrees/<name>`.
+  - Oder einen Symlink daneben legen und den als Root übergeben:
+    ```bash
+    mkdir -p /tmp/root519 && ln -sfn <worktree-pfad> /tmp/root519/edpweb
+    edp-ctrl dev compile edpweb --project-root /tmp/root519
+    ```
+  Im Ausgabekopf steht der verwendete Branch — dort **immer** gegenprüfen, dass er stimmt.
 - Die VM muss gegen `origin` authentifizieren können. Für GHE über HTTPS, einmal pro VM konfigurieren:
   ```cmd
   git config --global --unset-all credential.helper

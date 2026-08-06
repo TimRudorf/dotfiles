@@ -126,7 +126,7 @@ git push -u origin <branch>
 gh pr create -R einsatzleitsoftware.ghe.com/edp/<repo> --title "<titel>" --body "<body>" --head <branch> --base dev
 ```
 
-**6c: Assignee & Copilot-Review**
+**6c: Assignee & Review**
 
 Assignee setzen:
 
@@ -134,17 +134,9 @@ Assignee setzen:
 gh pr edit <pr-nummer> -R einsatzleitsoftware.ghe.com/edp/<repo> --add-assignee tim-rudorf
 ```
 
-Copilot als Reviewer anfordern — **nicht** über `gh --add-reviewer` (der Handle `copilot-pull-request-reviewer` wird von `gh` still ignoriert / no-op). Stattdessen per GraphQL `requestReviews` mit der Copilot-Bot-Node-ID:
+> **Kein Copilot-Review mehr.** Seit 2026-08-06 wird Copilot **nicht** angefordert — der Bot ist auf der GHE-Instanz inaktiv (in den letzten 40 edpweb-PRs kein einziges Review), `gh pr edit --add-reviewer copilot-pull-request-reviewer` ist ein stiller No-op, und die GraphQL-Anforderung braucht eine Bot-Node-ID, die sich ohne vorhandenes Review nicht ermitteln lässt. Stattdessen den PR per **`/edp-review`** von einem skeptischen lokalen Agent prüfen lassen. Volltext: `$VAULT/tim/feedback/pr-review-lokaler-agent.md`.
 
-```bash
-H=einsatzleitsoftware.ghe.com
-PRID=$(gh api graphql --hostname "$H" -f query='query{repository(owner:"edp",name:"<repo>"){pullRequest(number:<pr-nummer>){id}}}' --jq '.data.repository.pullRequest.id')
-# Copilot-Bot-Node-ID aus einem beliebigen frueheren Review holen (stabil pro Instanz):
-CID=$(gh api graphql --hostname "$H" -f query='query{repository(owner:"edp",name:"<repo>"){pullRequest(number:<alter-pr-mit-copilot-review>){reviews(first:20){nodes{author{login __typename ... on Bot{id}}}}}}}' --jq '[.data.repository.pullRequest.reviews.nodes[].author|select(.login=="copilot-pull-request-reviewer")][0].id')
-gh api graphql --hostname "$H" -f query="mutation{requestReviews(input:{pullRequestId:\"$PRID\",botIds:[\"$CID\"],union:true}){pullRequest{id}}}"
-```
-
-`patrick-vogel` wird **nicht** automatisch als Reviewer gesetzt — nur wenn der User es ausdruecklich sagt (dann zusaetzlich `--add-reviewer patrick-vogel`).
+`patrick-vogel` wird **nicht** automatisch als Reviewer gesetzt — nur wenn der User es ausdruecklich sagt (dann `--add-reviewer patrick-vogel`).
 
 **6d: Project zuordnen (optional)**
 

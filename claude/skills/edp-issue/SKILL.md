@@ -7,7 +7,7 @@ description: >-
   Repo", eine reine edp-GHE-Issue-URL/-Nummer, "/edp-issue". Versteht das Issue inkl. aller Verlinkungen
   (auch Zammad), reproduziert Bugs automatisch, findet die Fehlerquelle, plant + implementiert den Fix bzw. das
   Feature nach den Git-/Branch-Cascade-Konventionen, ergänzt Tests, verifiziert end-to-end, hält Issue + Doku
-  aktuell, erstellt den PR und treibt ihn über CI- und Copilot-Review-Loop bis zur Mergebarkeit. Läuft voll
+  aktuell, erstellt den PR und treibt ihn über CI- und lokalen Review-Loop bis zur Mergebarkeit. Läuft voll
   autonom bis der PR mergebar ist und meldet erst dann zurück.
 argument-hint: [issue-nummer-oder-url]
 ---
@@ -216,8 +216,8 @@ Nicht bestanden → zurück zu Schritt 5 (bzw. 3d), iterieren bis sauber.
 
 ## Schritt 8: PR erstellen und bis zur Mergebarkeit treiben
 
-**8a — PR** via `/edp-pull-request` (Titel/Body/Zammad-Notiz/Assignee `tim-rudorf`/Copilot-Reviewer per dessen
-Konvention). Im **Autonomie-Modus** den Entwurf ohne Zwischenbestätigung erstellen. `Closes/Fixes #<nr>` je
+**8a — PR** via `/edp-pull-request` (Titel/Body/Zammad-Notiz/Assignee `tim-rudorf` per dessen Konvention).
+Im **Autonomie-Modus** den Entwurf ohne Zwischenbestätigung erstellen. `Closes/Fixes #<nr>` je
 vollständig erledigtem Issue in den Body ([[tim/feedback/pr-issues-auto-schliessen]]).
 
 **PR-Label automatisch setzen** (nach dem Erstellen, per `gh pr edit <nr> -R einsatzleitsoftware.ghe.com/edp/<repo> --add-label "..."`):
@@ -235,16 +235,17 @@ vollständig erledigtem Issue in den Body ([[tim/feedback/pr-issues-auto-schlies
   Flags (`merge:no-release-note`, `merge:release-note-etc`) nur setzen, wenn das erkennbar gewollt ist.
 
 - **`todo:*`-Label** — was nach dem Merge-Ready-Zustand noch an **menschlicher** Arbeit offen ist:
-  - `todo:review` — praktisch immer setzen (Code/Konzept braucht menschliches Review über Copilot hinaus).
+  - `todo:review` — praktisch immer setzen (Code/Konzept braucht menschliches Review über das lokale hinaus).
   - `todo:testing` — zusätzlich setzen, wenn die Änderung sinnvoll noch einen **manuellen** Funktionstest durch
     einen Menschen braucht (typisch bei UI-/Workflow-Änderungen; bei reinem Refactoring/Doku i.d.R. nicht nötig).
 
 **8b — CI beobachten** ([[tim/feedback/ci-nach-push-beobachten]]): Run-Status abwarten; bei Fehlschlag Logs
 ziehen, Ursache fixen (zurück zu Schritt 5, Suite grün halten), pushen, erneut prüfen.
 
-**8c — Copilot-Review-Loop:** sobald das Review da ist, per `/edp-copilot-review` abarbeiten (umsetzen oder
-begründet ablehnen, Threads beantworten + resolven; [[tim/feedback/vor-merge-reviews-pruefen]]). Nach jedem
-Code-Push reviewt Copilot neu → erneut prüfen.
+**8c — Lokales Review:** per `/edp-review` einen **skeptischen lokalen Review-Agent** auf den Diff ansetzen,
+dessen Funde selbst verifizieren und die berechtigten fixen ([[tim/feedback/pr-review-lokaler-agent]],
+[[tim/feedback/vor-merge-reviews-pruefen]]). Nach jedem Fix-Push CI erneut abwarten. **Copilot wird nicht
+mehr angefordert** — der Bot ist auf der Instanz inaktiv, `--add-reviewer` ist ein stiller No-op.
 
 **8d — Loop bis mergebar** ([[tim/feedback/pr-fertig-erst-wenn-mergebar]]): `mergeStateStatus CLEAN` /
 `mergeable MERGEABLE` als Definition of Done. Blocker (BLOCKED/BEHIND/DIRTY/roter Check) je Ursache auflösen,
