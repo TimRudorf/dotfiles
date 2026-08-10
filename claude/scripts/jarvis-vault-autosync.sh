@@ -56,10 +56,22 @@ case "$REAL_PATH" in
 esac
 
 # --- Host-Detection (für Commit-Message) ---
+# Der Name landet in JEDER Vault-Commit-Message und ist die einzige Spur, welcher
+# Rechner geschrieben hat. Solange es nur Container und Mac gab, war ein else-Zweig
+# auf "mac" richtig; seit Poseidon dazugekommen ist, war er falsch — jeder
+# Poseidon-Commit trug "via mac". Bei zwei parallel am selben Vault arbeitenden
+# Sitzungen macht das die Historie unbrauchbar, und zwar genau dann, wenn man sie
+# am dringendsten braucht.
+# uname -n statt hostname: hostname fehlt auf Arch ohne inetutils.
 if [ "${JARVIS_HOST:-}" = "container" ] || [ -f /.dockerenv ]; then
   HOST="container"
-else
+elif [ -n "${JARVIS_HOST:-}" ]; then
+  HOST="$JARVIS_HOST"
+elif [ "$(uname -s)" = "Darwin" ]; then
   HOST="mac"
+else
+  HOST="$(uname -n 2>/dev/null | cut -d. -f1 | tr '[:upper:]' '[:lower:]')"
+  [ -z "$HOST" ] && HOST="unbekannt"
 fi
 
 REL_PATH="${REAL_PATH#$REAL_VAULT/}"
