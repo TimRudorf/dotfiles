@@ -47,6 +47,7 @@ button {
 #backlight,
 #custom-clock,
 #network,
+#custom-caffeine,
 #custom-tailscale,
 #clock,
 #battery,
@@ -71,6 +72,14 @@ button {
 
 #custom-tailscale.stopped {
   color: @red;
+}
+
+#custom-caffeine.aktiv {
+  color: @yellow;
+}
+
+#custom-caffeine.inaktiv {
+  color: @overlay0;
 }
 
 #battery {
@@ -107,6 +116,7 @@ button {
 
 #backlight,
 #network,
+#custom-caffeine,
 #custom-tailscale,
 #battery,
 #power-profiles-daemon,
