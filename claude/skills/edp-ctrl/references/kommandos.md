@@ -149,13 +149,15 @@ dort trägt `dev test`, `dev compile` hat keine Anwendung zu bauen und verweist 
 - **Remote — Git ist Source-of-Truth:** `compile` verlangt einen sauberen, nicht hinter `origin`
   liegenden lokalen Baum (pusht ausstehende Commits selbst), dann VM-`reset --hard`.
 - **Frontend (nur bei vorhandener `package.json`):** `compile` baut **vor dem Dienststart** auch
-  das Frontend — `scss:build` nach `public/css/` und, falls das Projekt ein `module:build`-Skript
-  führt, die Modul-Kompilate nach `public/module/`. Beides sind **gitignore-Ausgaben**: ein
-  frischer Checkout und jedes VM-`reset --hard` haben sie nicht, und ohne den Bau laufen die
-  `<script type="module">`-Verweise der portierten Seiten in einen **404 — die Seite bleibt still
-  ohne JavaScript, während `compile` Erfolg meldet**. Führt ein Projekt kein `module:build`, wird
-  nur dieser Schritt übersprungen und das protokolliert; `compile` bleibt grün. (`dev test` baut
-  kein Frontend.)
+  das Frontend. Führt das Projekt ein **`build`**-Skript, ist das der einzige Aufruf — welche
+  Schritte dazugehören, pflegt das Projekt dann selbst in seiner `package.json`. Fehlt `build`,
+  fällt `compile` auf die Einzelschritte zurück: `scss:build` nach `public/css/` und, falls
+  deklariert, `module:build` nach `public/module/`; der Rückfall wird protokolliert. Die Ausgaben
+  sind **gitignoriert**: ein frischer Checkout und jedes VM-`reset --hard` haben sie nicht, und
+  ohne den Bau laufen die `<script type="module">`-Verweise der portierten Seiten in einen
+  **404 — die Seite bleibt still ohne JavaScript, während `compile` Erfolg meldet**. Führt ein
+  Projekt weder `build` noch `module:build`, wird nur der jeweilige Schritt übersprungen;
+  `compile` bleibt grün. (`dev test` baut kein Frontend.)
 - **Lokal — Toolchain:** `rsvars.bat`/MSBuild werden automatisch gefunden. Auf Nicht-Windows
   ist nur `remote` möglich; `local` bricht dort mit einer klaren Fehlermeldung ab.
 - **Lokal:** gebaut wird in `project-root\<projekt>` — also **im Arbeitsbaum**. `compile` verändert
