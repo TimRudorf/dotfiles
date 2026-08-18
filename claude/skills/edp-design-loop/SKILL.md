@@ -74,6 +74,19 @@ VM_IP="${VM_IP:-172.16.0.2}"
 
 `$VM_IP` wird in allen Playwright-URLs unten verwendet.
 
+## Schritt 2b: VM belegen
+
+Die Schleife kompiliert mehrfach — die VM ist für ihre ganze Dauer belegt. `dev compile` setzt
+das Projektverzeichnis per `reset --hard` auf den Branch der **aufrufenden** Session; eine
+parallele Session prüfte sonst still gegen fremden Code. Deshalb **vor** der ersten Runde
+belegen und im Cleanup (Schritt 6) freigeben — Protokoll und Begründung in `/edp-develop`:
+
+```bash
+ssh "$EDP_VM_HOST" "if exist C:\vm.lock (type C:\vm.lock & exit 1) else (echo design-loop <projekt> %DATE% %TIME% > C:\vm.lock)"
+```
+
+Ist das Lock belegt: **warten, nie überschreiben**, und dem User sagen, wer dort steht.
+
 ## Schritt 3: Baseline-Login + Screenshot
 
 Arbeitsverzeichnis bleibt im Projekt-Root — `playwright-cli` erlaubt Datei-Zugriff **nur** innerhalb des Projekt-Roots und dessen `.playwright-cli/` Unterordners. Pfade wie `/tmp/...` schlagen mit `outside allowed roots` fehl.
@@ -213,6 +226,15 @@ Optionen:
 - **Verwerfen** (`git reset --hard <startpunkt>` — nur nach expliziter Bestätigung).
 
 ## Schritt 6: Cleanup
+
+**Zuerst das VM-Lock freigeben — immer, auch wenn die Schleife abgebrochen ist oder ihr Ziel
+nicht erreicht hat.** Ein verwaistes Lock blockiert die nächste Session, bis es jemand von Hand
+wegräumt.
+
+```bash
+ssh "$EDP_VM_HOST" "del C:\vm.lock"
+```
+
 
 ```bash
 playwright-cli -s=edpdesign close
