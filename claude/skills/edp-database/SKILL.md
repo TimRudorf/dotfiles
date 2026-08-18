@@ -22,6 +22,12 @@ Voraussetzungen gemäß `requirement-checker` Skill validieren. Bei Fehlschlag a
 - **Passwort**: `EDP`
 - **Datenbank**: `EDPdb`
 
+> [!warning] Schreibende Queries brauchen die VM-Belegung
+> Lesende Queries (`SELECT`, `DESCRIBE`, `SHOW`) stören eine parallel laufende Session nicht und
+> brauchen kein Lock. Eine **schreibende** Query (`UPDATE`/`INSERT`/`DELETE`) verändert dagegen
+> den Zustand, gegen den eine andere Session gerade prüft — dann gilt das VM-Belegungsprotokoll
+> aus `/edp-develop` (`C:\vm.lock` setzen, danach immer freigeben).
+
 ## Schritt 1: Query bestimmen
 
 Aus `$ARGUMENTS` die auszuführende SQL-Query ableiten:

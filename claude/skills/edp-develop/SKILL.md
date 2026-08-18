@@ -15,6 +15,41 @@ stets aktuelle Kommando-Referenz ist `edp-ctrl dev --help` bzw. die mitgeliefert
 > Diese Schiene hat die frühere `edp()`-Shell-Funktion abgelöst. Alte Muskelgedächtnis-
 > Zuordnung: `edp <projekt> compile` → `edp-ctrl dev compile <projekt>`.
 
+## 🔴 Zuerst: die VM belegen
+
+Die Dev-VM ist die **einzige harte geteilte Ressource** zwischen parallel laufenden Sessions.
+`dev compile` setzt das Projektverzeichnis per `reset --hard` auf den Branch der **aufrufenden**
+Session und bounct den Dienst. Laufen zwei Sessions kurz nacheinander, prüft die erste
+anschliessend **gegen den Code der zweiten** — ohne Fehlermeldung, ohne Konflikt, ohne dass
+irgendwo etwas rot wird. Eine stille Fehlmessung kostet mehr als der gesparte Parallelismus.
+
+**Regel: Zu jedem Zeitpunkt hat genau eine Session VM-Hoheit.**
+
+Belegen als check-and-set in **einem** SSH-Aufruf (zwei getrennte Aufrufe haben ein Rennfenster):
+
+```bash
+ssh <vm-host> "if exist C:\vm.lock (type C:\vm.lock & exit 1) else (echo <vorgang> %DATE% %TIME% > C:\vm.lock)"
+ssh <vm-host> "del C:\vm.lock"      # IMMER, auch bei Abbruch
+```
+
+Ist das Lock belegt: **warten, nie überschreiben** — der Eintrag nennt Vorgang und Zeit. Setzen
+und Freigeben je einmal per Read-back gegenprüfen.
+
+| Kommando | Lock nötig | Grund |
+|---|---|---|
+| `dev compile` | **ja** | `reset --hard` + Dienst-Bounce + Build |
+| `dev test` | **ja** | trotz des Namens **destruktiv** — ebenfalls `reset --hard` |
+| `dev service start` / `stop` | **ja** | globaler Zustand; `EDPSrv` teilen sich alle `schn_*`-Projekte |
+| `dev log`, `dev compilelog` | **nein** | reines Lesen — und sie blockieren bis Ctrl-C, ein gehaltener Lock sperrte die VM unbegrenzt |
+| `dev service status` | nein | nur `sc query` |
+
+Der Lock ist das Netz, nicht der Plan: Bei mehreren parallelen Vorgängen vorab **genau einen**
+als VM-Vorgang benennen, alle anderen arbeiten VM-frei (Code lesen, portieren, Unit-Tests,
+Modulbau). Seriell ist nur kompilieren, Browser-Abnahme, Screenshots.
+
+⚠️ `edp-ctrl` erzwingt das **nicht** und hat kein Signal-Handling — ein Ctrl-C während `compile`
+hinterlässt ein verwaistes Lock, das die nächste Session blockiert, bis es jemand wegräumt.
+
 ## Kommandos
 
 ```bash
