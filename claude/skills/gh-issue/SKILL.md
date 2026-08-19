@@ -96,7 +96,7 @@ Testkommando **aus dem Repo ableiten**, nicht raten: `package.json`-Scripts, `.g
 `npm run typecheck`; C# → `dotnet test`; Python → `pytest`. Gibt es noch keine Suite, die erste mit dem
 Fix anlegen — nicht überspringen ([[tim/feedback/tests-dynamisch-erweitern]]).
 
-**Beim Anlegen der ersten Suite in einem TS-Repo drei Fallen:**
+**Beim Anlegen der ersten Suite in einem TS-Repo vier Fallen:**
 
 - Tests dürfen **nicht in den Produktions-Build** geraten, sonst landen sie im Image. Eigene
   `tsconfig.test.json` mit separatem `outDir`, und `*.test.ts` im Basis-`tsconfig.json` ausschließen.
@@ -106,6 +106,10 @@ Fix anlegen — nicht überspringen ([[tim/feedback/tests-dynamisch-erweitern]])
 - **Leerer Glob = Exit-Code 0.** Ein `npm test`, das keine Testdatei findet, ist grün. Ohne CI merkt das
   niemand → eine Wache davorschalten, die abbricht und sagt, was fehlt und wie man es behebt
   ([[tim/feedback/pruefungen-muessen-sich-selbst-erklaeren]]).
+- **Eine zählende Wache ist zu wenig.** Sie muss **jede** Testquelle im Workspace mit dem tatsächlich
+  Gebauten abgleichen und die fehlende Datei benennen. „Mindestens eine `.test.js` da" geht schief,
+  sobald die `tsconfig.test.json` eine explizite `files`-Liste führt: die nächste Testdatei wird nie
+  kompiliert, nie ausgeführt — und die Wache meldet weiterhin grün.
 
 ### `«VERIFY»` — gegen einen real laufenden Stand
 
@@ -120,8 +124,15 @@ Grüne Unit-Tests sind **kein** E2E-Beleg ([[tim/feedback/code-self-check-vor-re
 
 Geht beides nicht, transparent melden statt schwächer zu prüfen (Core Schritt 6).
 
-**Vergleichsmessung gegen den Stand vor der Änderung** (Beweis, dass der Fehler vorher wirklich auftrat)
-immer über `git worktree add <pfad> origin/<default> --detach` — **nie** über eine Kopie der Quellen in
+**Vor dem ersten Verifikationslauf den Bestand sichern**, wenn die Änderung Daten löschen kann (neue
+DELETE-Pfade, Migrationen, `ON DELETE CASCADE`). Beim Eintracht-Stack ist das die SQLite-Datei im Volume
+`data`; das Kommando steht in `$VAULT/referenz/eintracht-ticketapp.md`.
+
+**Vergleichsmessung gegen den Stand vor der Änderung** (Beweis, dass der Fehler vorher wirklich auftrat):
+**zuerst prüfen, ob das Deploy-Ziel noch auf dem Default-Branch läuft** — dann ist es selbst die Baseline
+und der Fehler lässt sich dort direkt messen (ein `curl` gegen den laufenden Dienst), bevor der Branch
+ausgerollt wird. Das ist der belastbarste Beleg überhaupt: echter Code, echte Daten, nichts rekonstruiert.
+Nur wenn das nicht geht, über `git worktree add <pfad> origin/<default> --detach` — **nie** über eine Kopie der Quellen in
 ein Verzeichnis außerhalb des Repos. Außerhalb fehlen `package.json` und `node_modules`; der Build kippt
 dann still in ein anderes Modulsystem oder findet seine Abhängigkeiten nicht, und der Prozess stirbt aus
 einem ganz anderen Grund als dem erwarteten. Das sieht wie eine bestätigte Baseline aus und ist keine
