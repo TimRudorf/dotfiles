@@ -142,6 +142,14 @@ Gemeinsame Patterns sind in `~/.claude/skills/.shared/` ausgelagert:
 | Datei | Inhalt |
 |-------|--------|
 | `skill-best-practices.md` | Diese Datei — Struktur, Konventionen, Checkliste |
+| `issue-workflow-core.md` | Ablauf Issue → PR, host-agnostisch; gelesen von `edp-issue` + `gh-issue` |
+
+**Muster für geteilte Abläufe:** Wenn zwei Skills denselben Ablauf mit anderen Fakten fahren, gehört der
+Ablauf **einmal** in eine `.shared/`-Datei, die an jeder variablen Stelle einen benannten **Hook**
+(`«HOST»`, `«VERIFY»`, …) setzt und sie oben als Vertrag auflistet. Die SKILL.md wird zum **Profil**, das
+jeden Hook füllt — kein Ablauf-Text wird kopiert. Vorbild: `issue-workflow-core.md`. Ob der Vertrag hält,
+ist prüfbar: jeder Hook aus dem Core braucht im Profil eine `### `«HOOK»``-Sektion, und kein Profil darf
+eine Sektion tragen, die der Core nicht kennt.
 
 ### Voraussetzungen-Validierung
 
