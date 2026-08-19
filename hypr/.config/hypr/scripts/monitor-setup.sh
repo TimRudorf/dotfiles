@@ -66,5 +66,5 @@ hyprctl reload >/dev/null
 if [[ ! -f /tmp/hypr-apps-started ]]; then
     touch /tmp/hypr-apps-started
     hyprctl dispatch exec "[workspace 1 silent] kitty"
-    hyprctl dispatch exec "[workspace 2 silent] firefox"
+    hyprctl dispatch exec "[workspace 2 silent] chromium"
 fi
