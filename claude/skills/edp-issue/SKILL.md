@@ -19,7 +19,12 @@ theoretisch mergebar ist (oder ein echter Blocker eine Entscheidung von Tim brau
 
 ## Voraussetzungen
 
-- Env: `EDP_VM_HOST`, `EDP_PROJECT_ROOT` (Mac-Setup + Fallen: `$VAULT/referenz/edp-project-root-mac.md`)
+- Env: `EDP_PROJECT_ROOT` (Mac-Setup + Fallen: `$VAULT/referenz/edp-project-root-mac.md`)
+- 🔴 **Das SSH-Ziel der Dev-VM NICHT aus `$EDP_VM_HOST` nehmen.** Die Var trägt den Maschinennamen
+  (`vm-eifert-develop`) und ist als SSH-Ziel unbrauchbar — auf Poseidon kennt `~/.ssh/config` nur
+  `eifert-dev`, und `ssh $EDP_VM_HOST` scheitert mit „Could not resolve hostname". Das sieht nach toter
+  VM aus und ist ein Konfigurationsfehler. Maßgeblich ist **immer** `edp-ctrl config get vm-host`
+  (Messung: `$VAULT/referenz/edp-devvm.md`).
 - Tools: `gh`, `git`, `ssh`, `edp-ctrl`, `playwright-cli`
 - Projekt: lokales EDP-Repo-Checkout (Pfad-Muster laut `$VAULT/referenz/edp-project-root-mac.md`)
 
@@ -106,8 +111,11 @@ Delphi = DUnitX (`$VAULT/referenz/dunitx-patterns.md`,
 ### `«VERIFY»` — ausschließlich Dev-VM
 
 > **Zwingend: Test/Verify NUR in der Dev-Umgebung.** Jede Verifikation läuft gegen den **frisch auf die
-> Dev-VM deployten** Stand — Delphi/Frontend via `/edp-develop` (`edp-ctrl dev compile <projekt>`, baut inkl.
-> `scss:build`), UI via `/edp-design-loop`, Backend via HTTP-POST/DB-Read-Back **gegen die VM**. Ein lokales
+> Dev-VM deployten** Stand — Delphi/Frontend via `/edp-develop` (`edp-ctrl dev compile <projekt>` baut
+> das **ganze** Frontend — der Ausgabekopf sagt `Frontend kompilieren (npm run build)`, das zieht
+> `scss:build` **und** `module:build` mit; ein separates `module:build` auf der VM ist überflüssig,
+> zweimal unabhängig gemessen 2026-08-19), UI via `/edp-design-loop`, Backend via
+> HTTP-POST/DB-Read-Back **gegen die VM**. Ein lokales
 > Render-Harness, ein lokaler Build oder „CI ist grün" sind **KEIN Ersatz** — nur auf der Dev-VM herrschen
 > reale Bedingungen, und nur so kann Tim die Änderung **selbst** live ansehen. Also **immer erst deployen,
 > dann verifizieren**. Geht der Deploy nicht (VM down, Compile hängt) → transparent melden, nicht mit einer
@@ -126,7 +134,7 @@ Delphi = DUnitX (`$VAULT/referenz/dunitx-patterns.md`,
   Testdaten/Lage: `$VAULT/referenz/edpweb-demo-lage-reset.md`.
 - Repo-spezifische Notes unter `$VAULT/projekte/<repo>/` und `$VAULT/referenz/` (z.B. `delphi-live-debug-vm.md`).
 
-> **Dev-VM-Verifikation — zwei wiederkehrende Vorbedingungen:**
+> **Dev-VM-Verifikation — drei wiederkehrende Vorbedingungen:**
 > 1. **Feature-Branch vorher auf `origin` pushen** (alle Repos) — der Git-Sync von `edp-ctrl dev compile`/
 >    `test` vergleicht `HEAD..origin/<branch>`; ein nie gepushter Branch bricht mit „unbekannter Commit …
 >    origin/<branch>" ab (nicht als VM-/Compile-Fehler fehldeuten).
@@ -134,6 +142,15 @@ Delphi = DUnitX (`$VAULT/referenz/dunitx-patterns.md`,
 >    Test-`.dproj` ist Win64-orientiert und reused die `..\Win64\Release`-DCUs des Haupt-Builds (inkl.
 >    CCR.Exif). Der `edp-ctrl dev test`-Default Win32 scheitert sonst mit `F2048`/`F2613`, was **nichts**
 >    mit dem Fix zu tun hat. Details: [[projekte/edpweb/dunitx-test-harness-pickup]].
+> 3. 🔴 **Nach der Lock-Freigabe KEINE Messung mehr gegen die VM — auch keine lesende.** Sobald der Lock
+>    weg ist, deployt eine andere Session sofort ihren Branch. Eine Messung danach misst fremden Code, und
+>    das Fehlerbild zeigt auf den **eigenen**: Gemessen 2026-08-19 (#413) kam nach der Freigabe ein
+>    `EINSATZNUMMER = NULL` zurück, wo eben noch der Wert stand, plus ein 500 auf dem eigenen
+>    JSON-Endpunkt — beides sah nach Regression im eigenen Fix aus und war ein anderer Stand
+>    (`git log -1` im VM-Projektverzeichnis zeigte einen fremden Branch). Also **alle** Messungen innerhalb
+>    der eigenen Lock-Zeit abschliessen; muss später nachgemessen werden, erst den Lock wieder holen und den
+>    deployten Branch gegenlesen. Reine CSS-/Farbfragen brauchen die VM ohnehin nicht — dafür
+>    `$VAULT/referenz/edpweb-testing/frontend-ui-harness.md`.
 
 > **Ausnahme — die Änderung IST eine CI-/Delivery-Workflow-Datei** (z.B. `.github/workflows/delivery.yml`
 > selbst): Die lässt sich nicht via `/edp-develop` auf die Dev-VM deployen. Verifikation dann **artefakt-basiert**:
