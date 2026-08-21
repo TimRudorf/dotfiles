@@ -280,10 +280,15 @@ ihn **nicht** — dann auf einen fremd gehaltenen Lock **nicht warten**, aber ih
 > 1. **Feature-Branch vorher auf `origin` pushen** (alle Repos) — der Git-Sync von `edp-ctrl dev compile`/
 >    `test` vergleicht `HEAD..origin/<branch>`; ein nie gepushter Branch bricht mit „unbekannter Commit …
 >    origin/<branch>" ab (nicht als VM-/Compile-Fehler fehldeuten).
-> 2. **edpweb-DUnitX-Suite mit `--platform Win64` fahren, nach einem vorherigen `compile`** — das
->    Test-`.dproj` ist Win64-orientiert und reused die `..\Win64\Release`-DCUs des Haupt-Builds (inkl.
->    CCR.Exif). Der `edp-ctrl dev test`-Default Win32 scheitert sonst mit `F2048`/`F2613`, was **nichts**
->    mit dem Fix zu tun hat. Details: [[projekte/edpweb/dunitx-test-harness-pickup]].
+> 2. **edpweb-DUnitX-Suite nach einem vorherigen `compile` fahren** — das Test-`.dproj` ist
+>    Win64-orientiert und reused die `..\Win64\Release`-DCUs des Haupt-Builds (inkl. CCR.Exif).
+>    ⚠️ **`--platform Win64` NICHT mehr von Hand setzen — hier stand jahrelang das Gegenteil.** `edp-ctrl
+>    dev test` defaultet seit Commit `4692d76` (Issue #22 / PR #23, in `dev` am 2026-07-23) selbst auf
+>    Win64, ausgeliefert ab **v0.2.0**; nachgemessen 2026-08-21 an `cmd_dev.go` und
+>    `git tag --contains`. Nur ein Uralt-Binary (≤ v0.1.1) braucht das Flag noch. Ein `F2048`/`F2613`
+>    beim Testbau bleibt trotzdem erkennenswert: es heisst Plattform-Mismatch zwischen Haupt-Build und
+>    Testbau und hat **nichts** mit dem eigenen Fix zu tun.
+>    Details: [[projekte/edpweb/dunitx-test-harness-pickup]].
 > 3. 🔴 **Nach der Lock-Freigabe KEINE Messung mehr gegen die VM — auch keine lesende.** Sobald der Lock
 >    weg ist, deployt eine andere Session sofort ihren Branch. Eine Messung danach misst fremden Code, und
 >    das Fehlerbild zeigt auf den **eigenen**: Gemessen 2026-08-19 (#413) kam nach der Freigabe ein
