@@ -397,6 +397,24 @@ ihn **nicht** — dann auf einen fremd gehaltenen Lock **nicht warten**, aber ih
 > begründen. Ein Kriterium ist eine Absicht in Kommandoform — trifft das Kommando mehr als die Absicht,
 > gewinnt die Absicht, aber nur ausgesprochen.
 
+> 🔴 **Wo ein CI-Artefakt vorliegt, wird AM ARTEFAKT gemessen — ein selbst nachgebautes Erzeugnis ist
+> eine Hypothese über den Bau, kein Beleg.** Der Delphi-Lauf hängt das Bauergebnis an
+> (`einsatzmonitor-artifacts`, `<repo>-testreport`, bei edpweb entsprechend); `gh run download <run-id>
+> -R einsatzleitsoftware.ghe.com/edp/<repo> -n <name>` holt es auf den Linux-Rechner, und dann lässt sich
+> die Frage „steckt X wirklich drin?" byte-genau beantworten, statt sie zu vermuten. Vorher an den Lauf
+> kommen: `gh api "repos/edp/<repo>/actions/runs/<id>/artifacts" --hostname einsatzleitsoftware.ghe.com`.
+>
+> ⚠️ **Und die Zeilenenden-Falle dabei kennen.** Wer Quelldateien vom Linux-Rechner auf die Dev-VM kopiert
+> (`scp`) und dort ein Werkzeug darüber laufen lässt, misst an **LF**-Eingaben. Der Windows-Läufer checkt
+> mit `autocrlf` aus und arbeitet mit **CRLF** — solange keine `.gitattributes` das festnagelt. Ein
+> Erzeugnis, das so nachgebaut wurde, weicht dann vom echten Bauergebnis ab, **ohne** dass irgendetwas
+> defekt wäre. Gemessen 2026-08-21 (`einsatzmonitor#12`): daraus wurde die falsche Aussage, eine
+> eingecheckte `.RES` sei von ihren Quellen abgedriftet — sie war aktuell, das CI-Artefakt enthielt alle
+> sieben Abschnitte bytegleich. Drei Aufrufformen desselben Werkzeugs hatten das übereinstimmend
+> „bestätigt": **alle drei bekamen dieselben LF-Eingaben**, variiert war der Aufruf statt der Grösse, an
+> der die Aussage hing ([[tim/feedback/urteil-braucht-vollstaendige-messung]]). Vor dem Variieren also
+> fragen, **welche Grösse die Aussage trägt** — und die variieren.
+
 **Repro-/Test-Wissen zuerst nutzen, nicht neu erfinden:**
 - Backend deterministisch per HTTP-Form-POST: `$VAULT/referenz/edpweb-testing/index.md` (Hub → `setup`, `auth`,
   `snippets`, `actions-<bereich>`, `db-kerntabellen`).
@@ -744,6 +762,17 @@ eigentlichen Merge dem Team/Reviewer überlassen — **nicht selbst mergen**.
 > **`Tests Found` grösser null**. Fehlt `run-tests` in der `ci.yml` bei vorhandenem `Test`-Block, wird die
 > Suite nicht einmal übersetzt und der Lauf ist grün, ohne dass ein Test lief — der stille Fall aus
 > `edp/.github` > `docs/delphi-test-standard.md`. Der Auszug gehört in den PR-Body, nicht der grüne Haken.
+
+> ⚠️ **Im Job-Log gibt es keinen Schritt namens `Build` — der Hauptbau läuft unter `TestBuild`.** Die
+> Engine fährt `Repos`, `DelphiConfig`, `BuildPackages`, `TestBuild` und (bei `run-tests: true`) `TestRun`.
+> `TestBuild` baut das **Produktivziel**, nicht ein Testprojekt: `TestBuild: 1 Ziel(e) — <projekt>` →
+> `TESTBUILD GRÜN — <projekt> gebaut!` → `<projekt>.exe (… MB) → _ci-out/`. Wer nach „Build" greppt,
+> findet nichts und schliesst falsch, der Hauptbau liefe am Pull Request nicht mit.
+>
+> Das ist deshalb wichtig, weil `delphi / build` damit **der** Nachweis für alles ist, was die Dev-VM
+> nicht bauen kann (fehlende Komponente, siehe `«VERIFY»`). Gemessen 2026-08-21 (`einsatzmonitor#12`,
+> Lauf `208747682`): die Dev-VM scheitert an TMS, der PR-Lauf baute die `einsatzmonitor.exe` trotzdem
+> vollständig — die Aussage „auf der Dev-VM nicht prüfbar" heisst also nicht „im PR nicht geprüft".
 
 ### Der Format-Bot pusht in deinen Branch
 
