@@ -295,6 +295,15 @@ Delphi = DUnitX (`$VAULT/referenz/dunitx-patterns.md`,
 **Die Dev-VM ist exklusiv zu belegen** — `compile`, `test` und `service start|stop` erst nach gesetztem
 `C:\vm.lock`, sonst misst eine parallele Session still gegen fremden Code ([[tim/feedback/dev-vm-exklusiv-belegen]]).
 
+> 🔴 **Die erste verändernde Aktion an das ERGEBNIS des check-and-set binden, nicht bloss dahinter
+> schreiben.** Der Lock-Aufruf liefert „GESETZT" oder „BELEGT" — steht die Mutation (ein `scp` auf die
+> VM, ein `compile`) unbedingt im selben Block dahinter, läuft sie auch bei „BELEGT". Gemessen
+> 2026-08-21 (`edp-ctrl#47`): der Lock war zwischen zwei Schritten von einer parallelen Session
+> übernommen worden, die Testdatei landete trotzdem im VM-Projektverzeichnis und musste sofort wieder
+> weg, bevor sie deren Bau verfälscht. Also: Lock holen, Antwort **lesen**, erst dann mutieren — und
+> bei „BELEGT" warten statt weiterzumachen. Der Lock kann auch **mitten im Lauf** den Halter wechseln;
+> vor einer späteren Messrunde neu holen, nicht auf den Stand von vorhin vertrauen.
+
 > 🔴 **Ein gescheiterter `dev compile` heisst nicht „auf der Dev-VM ist nichts messbar".** Zwei Schritte,
 > bevor daraus ein Blocker im Bericht wird:
 >
@@ -398,6 +407,15 @@ ihn **nicht** — dann auf einen fremd gehaltenen Lock **nicht warten**, aber ih
 > die VM gar nicht brauchen (unerreichbarer Host, DNS), laufen ohne Lock — dann auch nicht darauf warten.
 > Für einen **dauerhaften `sc`-Fehler** ohne Dienst-Manipulation: `sc query \\10.255.255.1` liefert
 > reproduzierbar `[SC] … FEHLER 123:`, rein lesend (gemessen 2026-08-21, `edp-ctrl#28`).
+>
+> **Den Fall auf der echten VM herstellen, ohne ein Repo anzufassen:** `gitSyncVM` fährt `fetch` +
+> `checkout -B` + `reset --hard`, aber **kein `git clean`** — eine **untrackte** Datei im
+> VM-Projektverzeichnis überlebt den Sync. Damit lässt sich eine Bedingung, die kein echtes Projekt
+> hergibt (etwa eine `package.json` ohne das gesuchte Skript), per `scp` setzen und danach wieder
+> entfernen. Vehikel ist ein **kleines Delphi-Projekt ohne Dienst** — `ServiceForProject` liefert nur
+> für `edpweb` und `server`/`schn_*` einen Namen, der Dienst-Bounce entfällt sonst. Achtung: den
+> Frontend-Bau ruft **nur `compileDelphi`** auf, ein Go-Projekt läuft nie durch diesen Pfad. Rezept
+> und Fallen: `$VAULT/projekte/edp-ctrl/architektur.md`.
 
 > **Nennt das Akzeptanzkriterium einen Bau in einem ANDEREN Repo, läuft die Verifikation dort** — nicht
 > via `/edp-develop`. Typisch bei Aufräum-Issues, deren Nachweis „das Setup baut ohne diese Datei" lautet:
@@ -476,9 +494,12 @@ Schreibaktionen auf GHE via `gh` (Host-Quirks: `$VAULT/referenz/ghe-instance-qui
 
 **Randfunde** — was am Rande auffällt, aber eine eigene Entscheidung oder Bauprobe braucht, wird
 ausgekoppelt statt mitgefixt: eigenes Issue mit Messung + `## Branch & Cascade`, Assignee `tim-rudorf`
-([[tim/feedback/randfunde-als-issue]]). ⚠️ **Erst das Issue anlegen, dann seine Nummer im Code/PR
+([[tim/feedback/randfunde-als-issue]]). ⚠️ **Erst den Vorgang anlegen, dann seine Nummer irgendwo
 referenzieren** — die nächste freie Nummer lässt sich nicht vorhersagen (Issues und PRs teilen sie sich;
-in diesem Lauf war die geratene bereits vergeben und musste per Folge-Commit korrigiert werden).
+in einem Lauf war die geratene bereits vergeben und musste per Folge-Commit korrigiert werden). Das gilt
+**in beide Richtungen**: auch eine PR-Nummer gehört nicht in einen Issue-Kommentar, bevor der PR
+existiert. Eine geratene Nummer, die zufällig stimmt, ist der schlechtere Ausgang — sie bestätigt das
+Raten (gemessen 2026-08-21, `edp-ctrl#47`). Reihenfolge: PR anlegen, Nummer lesen, dann kommentieren.
 
 > 🔴 **Vor jedem `gh issue create` den Bestand prüfen — offen UND geschlossen, Titel UND Body**
 > ([[tim/feedback/issue-bestand-pruefen-vor-neuanlage]]). Gemessen 2026-08-21 (`edp/datenbank#33`): von 14
@@ -691,6 +712,20 @@ Normalfall, sobald der PR Markdown oder YAML berührt hat.
   nehmen und **prettier erneut darüberlaufen lassen**; sonst kämpft man gegen den Formatierer.
 - Danach die Suite erneut fahren: der Rebase kann Änderungen aus zwei Commits zusammenführen, die einzeln
   grün waren.
+
+## Zusatz zu Core-Schritt 8c (lokales Review)
+
+> 🔴 **Ändert die Review-Runde das Verhalten, sind die im PR-Body zitierten Belege selbst Träger einer
+> überholten Aussage.** Ein Ausgabe-Block, ein Log-Auszug, eine Mutationstabelle im PR-Body war eine
+> Messung am Stand von vorhin — nach einem Fix-Push stimmt sie womöglich nicht mehr, und niemand sieht
+> es ihr an. Nach jeder Review-Runde deshalb prüfen, welche zitierten Belege der Fix ungültig gemacht
+> hat, und sie **neu messen** statt sie stehen zu lassen ([[tim/feedback/korrektur-erreicht-alle-traeger]]).
+> Gemessen 2026-08-21 (`edp-ctrl#47`): das Review änderte den Meldungstext, der PR-Body zitierte weiter
+> die alte Zeile aus dem VM-Lauf — der Nachweis wurde auf der Dev-VM wiederholt und ersetzt.
+>
+> Die Review-Notiz an den PR nennt **auch die Funde ohne Befund** („geprüft und in Ordnung") — sie sagt
+> dem menschlichen Reviewer, was er *nicht* mehr selbst durchgehen muss, und ist damit die halbe
+> Ersparnis.
 
 ## Zusatz zu Core-Schritt 4 (Feature)
 
