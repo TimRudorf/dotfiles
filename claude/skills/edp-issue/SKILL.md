@@ -242,6 +242,43 @@ Delphi = DUnitX (`$VAULT/referenz/dunitx-patterns.md`,
 > ist so eine frisch geschriebene Funktion verschwunden. Stattdessen **vor** der Mutationsreihe committen
 > oder die Datei nach `$CLAUDE_JOB_DIR/tmp` kopieren und von dort zurückspielen.
 
+> 🔴 **„Wird es rot?" ist nur die halbe Mutationsprobe — und ein rot gewordener Lauf belegt oft etwas
+> anderes als die eigene Änderung.** Zwei Lücken, beide am 2026-08-21 in `installer#94` bezahlt:
+>
+> 1. **Rot ≠ mein Test war es.** Das auskommentierte Tag-Muster machte die Suite rot (12 Tests) — aber
+>    ausschliesslich über vorbestehende **funktionale** Tests; die frisch verschärfte Zusicherung blieb
+>    grün und hätte die Mutation nie bemerkt. Die Probe „hat bestanden" und bewies nichts. Also nicht nur
+>    die **Zahl** roter Tests lesen, sondern ihre **Namen** — und dabei prüfen, ob die eigene Zusicherung
+>    darunter ist.
+> 2. **Eine Verschärfung kann eine neue Falsch-Rot-Klasse einführen.** Aus `> 0` wurde `-Be n`; damit
+>    wurde eine bis dahin folgenlose Ungenauigkeit wirksam (der Helfer zählte Treffer in Kommentaren mit)
+>    und ein harmloser erklärender Kommentar färbte die CI rot. Die Probe muss deshalb **in beide
+>    Richtungen** laufen: *wird es rot, wenn der Gegenstand kaputtgeht?* **und** *bleibt es grün, wenn
+>    jemand etwas Harmloses tut?*
+>
+> Beides entscheidet sich erst im **A/B gegen die Fassung vor der Änderung**: dieselbe Mutation einmal
+> gegen den alten und einmal gegen den neuen Test fahren. Nur der Unterschied zwischen beiden Läufen ist
+> der Beleg — ein einzelner roter Lauf ist keiner. Die Tabelle mit beiden Spalten gehört in den PR-Body.
+>
+> Verwandt, eine Ebene höher: [[tim/feedback/pruefungen-muessen-sich-selbst-erklaeren]] — dort auch der
+> Befund, dass der **Behebungsvorschlag** einer Prüfung selbst ein Prüfgegenstand ist. Im selben Lauf
+> riet die Meldung, „die erwartete Anzahl anzupassen"; `Anzahl = 0` war gültig und machte die Prüfung
+> lautlos wirkungslos. Den eigenen Rat also durchspielen, als befolge ihn jemand wörtlich und faul — und
+> den entwertenden Randfall nicht nur in Prosa ausschließen, sondern **hart** (eigene Zusicherung auf
+> die Konfiguration).
+
+> ⚠️ **Die Vorfassung für das A/B byte-genau zurückspielen — und die Testanzahl mitlesen.**
+> `git show <ref>:<datei> | Set-Content -Encoding utf8BOM` erzeugt einen **doppelten BOM**: `git show`
+> gibt den Blob unverändert aus, der Writer setzt einen zweiten davor. Das zweite Zeichen steht dann vor
+> dem ersten Token, Pester findet **keinen einzigen Test** und meldet `Total=0 Failed=0` — was jede
+> Auswertung auf `Failed -eq 0` als **grün** liest. Gemessen 2026-08-21 (`installer#94`): der „grüne"
+> A/B-Lauf hatte gar nichts gemessen.
+>
+> Richtig: `git show "<ref>:<pfad>" > <datei>` (byte-genau umleiten, Anführungszeichen wegen zsh) und
+> `head -c 6 <datei> | xxd` gegenlesen. Und **jede** Auswertung eines Testlaufs prüft `TotalCount`
+> zusätzlich zu `FailedCount` — ein Lauf ohne Tests ist kein grüner Lauf. Weitere Fälle derselben Bauart:
+> `$VAULT/referenz/stille-messfallen-shell-git.md`.
+
 ### `«VERIFY»` — ausschließlich Dev-VM
 
 > **Zwingend: Test/Verify NUR in der Dev-Umgebung.** Jede Verifikation läuft gegen den **frisch auf die
@@ -305,6 +342,19 @@ ihn **nicht** — dann auf einen fremd gehaltenen Lock **nicht warten**, aber ih
 > 2026-08-21: `#15` verlangte `Build-Installer.ps1 -Produkt monitor -Kanal dev`, der Parameter heisst aber
 > `-Channel` — so notiert läuft der geforderte Nachweis nicht. Die Abweichung gehört als Kommentar ans Issue,
 > damit der Nächste nicht dasselbe sucht.
+>
+> 🔴 **Und prüfen, ob das Kriterium überhaupt erfüllbar ist — manche sind es wörtlich nicht.** Gemessen
+> 2026-08-21 (`installer#94`): gefordert war, dass `grep -rn 'Produktliste' --include='*.md' --include='*.yml'
+> --include='*.ps1' .` nach dem Löschen von `tests/Produktliste.Tests.ps1` **keinen Treffer** liefert. Der
+> Suchbegriff ist aber zugleich ein gewöhnliches deutsches Wort und stand zweimal in völlig korrekter Prosa
+> („die Workflows lesen die Produktliste aus dem Verzeichnis"). Wörtlich erfüllbar wäre das Kriterium nur,
+> indem man richtigen Text verstümmelt.
+>
+> In so einem Fall **nicht** stillschweigend das Kriterium umdeuten und auch nicht den Code danach biegen:
+> die engere, tatsächlich gemeinte Fassung ausführen (hier `grep -rn 'Produktliste\.Tests'`), die
+> verbleibenden Treffer **einzeln zitieren** und die gewählte Lesart in **Issue-Kommentar und PR-Body**
+> begründen. Ein Kriterium ist eine Absicht in Kommandoform — trifft das Kommando mehr als die Absicht,
+> gewinnt die Absicht, aber nur ausgesprochen.
 
 **Repro-/Test-Wissen zuerst nutzen, nicht neu erfinden:**
 - Backend deterministisch per HTTP-Form-POST: `$VAULT/referenz/edpweb-testing/index.md` (Hub → `setup`, `auth`,
