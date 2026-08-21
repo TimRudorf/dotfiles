@@ -246,6 +246,16 @@ ihn **nicht** — dann auf einen fremd gehaltenen Lock **nicht warten**, aber ih
 >    deployten Branch gegenlesen. Reine CSS-/Farbfragen brauchen die VM ohnehin nicht — dafür
 >    `$VAULT/referenz/edpweb-testing/frontend-ui-harness.md`.
 
+> **Ist das Repo unter Prüfung `edp-ctrl` selbst, dreht sich `/edp-develop` um.** Das Werkzeug *steuert*
+> die Dev-VM, es läuft nicht auf ihr — „auf die VM deployen" gibt es hier nicht. Verifikation stattdessen:
+> Binary lokal bauen (`go build -o <tmp>/edp-ctrl-fix .`) und **gegen die echte VM** fahren. Der stärkste
+> Beleg ist ein **A/B im selben Lock-Fenster**: altes Binary aus `origin/<base>` und neues direkt
+> hintereinander mit demselben Kommando messen. Über zwei Lock-Fenster hinweg ist ein A/B wertlos, sobald
+> eine parallele Session dazwischen deployt ([[tim/feedback/dev-vm-exklusiv-belegen]]). Fehlerpfade, die
+> die VM gar nicht brauchen (unerreichbarer Host, DNS), laufen ohne Lock — dann auch nicht darauf warten.
+> Für einen **dauerhaften `sc`-Fehler** ohne Dienst-Manipulation: `sc query \\10.255.255.1` liefert
+> reproduzierbar `[SC] … FEHLER 123:`, rein lesend (gemessen 2026-08-21, `edp-ctrl#28`).
+
 > **Nennt das Akzeptanzkriterium einen Bau in einem ANDEREN Repo, läuft die Verifikation dort** — nicht
 > via `/edp-develop`. Typisch bei Aufräum-Issues, deren Nachweis „das Setup baut ohne diese Datei" lautet:
 > dann `edp/installer` auf der Dev-VM auschecken und `scripts\Build-Installer.ps1` fahren. Werkzeugbeschaffung,
@@ -397,6 +407,11 @@ eigentlichen Merge dem Team/Reviewer überlassen — **nicht selbst mergen**.
 > die zu entfernenden Dateien lagen seit einer Stunde nach Issue-Erstellung auf keinem Kanal mehr, und die
 > im Issue offengelassene Entscheidung war faktisch schon gefallen. Wer den Body als Auftrag abarbeitet,
 > baut hier Änderungen, die es nicht mehr braucht, und übersieht den einen wirklich offenen Punkt.
+>
+> Das gilt auch für **Zahlen** im Issue: eine genannte Wartezeit/Dauer ist eine Messung unter *einer*
+> Fehlerart, nicht die Obergrenze. Gemessen 2026-08-21 (`edp-ctrl#28`): der Titel nannte einen 41-s-Hänger
+> — bei nicht routbarer Ziel-IP waren es **251 s**, weil je Versuch der volle `ConnectTimeout` lief. Die
+> teuerste Variante derselben Fehlerklasse selbst suchen, bevor man Aufwand oder Dringlichkeit einschätzt.
 >
 > Ergebnis der Nachmessung gehört als Kommentar ans Issue (Kriterium für Kriterium: erledigt / offen, je
 > mit Beleg) — das ist zugleich das Gerüst für den späteren PR-Body.
