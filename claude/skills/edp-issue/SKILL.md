@@ -534,6 +534,28 @@ No-op ([[tim/feedback/pr-review-lokaler-agent]]).
 Definition of Done ist der **mergebare** Zustand ([[tim/feedback/pr-fertig-erst-wenn-mergebar]]). Den
 eigentlichen Merge dem Team/Reviewer überlassen — **nicht selbst mergen**.
 
+> 🔴 **Sonderfall: ein Klammer-Vorgang, der per Fanout in Einzel-Issues aufgelöst und dann geschlossen
+> wird.** Manche Vorgänge ändern selbst keine Datei — sie halten eine org-weite Messung, eine Reihenfolge
+> und eine Entscheidung fest, und die Arbeit liegt in N anderen Repos. Wird so einer geschlossen, gilt:
+>
+> 1. **Jedes Akzeptanzkriterium einzeln daraufhin prüfen, ob ein Einzelvorgang es trägt.** Das ist der
+>    Schritt, der leicht ausfällt, weil die Repo-Liste vollständig aussieht. Gemessen 2026-08-21
+>    (`edp-runtime-redist#15`): drei der vier Kriterien wanderten sauber in die acht Repo-Vorgänge, das
+>    vierte — eine Prüfung, die anschlägt, wenn eine Datei wieder in einen Baum kommt — trug **keiner**.
+>    Es hätte mit dem Schliessen aufgehört zu existieren. Ein solches Kriterium gehört in das Repo, dessen
+>    Mechanismus es prüft (hier `edp-runtime-redist#28`), nicht in eines der Konsumenten-Repos.
+> 2. **Was bewusst NICHT weitergegeben wird, im Abschlusskommentar benennen — mit Grund.** Ein Vorbehalt,
+>    der nur wegfällt, gilt später als übersehen. Prüffrage: ändert dieser offene Punkt die *Handlung* oder
+>    nur die *Dringlichkeit*? Nur die Dringlichkeit → benennen und der Priorisierung überlassen.
+> 3. **Die Einzelvorgänge tragen den Ist-Wert, nicht nur einen Verweis.** Wer `#5` in seinem Repo öffnet,
+>    darf nicht erst den geschlossenen Klammer-Vorgang lesen müssen: Fundstellen, Fassung, Prüfsumme,
+>    Auslieferungsweg, `## Branch & Cascade` und ein Laufzeit-Akzeptanzkriterium gehören in **jeden**
+>    Einzelvorgang. Der Rückverweis (`Ref <org>/<klammer>#NN`) kommt zusätzlich.
+> 4. **Bei Überschneidung mit bestehenden Vorgängen dort kommentieren, nicht nur im neuen Issue.** Vier der
+>    acht Repos hatten schon einen offenen oder geschlossenen Vorgang am selben Gegenstand; ohne Kommentar
+>    dort arbeitet der Nächste doppelt oder hält den geschlossenen für erledigt
+>    ([[tim/feedback/korrektur-erreicht-alle-traeger]]).
+
 ### `«TABUS»`
 
 - **Testen/Verifizieren/Reproduzieren IMMER nur in der Dev-Umgebung** (siehe `«VERIFY»`). Lokales
@@ -566,6 +588,50 @@ eigentlichen Merge dem Team/Reviewer überlassen — **nicht selbst mergen**.
 >
 > Ergebnis der Nachmessung gehört als Kommentar ans Issue (Kriterium für Kriterium: erledigt / offen, je
 > mit Beleg) — das ist zugleich das Gerüst für den späteren PR-Body.
+>
+> 🔴 **Auch den REFERENZWERT nachmessen, gegen den das Issue seine Funde bewertet — nicht nur die Funde.**
+> Ein Issue vergleicht fast immer gegen etwas: eine Soll-Version, einen Pin, einen kanonischen Stand, eine
+> Vorlage. Dieser Bezugspunkt altert genauso wie die Fundstellen, nur **unsichtbar**: die Fundliste stimmt
+> weiter, ihre *Einstufung* kippt. Ein „stimmt alles noch"-Abgleich der Fundstellen bestätigt den Vorgang
+> dann fälschlich.
+>
+> Gemessen 2026-08-21 (`edp-runtime-redist#15`): der Body nannte Bundle `v1.2.0`/OpenSSL 3.5.1 als Soll und
+> stufte damit `edpweb@release`, `setups` und `tool-abrechnungstool` als **kanonisch** ein — sie standen
+> nicht auf der Arbeitsliste. Zentral galt längst `v1.4.0`/OpenSSL 3.5.5; dieselben, völlig unveränderten
+> Dateien waren damit abweichend. Der Vorgang wuchs von **5 auf 8 betroffene Repos**, und die Nachmessung
+> nur der genannten Fundstellen hätte drei Repos still ausgelassen.
+>
+> Daraus zwei Regeln:
+>
+> 1. **Erst die Referenz messen, dann die Funde.** Bei einer Fassungs-/Pin-Frage heisst das: die zentrale
+>    Deklaration am heutigen Stand lesen, nicht die Zahl aus dem Body übernehmen.
+> 2. **Hat sich die Referenz bewegt, ist die ganze Erhebung zu wiederholen** — nicht nur die Liste
+>    abzugleichen. Nur der volle Lauf zeigt die Fälle, die durch die Bewegung **neu** hineingerutscht sind.
+>    Er zeigt auch die, die seit der Erhebung erst entstanden sind: `edp/Schn_Icon_RUC` war fünf Tage nach
+>    der ursprünglichen Messung angelegt worden und brachte den Altbestand gleich mit.
+>
+> ⚠️ **Eine Datei in Git LFS lässt sich nicht über die Contents-API messen** — die liefert den Zeiger, und
+> `git lfs pull` scheitert im frischen Klon still (kein Fehler, keine Datei). Der Weg, der trägt:
+>
+> ```bash
+> TOK=$(gh auth token --hostname einsatzleitsoftware.ghe.com)
+> RESP=$(curl -s -u "x-access-token:$TOK" \
+>   -X POST "https://einsatzleitsoftware.ghe.com/edp/<repo>.git/info/lfs/objects/batch" \
+>   -H 'Accept: application/vnd.git-lfs+json' -H 'Content-Type: application/vnd.git-lfs+json' \
+>   -d "{\"operation\":\"download\",\"transfers\":[\"basic\"],\"objects\":[{\"oid\":\"<oid>\",\"size\":<size>}]}")
+> curl -sL -H "Authorization: $(echo "$RESP" | jq -r '.objects[0].actions.download.header.Authorization')" \
+>   "$(echo "$RESP" | jq -r '.objects[0].actions.download.href')" -o datei.bin
+> ```
+>
+> `oid` und `size` stehen im Zeiger selbst. Für einen reinen **Inhaltsvergleich** braucht es das gar nicht:
+> die `oid sha256` des Zeigers **ist** der SHA256 des Inhalts und lässt sich direkt gegen eine deklarierte
+> Prüfsumme stellen. Materialisieren muss man nur, wenn man *in* die Datei sehen will (PE-Versionsblock,
+> Architektur).
+>
+> ⚠️ Und eine stille Falle beim Auswerten der Trees-API: `jq -r '.truncated // "n/a"'` liefert für den
+> Normalfall `false` die Zeichenkette `"n/a"` — `//` behandelt `false` wie „leer". Wer so auf abgeschnittene
+> Antworten prüft, bekommt nie ein `false` zu sehen und hält die Prüfung für nicht verfügbar. Richtig ist
+> `jq -r 'if .truncated then "TRUNCATED" else "ok" end'`.
 >
 > 🔴 **Und die im Issue behauptete URSACHE genauso nachmessen wie die Fundstellen.** Ein Melder beschreibt
 > zuverlässig, *was* er gesehen hat; *woher* es kommt, ist seine Hypothese — und die zeigt naturgemäß auf
