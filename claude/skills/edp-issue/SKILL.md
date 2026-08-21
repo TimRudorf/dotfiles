@@ -204,6 +204,16 @@ Delphi = DUnitX (`$VAULT/referenz/dunitx-patterns.md`,
 > Konfigurations-/Engine-Bugs: sie sind meist ein fehlendes Stück Verdrahtung, kein falscher Algorithmus.
 > Die Mutations-Ergebnisse gehören als Tabelle in den PR-Body — sie sind der Beleg, den ein Reviewer
 > sonst selbst herstellen müsste.
+>
+> 🔴 **Die Probe braucht zwei Fälle, die keine Mutation sind: eine unveränderte Baseline und mindestens
+> eine Gegenrichtung.** Ohne Baseline („unverändert → grün") merkt man nicht, wenn eine Prüfung nach
+> einer Korrektur *immer* rot ist; ohne Gegenrichtung („das darf NICHT rot machen") nicht, wenn sie
+> *zu viel* fängt. Die Probe deshalb als Skript bauen, das je Fall aus einer **frischen Kopie** startet
+> und Rückgabewert **und** Meldungstext prüft — dann fällt beides sofort auf.
+> Gemessen 2026-08-21 (`delphi-devsetup#43`): Ein Fix gegen einen zu **engen** Prüfbestand geriet zu
+> **weit** und liess den Bestand leerlaufen; sichtbar wurde das ausschliesslich an der roten Baseline.
+> Ein reiner „macht es rot?"-Durchgang hätte alle sieben Mutationen als bestanden gemeldet, während die
+> Prüfung nichts mehr prüfte.
 
 > ⚠️ **Ein Test kann den falschen Text lesen und ist dann grün, ohne etwas zu messen.** Nicht nur „greift
 > die Prüfung?", sondern „greift sie auf den **Prüfgegenstand**?". Gemessen 2026-08-21 (installer#132): eine
@@ -373,7 +383,25 @@ Delphi = DUnitX (`$VAULT/referenz/dunitx-patterns.md`,
 > 2. Die **Engine-Tests** des Repos lokal fahren (dort Plain-PowerShell-Skripte, **kein** Pester) und
 >    zusätzlich **gegen die Baseline** (`origin/<base>`), damit ein roter Test nicht als
 >    „gab es vorher schon" durchrutscht.
-> 3. Im PR-Body **ausdrücklich benennen**, was dieser PR nicht prüfen kann und welcher spätere Lauf den
+> 3. 🔑 **Und die Suite zusätzlich auf der Dev-VM fahren — sie ist auch ohne `edp-ctrl` eine echte
+>    Windows-Maschine.** „Nicht deploybar" heisst nicht „nicht messbar": den Branch-Kopf als Archiv
+>    hinüberkopieren und dort mit dem installierten pwsh 7 laufen lassen. Das ist die **Zielplattform**
+>    und schlägt jeden Linux-Lauf — Pfadtrennzeichen, Registry, `Get-ChildItem`-Verhalten und Codepages
+>    unterscheiden sich real. Berührt das EDP-Projektverzeichnis nicht, braucht also **keinen**
+>    `C:\vm.lock` (siehe unten).
+>
+>    ```bash
+>    git archive --format=tar -o /tmp/repo.tar HEAD
+>    scp /tmp/repo.tar runner.ps1 "$(edp-ctrl config get vm-host)":C:/Windows/Temp/
+>    ssh "$(edp-ctrl config get vm-host)" '"C:\Program Files\PowerShell\7\pwsh.exe" -NoProfile -File C:\Windows\Temp\runner.ps1'
+>    ```
+>
+>    Gemessen 2026-08-21 (`delphi-devsetup#43`): Suite grün unter Windows 10.0.26200 mit pwsh 7.6.5 —
+>    **und** ein Fund, den der Linux-Lauf gar nicht zeigen konnte (`Get-ChildItem -Recurse` läuft unter
+>    Windows in Punkt-Verzeichnisse hinein). Dieselbe Maschine trägt auch Windows PowerShell 5.1, taugt
+>    also für A/B-Proben zum Laufzeitverhalten. ⚠️ Konsolenausgabe über SSH ist **nicht** aussagekräftig
+>    (fremde Codepage) — was gemessen werden soll, in eine Datei schreiben und **Bytes** vergleichen.
+> 4. Im PR-Body **ausdrücklich benennen**, was dieser PR nicht prüfen kann und welcher spätere Lauf den
 >    Rest belegt — transparent statt kaschiert. `todo:testing` setzen.
 Der Lock schützt das **EDP-Projektverzeichnis**, das `edp-ctrl dev compile` per `reset --hard` umsetzt. Eine
 Verifikation, die dieses Verzeichnis gar nicht anfasst (eigener Checkout, z.B. ein Installer-Probebau), braucht
