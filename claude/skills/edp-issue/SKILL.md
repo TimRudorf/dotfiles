@@ -279,6 +279,38 @@ Delphi = DUnitX (`$VAULT/referenz/dunitx-patterns.md`,
 > zusätzlich zu `FailedCount` — ein Lauf ohne Tests ist kein grüner Lauf. Weitere Fälle derselben Bauart:
 > `$VAULT/referenz/stille-messfallen-shell-git.md`.
 
+> 🔴 **Dateiinhalte NIE per `base64 -d` aus der Contents-API lesen, ohne die Vollständigkeit zu prüfen.**
+> `gh api ".../contents/<pfad>" --jq .content | base64 -d` kann **still abbrechen** und einen Teil der
+> Datei liefern. Das Ergebnis einer Suche darin („kein Treffer") ist von einem echten Nicht-Vorkommen
+> **nicht zu unterscheiden**.
+>
+> Gemessen 2026-08-21 (`.github#147`): bei `edp/edpserver-delphi` wurden 58 von 69 Zeilen dekodiert —
+> abgeschnitten war ausgerechnet der gesuchte Eintrag. Folge: ein Issue in einem Repo, das gar keinen
+> Mangel hatte, plus eine falsche Kopfzahl in Dokument, PR-Body und sieben weiteren Issue-Bodies, die
+> alle nachgezogen werden mussten.
+>
+> Richtig ist der Rohabruf **plus Grössenabgleich** — die Metadaten nennen die Soll-Grösse:
+>
+> ```bash
+> soll=$(gh api --hostname <host> "repos/<org>/<repo>/contents/<pfad>?ref=<branch>" --jq .size)
+> ist=$(gh api --hostname <host> -H "Accept: application/vnd.github.raw" \
+>         "repos/<org>/<repo>/contents/<pfad>?ref=<branch>" | wc -c)
+> ```
+>
+> Weichen sie ab, ist die Messung ungültig — **nicht** der Befund. Dieselbe Bauart wie die anderen
+> stillen Nullen: `$VAULT/referenz/stille-messfallen-shell-git.md`.
+
+> ⚠️ **Zwei weitere stille Nullen bei `gh`, beide in diesem Lauf zugeschlagen:**
+>
+> - **Die Codesuche ist indexbasiert und hinkt hinterher.** `search/code?q=org:…+path:tests` lieferte
+>   eine Repo-Liste, in der ein Repo fehlte, dessen Suite wenige Stunden alt war — und zeigte umgekehrt
+>   noch die alte Fassung einer Datei, deren Korrektur-PR bereits offen war. Für „gibt es X im Baum?"
+>   gehört der **Baum** gelesen (`contents`/`git/trees`), nicht der Index. Die Codesuche taugt zum
+>   *Finden von Kandidaten*, nie als Bestandsaufnahme.
+> - **`gh api … -q` schreibt die 404-JSON auf stdout.** Eine Existenzprüfung per „Ausgabe leer?" meldet
+>   den Branch deshalb als vorhanden; das dichtete einem Repo ein `beta`/`release` an, das es nicht hat.
+>   Belastbar ist nur der Status: `gh api --silent … >/dev/null 2>&1`.
+
 ### `«VERIFY»` — ausschließlich Dev-VM
 
 > **Zwingend: Test/Verify NUR in der Dev-Umgebung.** Jede Verifikation läuft gegen den **frisch auf die
@@ -674,9 +706,24 @@ eigentlichen Merge dem Team/Reviewer überlassen — **nicht selbst mergen**.
 > gerade erst anläuft. In diesem Lauf hat genau das einmal ein falsches „alle Checks abgeschlossen" mit
 > einem einzigen Check erzeugt.
 >
-> Belastbar ist erst: **`ci-summary` ist in der Liste vorhanden UND nicht mehr `pending`**, zusätzlich die
-> Gesamtzahl der Checks gegenlesen (in `edp/datenbank` sind es 14). `ci-summary` ist ohnehin der einzige
-> Pflicht-Kontext der Organisation — was ihn nicht enthält, ist keine Aussage über den Lauf.
+> Belastbar ist erst: **der Aggregat-Check ist in der Liste vorhanden UND nicht mehr `pending`**,
+> zusätzlich die Gesamtzahl der Checks gegenlesen (in `edp/datenbank` sind es 14). Was ihn nicht
+> enthält, ist keine Aussage über den Lauf.
+>
+> 🔴 **Der Aggregat-Check heisst NICHT überall `ci-summary`.** In `edp/.github` ist es **`repo-summary`**
+> — dessen `gate.yml` begründet das ausdrücklich: das Repo ist weder ein Delphi- noch ein Go-Projekt und
+> darf keinen der beiden Sprach-Kontexte belegen. Wer dort auf `ci-summary` wartet, wartet auf einen
+> Kontext, den es nie geben wird. Den Namen also aus dem Repo ablesen (`grep -n 'summary:' \
+> .github/workflows/gate.yml` bzw. `ci.yml`), nicht annehmen.
+>
+> Und **`no checks reported on the '<branch>' branch` ist kein Fehler**, sondern der Zustand vor dem
+> Anlaufen — `gh pr checks --watch` beendet sich in diesem Fenster sofort mit Status 0. Deshalb nicht auf
+> `--watch` allein bauen, sondern auf eine Bedingung warten, die den Aggregat-Check **nennt**:
+>
+> ```bash
+> until out=$(gh pr checks <nr> -R einsatzleitsoftware.ghe.com/edp/<repo> 2>/dev/null) \
+>       && echo "$out" | grep -q '<aggregat-check>' && ! echo "$out" | grep -q 'pending'; do sleep 15; done
+> ```
 
 > 🔴 **Ein grünes `ci-summary` belegt NICHT, dass Tests gelaufen sind — und es gibt oft gar keinen
 > Test-Check.** Die Delphi-Suite läuft **innerhalb** von `delphi / build` als Phasen `TestBuild`/`TestRun`;
@@ -726,6 +773,35 @@ Normalfall, sobald der PR Markdown oder YAML berührt hat.
 > Die Review-Notiz an den PR nennt **auch die Funde ohne Befund** („geprüft und in Ordnung") — sie sagt
 > dem menschlichen Reviewer, was er *nicht* mehr selbst durchgehen muss, und ist damit die halbe
 > Ersparnis.
+
+> 🔴 **Wer einem Review-Fund widerspricht, muss die Gegenprobe ANDERS konstruieren als die
+> ursprüngliche Messung.** Der Core verlangt, Funde selbst zu verifizieren statt sie blind zu
+> übernehmen — das schützt vor falschen Funden, aber nicht vor dem teureren Fall: einen **richtigen**
+> Fund zurückzuweisen, weil die Gegenprüfung denselben Fehler wiederholt wie die Messung, die den
+> Fehler erzeugt hat.
+>
+> Gemessen 2026-08-21 (`.github#147`): Der Agent meldete, ein Repo sei fälschlich als betroffen
+> gelistet. Die Gegenprüfung „ich habe dort doch 0 Treffer gemessen" nutzte **dieselbe** still
+> trunkierende Dekodierung wie die Ersterhebung und bestätigte den eigenen Fehler. Erst eine anders
+> gebaute Messung (Rohabruf mit Grössenabgleich) zeigte, dass der Agent recht hatte. Zwischen beiden
+> Schritten stand bereits ein veröffentlichtes „der Agent irrt" — Widerspruch ist billig, seine
+> Rücknahme nicht.
+>
+> Prüffrage vor jedem „das stimmt nicht": *Nutze ich gerade dieselbe Quelle, dasselbe Werkzeug und
+> denselben Aufruf wie beim ersten Mal?* Wenn ja, ist es keine Gegenprobe, sondern eine Wiederholung
+> ([[tim/feedback/urteil-braucht-vollstaendige-messung]]).
+>
+> Ein zurückgezogener Fehlbefund wird **sichtbar** korrigiert, nicht stillschweigend: Kommentar am
+> betroffenen Vorgang mit der Ursache, Vorgang schliessen (`--reason "not planned"`), und **jeden**
+> weiteren Träger der falschen Angabe nachziehen — Dokument, PR-Body, alle abgeleiteten Issues
+> ([[tim/feedback/korrektur-erreicht-alle-traeger]]).
+
+> **Keine Momentaufnahme in ein Standard-/Vorlagen-Dokument schreiben.** Ein Zählstand („N von M Repos
+> führen X") ist beim Lesen schon veraltet und wird als Bestandsaufnahme missverstanden — „die anderen
+> sind versorgt". In diesem Lauf änderte sich die Grundmenge an einem einzigen Tag zweimal. Entweder die
+> Zahl weglassen **und die Auslassung im Text begründen**, damit sie niemand in gutem Glauben wieder
+> einsetzt, oder sie mit Datum und Messweg als klar erkennbare Momentaufnahme kennzeichnen. Für den
+> PR-Body gilt das Gegenteil: dort ist die Zahl mit Datum genau richtig.
 
 ## Zusatz zu Core-Schritt 4 (Feature)
 
