@@ -70,6 +70,27 @@ Repo-Checkout gemäß `$VAULT/referenz/edp-project-root-mac.md`.
 
 ### `«BRANCH»` — Branch-Cascade Fall A–D
 
+> 🔴 **Vorrangig, vor jeder Cascade-Überlegung: Arbeit in EDP-Repos landet auf `dev`.**
+> Promotion nach `beta`/`release` ist eine Release-Entscheidung des Teams, kein Bestandteil eines
+> Fixes — und **kein selbst eröffneter Kaskaden-PR**. Ein bestehender Kaskaden-PR darf abgearbeitet
+> werden; eine Auslieferung wird nicht angestossen.
+> Volltext: [[tim/feedback/edp-nur-dev-promotion-ist-teamsache]].
+>
+> Das gilt **auch dann**, wenn die Fall-A–D-Prüfung unten formal auf `release` oder `beta` zeigt, und
+> **auch dann**, wenn der Issue-Body eine fertige `## Branch & Cascade`-Sektion mit genau dieser Vorgabe
+> trägt. Gemessen 2026-08-21 (`edp/datenbank#33`): beides zusammen ergab einen sehr überzeugenden
+> falschen Pfad — der PR ging gegen `release`, musste zurückgezogen und gegen `dev` neu aufgesetzt
+> werden (#54 → #55). Erschwerend: die Begründung im Issue („sonst bleiben die Reste auf `beta`/`release`
+> liegen") war zum Bearbeitungszeitpunkt **überholt**; eine Vorgabe im Issue-Text ist eine Messung von
+> damals, nicht von heute.
+>
+> Prüffrage vor der Branch-Wahl: *ändert dieser Vorgang, was ein ausgeliefertes Programm tut?* Bei
+> `.gitignore`, CI-Konfiguration, Deskriptor oder Doku ist die Antwort nein — dann gibt es erst recht
+> keinen Grund, einen Auslieferungsweg zu öffnen.
+>
+> Die Fall-A–D-Bestimmung darunter bleibt nützlich, aber für eine **andere** Frage: sie sagt, wo der
+> Defekt sitzt und was im Bericht zu erwähnen ist — nicht, wohin der PR geht.
+
 Den **niedrigsten betroffenen Branch** (Fall A–D) und den Cascade-Pfad bestimmen — verbindlich aus der
 repo-eigenen `docs/GIT.md`. **Nicht jedes Repo hat sie** (`edp/einsatzmonitor` führt gar kein `docs/`);
 dann ist der Kopfkommentar von `.github/workflows/auto-cascade.yml` die Quelle im Repo — er benennt die
@@ -80,6 +101,19 @@ Fix-Branch von der korrekten Basis anlegen (nie auf den Default-Branch direkt co
 Beim Erfassen (Core-Schritt 1) eine im Issue-Body bereits vorhandene Sektion **`## Branch & Cascade`**
 mitlesen — sie ist die Vorgabe des Melders und wird gegen die eigene Cascade-Prüfung abgeglichen, nicht
 blind übernommen.
+
+> 🔴 **Den Default-Branch messen, bevor irgendetwas darauf aufbaut** — ein Einzeiler, der eine falsche
+> `## Branch & Cascade`-Angabe sofort aufdeckt:
+>
+> ```bash
+> gh api "repos/edp/<repo>" --hostname einsatzleitsoftware.ghe.com -q .default_branch
+> ```
+>
+> Gemessen 2026-08-21: `installer#92` nannte „das Repo führt nur `main`" — der Default ist `dev`, `main`
+> gibt es nicht. Dieselbe Falschangabe stand in `edp-runtime-redist#5`; beide Repos sind am 2026-08-19
+> umbenannt worden, ältere Issues tragen den alten Namen weiter. Ein `git checkout main` scheitert dann
+> mit einer Meldung, die nach kaputtem Klon aussieht. Die Korrektur gehört **in den Issue-Body**, nicht
+> nur in einen Kommentar — sonst trägt der Nächste sie weiter.
 
 > ⚠️ **Ein Branch-Hinweis im Issue-Titel/-Text (z.B. `[... (dev)]`) ist nur der Melde-Kontext, NICHT
 > zwangsläufig der niedrigste betroffene Branch.** Immer aktiv per `docs/GIT.md` + Cross-Branch-Prüfung
@@ -118,6 +152,28 @@ Delphi = DUnitX (`$VAULT/referenz/dunitx-patterns.md`,
 `$VAULT/projekte/edpweb/dunitx-test-harness-pickup.md`), Go = `go test`, Frontend = Repo-Standard
 ([[tim/feedback/delphi-tests-immer]]). Build/Deploy **nur** via `/edp-develop`.
 
+> **Ein grüner Test, der nicht rot werden kann, belegt nichts.** Jede neue Schutzmaßnahme einmal
+> **mutationsprüfen**: die Logik gezielt kaputtmachen, Suite laufen lassen, Rot sehen, zurückbauen. Und
+> die Probe auf die **Verdrahtung** nicht vergessen — deckt der Test nur die Funktion, bleibt die Suite
+> grün, wenn jemand ihren Aufruf löscht oder verschiebt. Genau diese Lücke ist der Regelfall bei
+> Konfigurations-/Engine-Bugs: sie sind meist ein fehlendes Stück Verdrahtung, kein falscher Algorithmus.
+> Die Mutations-Ergebnisse gehören als Tabelle in den PR-Body — sie sind der Beleg, den ein Reviewer
+> sonst selbst herstellen müsste.
+
+> ⚠️ **Ein Test kann den falschen Text lesen und ist dann grün, ohne etwas zu messen.** Nicht nur „greift
+> die Prüfung?", sondern „greift sie auf den **Prüfgegenstand**?". Gemessen 2026-08-21 (installer#132): eine
+> Zusicherung suchte `GPLv2` in der `[Code]`-Sektion einer `.iss`. Der Helfer filtert nur `;`-Kommentare —
+> die Schreibweise **ausserhalb** von `[Code]`; im Pascal-Script kommentiert man mit `//`. Der erklärende
+> Kommentar über der Prozedur nannte selbst „GPLv2", der Test las also ihn statt den Code und blieb grün,
+> als der Hinweistext ausgedünnt wurde. Auffällig wurde es erst durch die Mutationsprobe. Also: die Mutation
+> so wählen, dass sie **nur den Gegenstand** trifft, nicht dessen Beschreibung — und wenn die Suite dabei
+> grün bleibt, ist der Test schuld, nicht die Mutation.
+
+> ⚠️ **Zum Zurückbauen einer Mutation NIE `git checkout -- <datei>`.** Das stellt aus dem **Index** her und
+> verwirft dabei stillschweigend jede noch nicht committete Änderung in derselben Datei — in diesem Lauf
+> ist so eine frisch geschriebene Funktion verschwunden. Stattdessen **vor** der Mutationsreihe committen
+> oder die Datei nach `$CLAUDE_JOB_DIR/tmp` kopieren und von dort zurückspielen.
+
 ### `«VERIFY»` — ausschließlich Dev-VM
 
 > **Zwingend: Test/Verify NUR in der Dev-Umgebung.** Jede Verifikation läuft gegen den **frisch auf die
@@ -133,6 +189,26 @@ Delphi = DUnitX (`$VAULT/referenz/dunitx-patterns.md`,
 
 **Die Dev-VM ist exklusiv zu belegen** — `compile`, `test` und `service start|stop` erst nach gesetztem
 `C:\vm.lock`, sonst misst eine parallele Session still gegen fremden Code ([[tim/feedback/dev-vm-exklusiv-belegen]]).
+
+> 🔴 **Dev-VM ≠ Build-VM — nicht verwechseln, und die zweite ist autonom NICHT erreichbar.** Die
+> **Dev-VM** (`edp-ctrl config get vm-host`, auf Poseidon `eifert-dev`) ist das Ziel aller Deploys oben.
+> Die **CI-Build-VM** `edpttz-svghr01` = `10.36.10.6` ist eine andere Maschine (Zugang `ssh edpci@…`,
+> [[referenz/delphi-ci-service-account]]) und hängt hinter dem **edp-OpenVPN mit YubiKey-PIN** — ein
+> interaktiver Schritt, den ein autonomer Lauf nicht ausführen kann. Ein Issue, dessen Gegenstand die
+> **Bau-Engine** ist (`delphi-devsetup`, Runner-Provisionierung, Library-Suchpfade), lässt sich also
+> weder per `/edp-develop` deployen noch auf der Build-VM nachmessen. **Nicht daran hängenbleiben** und
+> auch nicht als Blocker melden — stattdessen:
+>
+> 1. Die Behauptung **offline hart belegen**, statt sie zu vermuten: `.dproj`-Ausgabepfade
+>    (`DCC_DcuOutput` **pro PropertyGroup** lesen — ein Override kann nur für eine Config/Plattform
+>    gelten), die Pins aus `<konsument>/ci/dependencies.psd1` und die GitHub-Trees-API
+>    (`?recursive=1`) gegen den gepinnten SHA. Methode im Volltext:
+>    `$VAULT/projekte/delphi-ci-runner/dependency-strategie.md` § „Library-Suchpfad offline auditieren".
+> 2. Die **Engine-Tests** des Repos lokal fahren (dort Plain-PowerShell-Skripte, **kein** Pester) und
+>    zusätzlich **gegen die Baseline** (`origin/<base>`), damit ein roter Test nicht als
+>    „gab es vorher schon" durchrutscht.
+> 3. Im PR-Body **ausdrücklich benennen**, was dieser PR nicht prüfen kann und welcher spätere Lauf den
+>    Rest belegt — transparent statt kaschiert. `todo:testing` setzen.
 Der Lock schützt das **EDP-Projektverzeichnis**, das `edp-ctrl dev compile` per `reset --hard` umsetzt. Eine
 Verifikation, die dieses Verzeichnis gar nicht anfasst (eigener Checkout, z.B. ein Installer-Probebau), braucht
 ihn **nicht** — dann auf einen fremd gehaltenen Lock **nicht warten**, aber ihn auch nicht überschreiben.
@@ -179,6 +255,24 @@ ihn **nicht** — dann auf einen fremd gehaltenen Lock **nicht warten**, aber ih
 > `components.lock.json`: sie zeigt, dass der Bau nur Release-Assets zieht und das Komponenten-Repo nie
 > auscheckt — „liest der Bau Datei X noch?" ist damit strukturell beantwortet, nicht nur stichprobenhaft.
 
+> **Ausnahme — das Issue liegt in einem Repo, das gar keinen Dev-VM-Deploy kennt** (z.B. `edp/installer`,
+> `edp/edp-runtime-redist`, `edp/.github`): Dort ist die Dev-VM nicht die reale Umgebung, sondern der
+> **CI-Runner**, und der läuft am PR ohnehin. Nicht künstlich auf die VM ausweichen — verifiziert wird:
+>
+> 1. **Suite lokal** — `pwsh` liegt auf Poseidon, Pester ≥ 5 ist da. `Invoke-Pester` gegen `tests/` gibt in
+>    Sekunden die Baseline **vor** der Änderung; ohne sie ist „meine Änderung hat nichts kaputtgemacht"
+>    unbelegt.
+> 2. **Der PR-Lauf auf `windows-latest`** — bei `edp/installer` der Job `Trockenbau <produkt>`. Der zieht die
+>    echten `dev-latest`-Assets, verifiziert das Redist-Bundle gegen SHA256 und ruft ISCC. Das **ist** der
+>    reale Bau, kein Ersatz dafür.
+> 3. **Das PR-Artefakt gegenlesen**, nicht nur den grünen Haken: `components.lock.json` zeigt je Asset Tag,
+>    Commit und beide Prüfsummen (`sha256_original` ≠ `sha256_verbaut` genau dann, wenn gestempelt wurde).
+>    Verlangt ein Akzeptanzkriterium „am Artefakt geprüft, nicht an der `.iss`", ist der stärkste erreichbare
+>    Beleg die **ISCC-Ausgabe im CI-Log** (`Compressing: …\_stage\<produkt>\<datei>`) — sie zeigt die
+>    tatsächlichen Quellpfade des Baus. 🔴 In die fertige `setup.exe` hineinzusehen geht auf Linux **nicht**:
+>    `innoextract` 1.9 (Arch) kann nur bis Inno 6.0.5, gepinnt ist 6.7.1, und `7z` kennt das Format nicht.
+>    Diese Grenze **benennen** statt sie mit einer schwächeren Prüfung zu kaschieren.
+
 > **Ausnahme — die Änderung IST eine CI-/Delivery-Workflow-Datei** (z.B. `.github/workflows/delivery.yml`
 > selbst): Die lässt sich nicht via `/edp-develop` auf die Dev-VM deployen. Verifikation dann **artefakt-basiert**:
 > `branch-build.yml` baut bei jedem Feature-Push die `.exe` als Workflow-Artefakt (kein Release); für den
@@ -201,6 +295,26 @@ Endpunkt-/Repro-Wissen → `$VAULT/referenz/edpweb-testing/` (Hub-Konvention); A
 Fehlt am Issue die Sektion **`## Branch & Cascade`** (Fix-Branch + Cascade-Pfad + Test-Akzeptanzkriterium),
 diese ergänzen, damit Bearbeiter sie direkt anwenden können ([[tim/feedback/issue-fix-branch-cascade-festhalten]]).
 Schreibaktionen auf GHE via `gh` (Host-Quirks: `$VAULT/referenz/ghe-instance-quirks.md`).
+
+**Randfunde** — was am Rande auffällt, aber eine eigene Entscheidung oder Bauprobe braucht, wird
+ausgekoppelt statt mitgefixt: eigenes Issue mit Messung + `## Branch & Cascade`, Assignee `tim-rudorf`
+([[tim/feedback/randfunde-als-issue]]). ⚠️ **Erst das Issue anlegen, dann seine Nummer im Code/PR
+referenzieren** — die nächste freie Nummer lässt sich nicht vorhersagen (Issues und PRs teilen sie sich;
+in diesem Lauf war die geratene bereits vergeben und musste per Folge-Commit korrigiert werden).
+
+> 🔴 **Vor jedem `gh issue create` den Bestand prüfen — offen UND geschlossen, Titel UND Body**
+> ([[tim/feedback/issue-bestand-pruefen-vor-neuanlage]]). Gemessen 2026-08-21 (`edp/datenbank#33`): von 14
+> org-weiten Randfunden waren **12 bereits erfasst**, blind angelegt wären das 12 Dubletten gewesen. Zwei
+> Fallen dabei:
+> - **Titel-Abgleich reicht nicht.** `schn_webhook#13` heißt „Auto generate ssl zertifikat" und behandelt
+>   im Body die gesuchte `ssl.key` vollständig. Ein Vorgang kann den Fund auch in einem **anderen** Repo
+>   mitnennen (`schn_alamos#13` nennt `schn_webhook` mit).
+> - **Geschlossen ≠ behoben.** Fünf Vorgänge standen als `completed` geschlossen, während die Dateien
+>   unverändert im Baum lagen. Das ist ein eigener Befund und wird **berichtet**, nicht eigenmächtig
+>   durch Wiedereröffnen korrigiert — ein geschlossener Vorgang kann eine bewusste Entscheidung sein.
+
+⚠️ **Secrets sind von „Randfund mitfixen" ausgenommen:** erfassen als Issue, sonst nichts — keine Löschung,
+kein `.gitignore`-Eintrag, keine Rotation, kein PR ([[tim/feedback/edp-secrets-nur-als-issue]]).
 
 ### `«PR»` — `/edp-pull-request` + Label-Schema
 
@@ -245,6 +359,49 @@ eigentlichen Merge dem Team/Reviewer überlassen — **nicht selbst mergen**.
 - **Git-Author** ist `Tim Rudorf <tim.rudorf@einsatzleitsoftware.de>` aus der Repo-Config; nie
   `-c user.name`/`-c user.email` am Commit ([[tim/feedback/git-author-arbeit-repos]]).
 
+## Zusatz zu Core-Schritt 1 (Erfassen)
+
+> 🔴 **Den Ist-Wert des Issues nachmessen, bevor irgendetwas umgesetzt wird.** Ein Issue-Body ist eine
+> Messung von seinem Erstellungstag, kein aktueller Zustand — und zwischen Erstellung und Bearbeitung
+> liegen oft Wochen und fremde Merges. Also jede im Issue behauptete Fundstelle einmal gegen den heutigen
+> Stand prüfen (`git ls-tree -r --name-only origin/<branch>`, `git log --diff-filter=D -- <pfad>`,
+> `git show "origin/<branch>:<pfad>"` — Anführungszeichen zwingend, zsh frisst sonst `:c`/`:s` hinter der
+> Variablen, siehe `$VAULT/referenz/stille-messfallen-shell-git.md`).
+>
+> Gemessen 2026-08-21 (`edp/datenbank#33`): **drei der vier Akzeptanzkriterien waren bereits erfüllt** —
+> die zu entfernenden Dateien lagen seit einer Stunde nach Issue-Erstellung auf keinem Kanal mehr, und die
+> im Issue offengelassene Entscheidung war faktisch schon gefallen. Wer den Body als Auftrag abarbeitet,
+> baut hier Änderungen, die es nicht mehr braucht, und übersieht den einen wirklich offenen Punkt.
+>
+> Ergebnis der Nachmessung gehört als Kommentar ans Issue (Kriterium für Kriterium: erledigt / offen, je
+> mit Beleg) — das ist zugleich das Gerüst für den späteren PR-Body.
+
+## Zusatz zu Core-Schritt 8b (CI beobachten)
+
+> ⚠️ **`gh pr checks` liefert direkt nach einem Push eine unvollständige Liste.** Eine Abbruchbedingung
+> „alle Checks sind nicht mehr `pending`" ist dann **trivial erfüllt** und meldet grün, während der Lauf
+> gerade erst anläuft. In diesem Lauf hat genau das einmal ein falsches „alle Checks abgeschlossen" mit
+> einem einzigen Check erzeugt.
+>
+> Belastbar ist erst: **`ci-summary` ist in der Liste vorhanden UND nicht mehr `pending`**, zusätzlich die
+> Gesamtzahl der Checks gegenlesen (in `edp/datenbank` sind es 14). `ci-summary` ist ohnehin der einzige
+> Pflicht-Kontext der Organisation — was ihn nicht enthält, ist keine Aussage über den Lauf.
+
+### Der Format-Bot pusht in deinen Branch
+
+Die zentrale Format-Stufe (`format / prettier`) **schreibt zurück und committet in den Feature-Branch**.
+Der nächste eigene Push wird dann als non-fast-forward abgelehnt — das ist kein Fehler, sondern der
+Normalfall, sobald der PR Markdown oder YAML berührt hat.
+
+- **Vorbeugen:** vor dem Push mit der org-gepinnten Fassung selbst formatieren. Version und
+  `prettierrc.json` liegen zentral in `edp/.github` unter `actions/format-prettier/` — von dort holen
+  statt raten. Dann bleibt der Branch, wie man ihn gepusht hat.
+- **Wenn es doch passiert:** `git fetch` + `git rebase origin/<branch>`, **nicht** force-pushen. Bei einem
+  Konflikt in einer formatierten Datei nicht von Hand mergen — die eigene (inhaltlich korrigierte) Fassung
+  nehmen und **prettier erneut darüberlaufen lassen**; sonst kämpft man gegen den Formatierer.
+- Danach die Suite erneut fahren: der Rebase kann Änderungen aus zwei Commits zusammenführen, die einzeln
+  grün waren.
+
 ## Zusatz zu Core-Schritt 4 (Feature)
 
 > **Berührt das Issue eine Oberfläche, ist `edp-frontend-design` verbindlich** — auch bei einem
@@ -252,5 +409,27 @@ eigentlichen Merge dem Team/Reviewer überlassen — **nicht selbst mergen**.
 > von Secondary, keine Versalien/Sperrung, Weißraum statt Linien) und verweist auf die belegten
 > Fluent-2-Werte in `$VAULT/referenz/fluent2-design.md`. Nicht den generischen
 > `frontend-design:frontend-design` direkt nutzen — `edp-frontend-design` zieht ihn selbst als Basis heran.
+
+## Zusatz zu Core-Schritt 7/8: fremde Repos — erst lesen, dann schreiben
+
+Berührt das Issue ein **anderes** Repo (Blocker, Zulieferer, Bundle), vor jedem Kommentar oder Issue dort
+den **aktuellen Stand** erheben — `gh pr list --state open` **und** `gh issue list`, nicht nur das eine
+verlinkte Issue. Sonst schreibt man eine Analyse zu einer Frage, die dort längst entschieden ist.
+
+Gemessen 2026-08-21: Ein ausführlicher Kommentar an `edp-runtime-redist#5` legte eine Designfrage dar
+(Namensschema für zwei Architekturen), die der offene PR #21 desselben Repos bereits anders entschieden
+hatte — nur x64, schlichter Dateiname. Der Kommentar brauchte einen Nachtrag, der ihn zu zwei Dritteln
+zurücknahm. Ein `gh pr list` vorher hätte das gespart.
+
+Ebenso: **fremde PRs nicht anfassen und nicht auf sie warten**
+([[tim/feedback/fremde-prs-sind-kein-blocker]]) — aber prüfen, ob sich der eigene Vorgang durch sie
+**erledigt** hat. Läuft parallel eine Session am selben Strang, kurz abstimmen, wer welches Repo hält;
+das verhindert doppelte Arbeit an derselben Datei.
+
+> **Löst sich ein Blocker mitten im Lauf auf, den Stand selbst nachmessen** statt der Meldung zu glauben:
+> Release da? Asset drin? Und vor allem — **der Freigabe-Pin gezogen?** Bei `edp/edp-runtime-redist` ist
+> `pins/redist-bundle.txt` der Schalter, der ausrollt; `release.yml` fasst ihn **nicht** an. Ein Release
+> ohne nachgezogenen Pin ist für jeden Konsumenten folgenlos. Rezept:
+> `$VAULT/referenz/edp-redist-komponente-pruefen.md`.
 
 Abschließend `skill-optimize` mit `edp-issue` aufrufen.
