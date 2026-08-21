@@ -161,10 +161,27 @@ blind übernommen.
 > PowerShell-CI-Engine) → dort die Engine-Tests/den echten Stand auf der Dev-VM fahren bzw. den realen
 > CI-Lauf nach dem Merge abwarten.
 
-### `«ENCODING»` — Win-1252 bei Delphi
+### `«ENCODING»` — pro Repo messen, Win-1252 ist nur der Regelfall
 
 Datei-Encoding strikt beachten ([[tim/feedback/datei-encoding]], `$VAULT/referenz/edp-cascade-encoding-check.md`)
-— v.a. Windows-1252 bei `.pas`/`.dpr`/`.dpk`/`.inc`/`.dfm`, UTF-8 bei Frontend/sonstigen. Echte Umlaute.
+— **im Regelfall** Windows-1252 bei `.pas`/`.dpr`/`.dpk`/`.inc`/`.dfm`, UTF-8 bei Frontend/sonstigen. Echte Umlaute.
+
+> 🔴 **„Delphi = Win-1252" ist eine Annahme, keine Messung — einzelne Repos haben umgestellt.**
+> `edp/schn_ivena` führt seine Delphi-Quellen seit `d3453bf` repo-weit als **UTF-8 mit BOM**; die CI-Stufe
+> `delphi / encoding` erzwingt dort genau das. Wer die Hausregel blind anwendet und die Datei per
+> `iconv -f WINDOWS-1252 -t UTF-8` dreht, kodiert doppelt — Symptom sind `â€"`/`Ã¼` statt `—`/`ü`, und
+> beim Zurückschreiben ist die Datei kaputt. Gemessen 2026-08-21 (`schn_ivena#83`): genau dieser
+> iconv-Aufruf lieferte Mojibake, obwohl die Quelldatei in Ordnung war.
+>
+> Also **vor dem ersten Edit messen**, nicht annehmen:
+>
+> ```bash
+> file -b <datei>                        # "UTF-8 (with BOM)" vs. "ISO-8859"/"Non-ISO extended-ASCII"
+> git log --oneline -- <datei> | head    # eine Encoding-Umstellung steht als eigener Commit drin
+> ```
+>
+> In UTF-8-mit-BOM-Repos ist der BOM Teil des Vertrags: beim byte-genauen Patchen mit `utf-8-sig`
+> dekodieren, mit vorangestelltem `\xef\xbb\xbf` zurückschreiben und danach auf U+FFFD prüfen.
 
 ### `«TESTS»` — DUnitX / go test / Repo-Standard
 
@@ -196,6 +213,29 @@ Delphi = DUnitX (`$VAULT/referenz/dunitx-patterns.md`,
 > als der Hinweistext ausgedünnt wurde. Auffällig wurde es erst durch die Mutationsprobe. Also: die Mutation
 > so wählen, dass sie **nur den Gegenstand** trifft, nicht dessen Beschreibung — und wenn die Suite dabei
 > grün bleibt, ist der Test schuld, nicht die Mutation.
+
+> 🔴 **Mutationsfest heisst nicht, dass der Test den Produktivpfad trifft.** Die Mutationsprobe belegt,
+> dass die Zusicherung scharf ist — nicht, dass der geprüfte Zustand im Betrieb überhaupt vorkommt. Vor
+> dem Schreiben deshalb die **Aufrufkette rückwärts** verfolgen: welche Zustände erreichen diese Stelle?
+> Gemessen 2026-08-21 (`schn_ivena#83`): drei Tests prüften `Pzc='' ∧ Prio<=0` und wurden in der
+> Mutationsprobe alle brav rot — trotzdem ist der Zustand produktiv unerreichbar, weil ein vorgelagerter
+> Guard (`IsValidForZuweisung`, an allen drei TaskHandler-Einstiegen) ihn ausschliesst. Der erreichbare
+> gefährliche Fall lag daneben, auf einem zweiten Pfad, und war ungetestet. Gefunden hat das der lokale
+> Review-Agent, nicht die grüne Suite.
+>
+> Zwei Folgerungen: **Vertrags-Tests behalten, aber als solche kennzeichnen** („Tiefenverteidigung,
+> produktiv nicht erreichbar") und den erreichbaren Fall **zusätzlich** abdecken. Und **jeden Sentinel
+> einzeln** prüfen — hat ein Feld zwei „ungültig"-Werte (dort `0` aus einem wörtlichen DB-Wert und `-1`
+> als „nicht gesetzt"), fängt ein Guard `<> 0` den einen ab und lässt den anderen durch; mit nur einem
+> geprüften Sentinel sieht das kein Test.
+
+> ⚠️ **Eine Mutation wirkt erst, wenn sie gepusht ist.** `edp-ctrl dev test` synchronisiert den
+> **gepushten** Branch auf die VM — eine nur lokal gesetzte Mutation ist für den Lauf unsichtbar, und das
+> Ergebnis liest sich wie „der Test hält". Dafür einen **Wegwerf-Branch** nehmen (`tmp/<vorgang>-…`),
+> nicht den Fix-Branch, und ihn danach lokal **und** auf `origin` löschen. Vorher prüfen, dass das Präfix
+> keinen Workflow triggert: in den `schn_*`-Repos läuft `ci.yml` nur auf `pull_request`, und
+> `delivery.yml` baut auf `feature/**`, `bugfix/**`, `hotfix/**`, `project/**` — ein `tmp/**` löst nichts
+> aus und hinterlässt damit auch kein Waisen-Release.
 
 > ⚠️ **Zum Zurückbauen einer Mutation NIE `git checkout -- <datei>`.** Das stellt aus dem **Index** her und
 > verwirft dabei stillschweigend jede noch nicht committete Änderung in derselben Datei — in diesem Lauf
@@ -430,6 +470,14 @@ kein `.gitignore`-Eintrag, keine Rotation, kein PR ([[tim/feedback/edp-secrets-n
 
 **Copilot wird nicht mehr angefordert** — der Bot ist auf der Instanz inaktiv, `--add-reviewer` ist ein stiller
 No-op ([[tim/feedback/pr-review-lokaler-agent]]).
+
+> ⚠️ **Der erste `Merge-Label`-Lauf ist rot — das ist kein Befund.** Der Workflow startet mit dem Pull
+> Request, also bevor `--add-label` gelaufen ist, und scheitert mangels `merge:*`-Label. Er heilt sich
+> selbst (`labeled` triggert neu), aber ein `gh pr checks` in diesem Fenster zeigt ein Rot, das keins ist.
+> Labels deshalb **unmittelbar** nach dem Erstellen setzen und den Check-Stand erst danach bewerten.
+> Nebenwirkung: die gleichnamigen Läufe teilen sich die Concurrency-Gruppe, einer endet `cancelled` —
+> für die Bewertung zählt allein der jüngste. Gemessen 2026-08-21 (`schn_ivena#128`): vier `Merge-Label`-
+> Läufe, `FAILURE` → `CANCELLED` → 2× `SUCCESS`, PR trotzdem `CLEAN`.
 
 ### `«ABSCHLUSS»` — merge-ready, Merge macht das Team
 
