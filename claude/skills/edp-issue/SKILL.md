@@ -273,6 +273,31 @@ ihn **nicht** — dann auf einen fremd gehaltenen Lock **nicht warten**, aber ih
 >    `innoextract` 1.9 (Arch) kann nur bis Inno 6.0.5, gepinnt ist 6.7.1, und `7z` kennt das Format nicht.
 >    Diese Grenze **benennen** statt sie mit einer schwächeren Prüfung zu kaschieren.
 
+> **Ausnahme — die Änderung IST die org-weit geteilte CI selbst** (`edp/.github`: ein `checks-*.yml`,
+> eine Action unter `actions/`, eine Vorlage unter `workflow-templates/`): Ihre Wirkung entsteht erst,
+> wenn die Konsumenten sie mit `@dev` ziehen — also **nach** dem Merge. Das Repo-Gate von `edp/.github`
+> prüft nur dieses Repo und sagt über die Wirkung nichts. Verifikation dann dreiteilig, und alle drei
+> Teile gehören in den PR-Body:
+>
+> 1. **Die Wirkungsbehauptung offline hart belegen** — nicht „nach dem Merge sieht man's". Beispiel aus
+>    `#140`: statt zu behaupten, die Merge-Fassung enthalte die fehlende Testausstattung, die **beiden
+>    Bäume gegeneinander messen** (`git ls-tree -r --name-only <kopf-sha> -- tests/` gegen denselben
+>    Aufruf auf dem Merge-SHA, dazu `git show "<sha>:<datei>"`). Das ist ein Beleg, kein Versprechen.
+> 2. **Fremdes Verhalten am Quellcode des gepinnten Stands nachlesen**, nicht aus dem Gedächtnis — bei
+>    `actions/checkout` etwa `ref-helper.ts`/`git-source-provider.ts` am Pin-SHA über
+>    `gh api "repos/actions/checkout/contents/<pfad>?ref=<sha>"`. ⚠️ Die URL **quoten**, sonst frisst zsh
+>    das `?` als Glob und meldet „no matches found" — ein leeres Ergebnis, das wie ein Nicht-Befund
+>    aussieht.
+> 3. **Offene Annahmen zu Ende messen und in `docs/ci-gate-struktur.md` § „Belegte Annahmen" eintragen**,
+>    mit Datum, Repo und Lauf — so hält es dieses Repo für jede andere Annahme auch. Ein Probier-Repo
+>    dafür gibt es: `edp/test` (dort liegen die bisherigen Proben). Eine Messung ohne Datum und Beleg ist
+>    in diesem Repo kein Befund, sondern eine Behauptung.
+>
+> ⚠️ Und die Frage **rückwärts** stellen: wer verlässt sich heute auf das alte Verhalten? In `#140` sprang
+> `decide` in `delivery.yml` den Delphi-Bau mit der Begründung ab, „das Gate baut denselben Stand" —
+> eine Aussage, die der Fix ungültig macht. Vor dem Push einmal nach Text**trägern** der Zusage suchen, die
+> man gerade bricht ([[tim/feedback/korrektur-erreicht-alle-traeger]]).
+
 > **Ausnahme — die Änderung IST eine CI-/Delivery-Workflow-Datei** (z.B. `.github/workflows/delivery.yml`
 > selbst): Die lässt sich nicht via `/edp-develop` auf die Dev-VM deployen. Verifikation dann **artefakt-basiert**:
 > `branch-build.yml` baut bei jedem Feature-Push die `.exe` als Workflow-Artefakt (kein Release); für den
@@ -375,6 +400,19 @@ eigentlichen Merge dem Team/Reviewer überlassen — **nicht selbst mergen**.
 >
 > Ergebnis der Nachmessung gehört als Kommentar ans Issue (Kriterium für Kriterium: erledigt / offen, je
 > mit Beleg) — das ist zugleich das Gerüst für den späteren PR-Body.
+>
+> 🔴 **Und die im Issue behauptete URSACHE genauso nachmessen wie die Fundstellen.** Ein Melder beschreibt
+> zuverlässig, *was* er gesehen hat; *woher* es kommt, ist seine Hypothese — und die zeigt naturgemäß auf
+> die Stelle, an der es weh tat, nicht auf die, an der es entsteht. Den Code-Pfad deshalb einmal
+> **rückwärts** vom Fehlerpunkt zur Quelle verfolgen, statt am benannten Ort mit dem Beheben anzufangen.
+>
+> Gemessen 2026-08-21 (`edp/.github#140`): das Issue verortete den Defekt im Checkout-Ref der
+> **Delphi-Stufe**. Tatsächlich nahm die gar keinen eigenen Rückfall — der falsche Wert kam aus der
+> Formatier-Ebene und traf **alle** Prüf-Ebenen gleichermaßen; Delphi fiel nur als erste hart auf, weil sie
+> als einzige eine *Ausstattung* braucht, die fehlen kann. Ein Fix an der benannten Stelle hätte den
+> Auslöser beseitigt und die Ursache stehen lassen — Go und Frontend prüften weiter still den falschen
+> Baum. Prüffrage: *ist die benannte Stelle die einzige Betroffene, oder nur die lauteste?* Wenn ein
+> Mechanismus geteilt ist, gehört der Fix an die Wurzel ([[tim/feedback/generisch-ueber-oekosysteme]]).
 
 ## Zusatz zu Core-Schritt 8b (CI beobachten)
 
