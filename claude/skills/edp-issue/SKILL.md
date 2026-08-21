@@ -68,6 +68,26 @@ Fehler transparent melden ([[tim/feedback/schreib-verify]]).
 
 Repo-Checkout gemäß `$VAULT/referenz/edp-project-root-mac.md`.
 
+> 🔴 **Arbeitsverzeichnis so anlegen, dass `edp-ctrl` es findet — sonst misst später der falsche
+> Stand.** `edp-ctrl dev compile|test <projekt>` sucht **`<project-root>/<projekt>`** und leitet den
+> Branch aus dem dortigen Klon ab. Ein `git worktree` unter `.worktrees/<vorgang>` heisst nicht
+> `<projekt>` und wird deshalb **nicht** gefunden; ohne `--project-root` greift der Vorgabewert
+> `~/dev/EDP` und damit der Haupt-Klon auf `dev` — der Lauf ist dann grün und hat den eigenen Fix
+> nie gesehen.
+>
+> Richtig ist eine Ebene mehr:
+>
+> ```bash
+> git worktree add ~/dev/EDP/.worktrees/<vorgang>/<repo> -b <branch> origin/dev
+> edp-ctrl dev test <repo> --project-root ~/dev/EDP/.worktrees/<vorgang>
+> ```
+>
+> Gemessen 2026-08-21 (`einsatzmonitor#10`): flach als `.worktrees/em-i10` angelegt, danach per
+> `git worktree move` umgezogen. Direkt richtig anlegen spart den Umzug.
+>
+> Der Ausgabekopf jedes `compile`/`test` nennt Branch **und** Commit — den einmal gegenlesen,
+> bevor ein Ergebnis als Beleg verwendet wird.
+
 ### `«BRANCH»` — Branch-Cascade Fall A–D
 
 > 🔴 **Vorrangig, vor jeder Cascade-Überlegung: Arbeit in EDP-Repos landet auf `dev`.**
@@ -152,6 +172,14 @@ Delphi = DUnitX (`$VAULT/referenz/dunitx-patterns.md`,
 `$VAULT/projekte/edpweb/dunitx-test-harness-pickup.md`), Go = `go test`, Frontend = Repo-Standard
 ([[tim/feedback/delphi-tests-immer]]). Build/Deploy **nur** via `/edp-develop`.
 
+> **Rot vor Grün, ohne gegen „nur grün committen" zu verstossen: zwei Commits.** Der Core verlangt bei
+> Bugs erst den reproduzierenden Test (rot), [[tim/feedback/delphi-tests-immer]] verlangt, nur grün zu
+> committen. Beides zusammen geht als **Commit 1 = Tests** (an dieser Stelle rot, im Commit-Text
+> ausdrücklich als solcher benannt), **Commit 2 = Fix** (ab hier grün). `edp-ctrl dev test` fährt gegen
+> den **gepushten** Stand, also beide Commits einzeln pushen und den roten Lauf mit seinen Zahlen
+> festhalten — er ist die Reproduktion und gehört in den PR-Body. CI läuft ohnehin nur auf dem Kopf des
+> Pull Requests, ein roter Zwischen-Commit erzeugt also keinen roten Lauf.
+
 > **Ein grüner Test, der nicht rot werden kann, belegt nichts.** Jede neue Schutzmaßnahme einmal
 > **mutationsprüfen**: die Logik gezielt kaputtmachen, Suite laufen lassen, Rot sehen, zurückbauen. Und
 > die Probe auf die **Verdrahtung** nicht vergessen — deckt der Test nur die Funktion, bleibt die Suite
@@ -189,6 +217,26 @@ Delphi = DUnitX (`$VAULT/referenz/dunitx-patterns.md`,
 
 **Die Dev-VM ist exklusiv zu belegen** — `compile`, `test` und `service start|stop` erst nach gesetztem
 `C:\vm.lock`, sonst misst eine parallele Session still gegen fremden Code ([[tim/feedback/dev-vm-exklusiv-belegen]]).
+
+> 🔴 **Ein gescheiterter `dev compile` heisst nicht „auf der Dev-VM ist nichts messbar".** Zwei Schritte,
+> bevor daraus ein Blocker im Bericht wird:
+>
+> 1. **Gegen die Baseline gegenprüfen** — denselben Bau auf unverändertem `origin/dev` fahren
+>    (Haupt-Klon, `--project-root ~/dev/EDP`). Zeilengleicher Fehler = vorbestehend, nicht aus dem
+>    eigenen Diff. Ohne diese Probe steht im Bericht ein Fehler, den man selbst verursacht zu haben
+>    scheint.
+> 2. **Prüfen, was trotzdem läuft.** Ein Bau scheitert an **einer** fehlenden Komponente in **einer**
+>    Unit; alles, was diese Unit nicht linkt, übersetzt weiterhin. Gemessen 2026-08-21
+>    (`einsatzmonitor#10`): `dev compile` bricht in `ufrmmain.pas` an `AdvMetroButton` ab (TMS auf der
+>    Dev-VM nicht provisioniert, `edp/delphi-devsetup#31`) — `edp-ctrl dev test` derselben Repo lief
+>    dagegen durch, weil das Testprojekt `ufrmmain` nicht linkt. Die geänderten Units waren damit
+>    übersetzt **und** gemessen; nur für die restlichen trug `delphi / build` des Pull Requests den
+>    Nachweis.
+>
+> Ein Testprojekt braucht **kein** vorheriges `compile`, solange es seine Produktivquellen selbst
+> übersetzt (eigener `DCC_DcuOutput`). Die Regel „erst `compile`, dann `test`" gilt dort, wo die Suite
+> die `Win64\Release`-DCUs des Hauptbaus mitbenutzt — das vorher an der `.dproj` ablesen statt
+> anzunehmen.
 
 > 🔴 **Dev-VM ≠ Build-VM — nicht verwechseln, und die zweite ist autonom NICHT erreichbar.** Die
 > **Dev-VM** (`edp-ctrl config get vm-host`, auf Poseidon `eifert-dev`) ist das Ziel aller Deploys oben.
@@ -439,6 +487,26 @@ eigentlichen Merge dem Team/Reviewer überlassen — **nicht selbst mergen**.
 > Belastbar ist erst: **`ci-summary` ist in der Liste vorhanden UND nicht mehr `pending`**, zusätzlich die
 > Gesamtzahl der Checks gegenlesen (in `edp/datenbank` sind es 14). `ci-summary` ist ohnehin der einzige
 > Pflicht-Kontext der Organisation — was ihn nicht enthält, ist keine Aussage über den Lauf.
+
+> 🔴 **Ein grünes `ci-summary` belegt NICHT, dass Tests gelaufen sind — und es gibt oft gar keinen
+> Test-Check.** Die Delphi-Suite läuft **innerhalb** von `delphi / build` als Phasen `TestBuild`/`TestRun`;
+> in der Check-Liste taucht sie nicht auf. Wer nach `delphi / test` sucht, findet nichts und darf daraus
+> **nicht** schliessen, dass nicht getestet wurde — und umgekehrt ist der grüne Haken von `delphi / build`
+> kein Beleg, dass getestet **wurde**. Beides entscheidet allein das Job-Log:
+>
+> ```bash
+> ID=$(gh run list -R einsatzleitsoftware.ghe.com/edp/<repo> --branch <branch> --workflow CI \
+>        --limit 1 --json databaseId -q '.[0].databaseId')
+> gh run view $ID -R einsatzleitsoftware.ghe.com/edp/<repo> --log \
+>   --job=$(gh run view $ID -R einsatzleitsoftware.ghe.com/edp/<repo> \
+>             --json jobs -q '.jobs[] | select(.name=="delphi / build") | .databaseId') \
+>   | grep -aE 'RUN_TESTS|Führe Tests aus|Tests (Found|Passed|Failed)|TESTS GRÜN'
+> ```
+>
+> Erwartet werden `RUN_TESTS: true`, die Zeile `Führe Tests aus: …\<Repo>Tests.exe` und eine
+> **`Tests Found` grösser null**. Fehlt `run-tests` in der `ci.yml` bei vorhandenem `Test`-Block, wird die
+> Suite nicht einmal übersetzt und der Lauf ist grün, ohne dass ein Test lief — der stille Fall aus
+> `edp/.github` > `docs/delphi-test-standard.md`. Der Auszug gehört in den PR-Body, nicht der grüne Haken.
 
 ### Der Format-Bot pusht in deinen Branch
 
