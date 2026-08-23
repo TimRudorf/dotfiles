@@ -214,6 +214,19 @@ Delphi = DUnitX (`$VAULT/referenz/dunitx-patterns.md`,
 > **weit** und liess den Bestand leerlaufen; sichtbar wurde das ausschliesslich an der roten Baseline.
 > Ein reiner „macht es rot?"-Durchgang hätte alle sieben Mutationen als bestanden gemeldet, während die
 > Prüfung nichts mehr prüfte.
+>
+> 🔴 **Die frische Kopie selbst kann die Baseline rot machen — und dann meldet JEDE Mutation
+> „bestanden".** Die Vorrichtung soll je Fall aus einer unberührten Kopie starten; genau dabei geht
+> Umgebung verloren, an der die Suite hängt: Git-Remote, `.git` überhaupt, Umgebungsvariablen,
+> Werkzeuge im `PATH`. Gemessen 2026-08-23 (`installer#95`): die per `git archive | tar -x` erzeugte
+> Kopie hatte keinen Remote, `tests/SignRelease.Tests.ps1` liest daraus aber `INSTALLER_REPO`/
+> `GH_HOST` — **11 Tests waren in jedem Lauf rot, auch im unveränderten**, und elf von elf
+> Mutationen wurden als „greift" gelesen.
+>
+> Symptom: die Trefferzahlen der Mutationen liegen nahe beieinander und keine ist klein und
+> erklärbar (dort 11–16 statt 0–5). Deshalb die **Baseline als eigenen Fall mitführen** statt sie
+> vorauszusetzen, und in der Kopie herstellen, was die Suite braucht (`git init` + `git remote
+> add …`).
 
 > ⚠️ **Ein Test kann den falschen Text lesen und ist dann grün, ohne etwas zu messen.** Nicht nur „greift
 > die Prüfung?", sondern „greift sie auf den **Prüfgegenstand**?". Gemessen 2026-08-21 (installer#132): eine
@@ -246,6 +259,42 @@ Delphi = DUnitX (`$VAULT/referenz/dunitx-patterns.md`,
 > keinen Workflow triggert: in den `schn_*`-Repos läuft `ci.yml` nur auf `pull_request`, und
 > `delivery.yml` baut auf `feature/**`, `bugfix/**`, `hotfix/**`, `project/**` — ein `tmp/**` löst nichts
 > aus und hinterlässt damit auch kein Waisen-Release.
+>
+> 🔴 **Einen Wegwerf-Namen NIE ein zweites Mal benutzen, ohne ihn vorher auf `origin` zu löschen.**
+> Liegt der Zweig dort schon, wird der Push als non-fast-forward abgewiesen — und der Lauf misst
+> dann den **alten** Inhalt. Gemessen 2026-08-23 (`einsatzmonitor#14`): acht von neun Fällen einer
+> zweiten Proberunde liefen so gegen den Stand der ersten; die Ausgabe trug keinerlei Testzahlen und
+> hätte ohne Gültigkeitsprüfung als „rot" gezählt. Also je Fall zuerst
+> `git push origin --delete <zweig>` (idempotent, braucht kein Force), dann anlegen und pushen — und
+> **den Rückgabewert des Push lesen**.
+
+> 🔴 **Eine Mutationsprobe kann an der MUTATION scheitern — dann ist der Lauf ungültig, nicht rot.**
+> Zwei Bauarten, beide am 2026-08-23 (`einsatzmonitor#14`) bezahlt:
+>
+> 1. **Die Mutation übersetzt nicht.** Ein herausgeschnittener `ELSE IF`-Zweig liess ein `END` ohne
+>    Semikolon vor dem nächsten `END;` stehen; `Tests Found` erscheint dann gar nicht. Wer nur
+>    `Failed <> 0` oder den Exit-Code auswertet, zählt das als „Mutation hat gegriffen". Deshalb je
+>    Lauf **`Tests Found` gegenprüfen** und eine Zusicherung lieber **stumm schalten**
+>    (`SameText(Wort, 'GibtEsNicht')`) als löschen — das ist syntaktisch immer gültig.
+> 2. **Die Mutation wirkt in die falsche Richtung.** Eine Bereichsgrenze wurde auf `0` gesetzt, `0`
+>    hiess in der Signatur aber *ganze Zeile*: das Fenster wurde breiter statt enger, Funde wurden
+>    **unterdrückt** statt falsche erzeugt, und es wurden die falschen Zusicherungen rot. Sichtbar
+>    war das nur, weil die Auswertung die **Namen** der roten Fälle gegen eine erwartete Liste hält.
+>
+> Also je Fall eine **erwartete Namensliste** führen und maschinell vergleichen — mit den
+> **vollständigen** Testnamen. Ein Vergleich gegen `ErkenntDenEinzeiler` statt
+> `Selbstprobe_ErkenntDenEinzeiler` meldet „nicht erfüllt", obwohl die Detailliste stimmt; im Zweifel
+> gewinnt die Detailliste ([[tim/feedback/kopfzahlen-aus-detailliste-nachrechnen]]).
+
+> 🔴 **Die Mutationsprobe NICHT über einen Schwarm von `workflow_dispatch`-Läufen fahren.** Ist die
+> Dev-VM belegt, liegt der Ausweg über die CI nahe — er kann sich aber selbst zerstören: am
+> 2026-08-23 (`einsatzmonitor#14`) starben **alle sieben** gleichzeitig angestossenen Läufe vor dem
+> Testlauf am selben `500 (Internal Server Error)` beim Bereitstellen des Redist-Bundles, das sie
+> alle zugleich zogen. Keiner hat gemessen, und die Tabelle las sich wie „jede Mutation hat
+> gegriffen". Mutationsreihen gehören **seriell auf die Dev-VM** (dort ~15 s je Fall, ohne
+> Bundle-Download); `workflow_dispatch` ist der Weg für eine **Einzelmessung**. Ist der Lock belegt:
+> die Reihe als Hintergrundlauf aufsetzen, der auf den Lock wartet, ihn holt und im Abbruchpfad
+> wieder freigibt — warten ist billiger als eine ungültige Messung.
 
 > ⚠️ **Zum Zurückbauen einer Mutation NIE `git checkout -- <datei>`.** Das stellt aus dem **Index** her und
 > verwirft dabei stillschweigend jede noch nicht committete Änderung in derselben Datei — in diesem Lauf
@@ -303,6 +352,15 @@ Delphi = DUnitX (`$VAULT/referenz/dunitx-patterns.md`,
 > `head -c 6 <datei> | xxd` gegenlesen. Und **jede** Auswertung eines Testlaufs prüft `TotalCount`
 > zusätzlich zu `FailedCount` — ein Lauf ohne Tests ist kein grüner Lauf. Weitere Fälle derselben Bauart:
 > `$VAULT/referenz/stille-messfallen-shell-git.md`.
+>
+> ⚠️ **Und er ist auch kein roter.** Bricht ein Testskript vor dem ersten Fall ab, ist der
+> Rückgabewert ungleich null — beim Rot-vor-Grün-Schritt liest sich das wie eine **geglückte
+> Reproduktion**. Gemessen 2026-08-23 (`edp/.github#155`): ein `$` in der Datentabelle eines
+> `set -u`-Skripts (`{$R}` im Begründungstext, in Doppelquotes) beendete den Lauf mit
+> „R ist nicht gesetzt", Status 1, **null geprüfte Fälle** — und der erwartete rote Lauf schien
+> einzutreten. Aufgefallen ist es nur, weil die Ausgabe keine Fallnamen enthielt. Also die Fallzahl
+> in **beide** Richtungen prüfen, und bei Rot zusätzlich die **Namen** der roten Fälle gegen die
+> Erwartung halten.
 
 > 🔴 **Dateiinhalte NIE per `base64 -d` aus der Contents-API lesen, ohne die Vollständigkeit zu prüfen.**
 > `gh api ".../contents/<pfad>" --jq .content | base64 -d` kann **still abbrechen** und einen Teil der
@@ -555,7 +613,20 @@ ihn **nicht** — dann auf einen fremd gehaltenen Lock **nicht warten**, aber ih
 > 2. **Der PR-Lauf auf `windows-latest`** — bei `edp/installer` der Job `Trockenbau <produkt>`. Der zieht die
 >    echten `dev-latest`-Assets, verifiziert das Redist-Bundle gegen SHA256 und ruft ISCC. Das **ist** der
 >    reale Bau, kein Ersatz dafür.
-> 3. **Das PR-Artefakt gegenlesen**, nicht nur den grünen Haken: `components.lock.json` zeigt je Asset Tag,
+> 3. 🔑 **Die Dev-VM als Windows-PowerShell-5.1-Prüfstand — auch für Repos ohne Deploy.** Die
+>    CI-Stufe fährt `shell: pwsh`, also **PowerShell 7**; `signing\Signieren.cmd` und der
+>    Arbeitsplatz fahren dieselben Skripte unter **Windows PowerShell 5.1**. Was sich dort anders
+>    verhält — allen voran native Aufrufe mit `2>&1` unter `$ErrorActionPreference = 'Stop'` — sieht
+>    die CI **nie**. Die Dev-VM trägt beide Fassungen (gemessen 2026-08-23: 5.1.26100.9168 neben
+>    pwsh 7); Probe per `scp` nach `C:\Windows\Temp` und `powershell -NoProfile -File`. Das EDP-
+>    Projektverzeichnis wird dabei nicht angefasst → **kein `C:\vm.lock` nötig**, aber auch keinen
+>    fremden überschreiben. Ausgabe in eine Datei schreiben und zurücklesen (Codepage über SSH),
+>    Probe ASCII-only halten. Rezept: `$VAULT/projekte/installer/pester-verifikation.md`.
+>
+>    ⚠️ **Immer mit Kontrollfall.** Belegt werden soll, dass eine Konstruktion wirkt — dazu gehört
+>    ein Durchgang **ohne** sie, der scheitert. Ohne ihn ist nicht unterscheidbar, ob die
+>    Konstruktion trägt oder ob es sie gar nicht braucht.
+> 4. **Das PR-Artefakt gegenlesen**, nicht nur den grünen Haken: `components.lock.json` zeigt je Asset Tag,
 >    Commit und beide Prüfsummen (`sha256_original` ≠ `sha256_verbaut` genau dann, wenn gestempelt wurde).
 >    Verlangt ein Akzeptanzkriterium „am Artefakt geprüft, nicht an der `.iss`", ist der stärkste erreichbare
 >    Beleg die **ISCC-Ausgabe im CI-Log** (`Compressing: …\_stage\<produkt>\<datei>`) — sie zeigt die
@@ -659,6 +730,12 @@ kein `.gitignore`-Eintrag, keine Rotation, kein PR ([[tim/feedback/edp-secrets-n
 
 **PR** via `/edp-pull-request` (Titel/Body/Zammad-Notiz/Assignee `tim-rudorf` per dessen Konvention).
 
+> ⚠️ **Zwei Stellen dieses Skills widersprechen `/edp-pull-request`; hier gilt dieses Profil.**
+> Jener Skill sagt „**Keine Labels** zuweisen" und will den Entwurf vor dem Anlegen bestätigt haben —
+> beides ist für diesen Vorgang überholt: die Labels unten sind Pflicht, und im Autonomie-Modus
+> entfällt die Zwischenbestätigung (Core-Schritt 8a). Sein Schritt 7 (Zammad-Notiz) greift nur, wenn
+> der Issue-Body wirklich ein `EDP#<nr>` trägt; eine Referenz auf ein anderes GHE-Issue ist keine.
+
 **PR-Label automatisch setzen** (nach dem Erstellen, per
 `gh pr edit <nr> -R einsatzleitsoftware.ghe.com/edp/<repo> --add-label "..."`):
 
@@ -673,6 +750,19 @@ kein `.gitignore`-Eintrag, keine Rotation, kein PR ([[tim/feedback/edp-secrets-n
 
   Genau **ein** passendes wählen (im Zweifel das dominante Änderungsmotiv des PRs). Bewusst reine Release-Notes-
   Flags (`merge:no-release-note`, `merge:release-note-etc`) nur setzen, wenn das erkennbar gewollt ist.
+
+  > 🔴 **Diese Liste ist der gemeinsame Nenner, nicht der Bestand des Repos.** Einzelne Repos führen
+  > mehr, und dann ist das speziellere Label das richtige. `edp/.github` etwa führt 15 `merge:*`,
+  > darunter `merge:ci/workflows` („Änderung an CI/Workflows — Pipelines, Actions, Automatisierung"),
+  > `merge:task`, `merge:note`, `merge:brainstorming`, `merge:security-issue`, `merge:sonstiges`.
+  > Die Definitionsquelle mit Beschreibungen ist `.github/labels.yml` des jeweiligen Repos;
+  > `gh label list -R … --json name` reicht für die blosse Menge.
+  >
+  > ⚠️ **Und ein Präzedenzfall altert.** `merge:ci/workflows` kam in `edp/.github` erst mit PR #129
+  > dazu — ältere PRs an derselben Datei tragen deshalb `merge:task` und sind **kein** Vorbild mehr.
+  > Also nicht den ähnlichsten alten PR kopieren, sondern die letzten ~30 gemergten ansehen
+  > (`gh pr list --state merged --limit 30 --json number,title,labels`) und prüfen, was seit
+  > Einführung des passenderen Labels tatsächlich verwendet wird.
 
 - **`todo:*`-Label** — was nach dem Merge-Ready-Zustand noch an **menschlicher** Arbeit offen ist:
   - `todo:review` — praktisch immer setzen (Code/Konzept braucht menschliches Review über das lokale hinaus).
@@ -814,7 +904,59 @@ eigentlichen Merge dem Team/Reviewer überlassen — **nicht selbst mergen**.
 > Baum. Prüffrage: *ist die benannte Stelle die einzige Betroffene, oder nur die lauteste?* Wenn ein
 > Mechanismus geteilt ist, gehört der Fix an die Wurzel ([[tim/feedback/generisch-ueber-oekosysteme]]).
 
+> 🔴 **Und vor jeder Messung durchspielen, wie ein echter TREFFER aussehen würde.** Die Regeln oben
+> schützen gegen *zu wenig* Messung. Dieser Fall ist die Umkehrung: eine Messung kann org-weit
+> vollständig, sauber gegengeprüft und trotzdem wertlos sein, weil sie am **falschen Mechanismus**
+> ansetzt. Eine Sonde, die bei einem echten Treffer gar nicht anschlagen könnte, liefert kein
+> „unbedenklich" — sie liefert überhaupt kein Ergebnis, und zwar in Form eines Satzes, der wie ein
+> Ergebnis klingt.
+>
+> Gemessen 2026-08-23 (`edp/.github#155`): Belegt werden sollte, dass ein `*.dof` in der
+> `.gitignore`-Vorlage kein Bau-Risiko trägt. Der Beleg lautete „keine `.dpr`, `.dpk` oder `.dproj`
+> der Organisation bindet eine `.dof` ein" — erhoben über flache Klone aller 102 Repos mit
+> Delphi-Quellen, 2327 Dateien, Dateizahl je Repo gegengeprüft, Falschtreffer auf `.DoFontChange`
+> erkannt und ausgefiltert. Handwerklich einwandfrei. Nur: **eine `.dof` wird nie eingebunden** — die
+> Delphi-6/7-IDE lädt sie über den gleichen Basisnamen. Die Suche hätte dasselbe Ergebnis geliefert,
+> wenn jedes Repo betroffen gewesen wäre. Mit der tragfähigen Frage — *liegt eine gleichnamige
+> `.dproj` daneben?* — kippte das Ergebnis: 4 von 6 Fundstellen waren der einzige Träger der
+> Bauoptionen, und der PR musste nach dem Review umgedreht werden.
+>
+> Zwei Verschärfungen, die den Fall teuer machen:
+>
+> - **Der Satz klang wie ein Ergebnis.** „Keine `.dpr` bindet eine `.dof` ein" ist wahr. Wahr und
+>   wertlos sieht aus wie wahr und tragend.
+> - **Der Issue-Text hatte den Fehlschluss vorgegeben** und die Frage deshalb als „beides vertretbar"
+>   eingestuft. Eine übernommene Beweisführung wird nicht dadurch belastbar, dass sie im Vorgang steht
+>   — die Wirkungsbehauptung des Melders gehört genauso an der Quelle gemessen wie seine Fundstellen
+>   ([[tim/feedback/korrektur-erreicht-alle-traeger]]).
+>
+> Und der Grund, warum die Testsuite hier nicht hilft: die vier Fälle waren mutationsfest und haben
+> trotzdem die falsche Entscheidung festgenagelt. **Ein scharfer Test über einer falschen Prämisse
+> zementiert sie** — gefangen hat es erst der lokale Review-Agent (Core-Schritt 8c).
+> Volltext: [[tim/feedback/urteil-braucht-vollstaendige-messung]].
+
 ## Zusatz zu Core-Schritt 8b (CI beobachten)
+
+> 🔴 **Ein roter CI-Job ist nicht automatisch der eigene Fehler — und „ist bestimmt flaky" ist keine
+> Messung.** Bevor ein Re-Run gedrückt wird, zwei Schritte, beide billig:
+>
+> 1. **Die Fehlerstelle aus dem Log holen** (Datei + Zeile), nicht nur „Job rot".
+> 2. **Byte-Gleichheit des betroffenen Abschnitts gegen die Basis belegen:**
+>    ```bash
+>    diff <(git show origin/<base>:<datei> | sed -n '/<anfang>/,/<ende>/p') \
+>         <(sed -n '/<anfang>/,/<ende>/p' <datei>)
+>    ```
+>    Kein Unterschied = der Pfad stammt nicht aus diesem Vorgang. Erst dann ist ein Re-Run
+>    berechtigt, und **nur dann**.
+>
+> Gemessen 2026-08-23 (`installer#95`): drei Läufe hintereinander rot, jedes Mal ein **anderes**
+> Produkt, immer dieselbe Zeile — ein Aussetzer der Release-Ablage in einem Codepfad, den der PR
+> nicht berührt. Wechselnde Betroffene bei gleichbleibender Fehlerstelle ist das Muster; ein echter
+> Defekt trifft immer dieselben.
+>
+> Das Ergebnis gehört **in den PR-Body**, nicht weggeschwiegen: welcher Job, welche Zeile, der
+> Gleichheitsbeleg, wie oft. Und wenn es dafür schon einen Vorgang gibt, gehört die Häufigkeit als
+> Beleg **dorthin** — sie ist oft das, was ihn priorisierbar macht.
 
 > ⚠️ **`gh pr checks` liefert direkt nach einem Push eine unvollständige Liste.** Eine Abbruchbedingung
 > „alle Checks sind nicht mehr `pending`" ist dann **trivial erfüllt** und meldet grün, während der Lauf
@@ -887,6 +1029,21 @@ Normalfall, sobald der PR Markdown oder YAML berührt hat.
   grün waren.
 
 ## Zusatz zu Core-Schritt 8c (lokales Review)
+
+> 🔴 **Der vom Review vorgeschlagene FIX ist selbst eine Behauptung — und wird genauso gemessen wie
+> der Fund.** Der Core verlangt, Funde zu verifizieren statt blind umzusetzen; das schützt vor
+> falschen Funden, nicht vor einem **richtigen Fund mit untauglicher Behebung**. Die ist gefährlicher:
+> der Fund ist ja belegt, also wird die vorgeschlagene Zeile gern ungeprüft übernommen — und danach
+> gilt die Sache als erledigt.
+>
+> Gemessen 2026-08-23 (`installer#95`): Der Agent meldete zu Recht, dass `& gh auth status 2>&1`
+> unter Windows PowerShell 5.1 bei `$ErrorActionPreference = 'Stop'` abbricht, und schlug `2>$null`
+> vor. Auf der Dev-VM unter echtem 5.1 nachgemessen: **`2>$null` wirft genauso.** Getragen haben nur
+> die `$ErrorActionPreference`-Rettung und der vollständige Verzicht auf die Umleitung. Der „Fix"
+> wäre eingebaut, der Vorgang geschlossen und der Defekt geblieben.
+>
+> Die **untaugliche** Variante gehört danach als Warnung an die Fundstelle („`2>$null` behebt das
+> NICHT, gemessen am …") — sonst vereinfacht sie der Nächste in gutem Glauben wieder hinein.
 
 > 🔴 **Ändert die Review-Runde das Verhalten, sind die im PR-Body zitierten Belege selbst Träger einer
 > überholten Aussage.** Ein Ausgabe-Block, ein Log-Auszug, eine Mutationstabelle im PR-Body war eine
