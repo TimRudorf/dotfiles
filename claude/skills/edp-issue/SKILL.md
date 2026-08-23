@@ -87,6 +87,24 @@ Repo-Checkout gemäß `$VAULT/referenz/edp-project-root-mac.md`.
 >
 > Der Ausgabekopf jedes `compile`/`test` nennt Branch **und** Commit — den einmal gegenlesen,
 > bevor ein Ergebnis als Beleg verwendet wird.
+>
+> 🔴 **Der Haupt-Klon ist oft Wochen alt — und wer versehentlich dort editiert, analysiert einen
+> Stand, den es nicht mehr gibt.** Der Worktree entsteht aus `origin/dev` und ist damit aktuell; der
+> lokale `dev` des Haupt-Klons ist es meist nicht. Gemessen 2026-08-23 (`schn_ivena#124`): lokal
+> `dev` = `7acfc63`, `origin/dev` = `a454f01` — **20 Commits Rückstand**, darunter zwei Dateien, die
+> der Vorgang berührte, plus zwei Test-Units, die es im alten Stand gar nicht gab. Die komplette
+> Erfassung (Aufrufketten, Zeilennummern, „wer schreibt diese Spalte?") lief gegen den falschen
+> Baum.
+>
+> Aufgefallen ist es erst, als der herausgezogene Patch im Worktree **nicht anwendbar** war — ein
+> glücklicher Zufall; ohne Konflikt wäre der falsche Stand unbemerkt geblieben. Zwei Gewohnheiten:
+>
+> ```bash
+> git -C <haupt-klon> rev-parse --short dev origin/dev   # zwei gleiche Zeilen = aktuell
+> ```
+>
+> und **jedes** `cd` vor einem Edit gegen den Worktree-Pfad prüfen, nicht gegen den Repo-Namen. Beide
+> Verzeichnisse heissen `<repo>` und sehen im Prompt identisch aus.
 
 ### `«BRANCH»` — Branch-Cascade Fall A–D
 
@@ -279,6 +297,23 @@ Delphi = DUnitX (`$VAULT/referenz/dunitx-patterns.md`,
 > `delivery.yml` baut auf `feature/**`, `bugfix/**`, `hotfix/**`, `project/**` — ein `tmp/**` löst nichts
 > aus und hinterlässt damit auch kein Waisen-Release.
 >
+> 🔴 **Ein abgebrochener Testlauf lässt das Test-Binary auf der VM zurück — der nächste Lauf hängt
+> dann bei „Fuehre Tests aus…" ohne Ausgabe.** Gemessen 2026-08-23 (`schn_ivena#124`): eine
+> Mutationsreihe lief in den Zeitdeckel des aufrufenden Kommandos, der Aufruf wurde getötet,
+> `Schn_IVENA_Tests.exe` blieb aber in der Dienste-Sitzung stehen und blockierte jeden weiteren Lauf.
+> Das Fehlerbild sieht nach kaputter Mutation aus und ist keine.
+>
+> ```bash
+> ssh "$(edp-ctrl config get vm-host)" 'tasklist /FI "IMAGENAME eq <Repo>Tests.exe"'
+> ssh "$(edp-ctrl config get vm-host)" 'taskkill /F /PID <pid>'
+> ```
+>
+> Daraus zwei Regeln: eine Mutationsreihe **als Hintergrundlauf** fahren, nicht im Vordergrund gegen
+> den Deckel — und nach jedem Abbruch **zuerst** den Restprozess prüfen, bevor das Ergebnis gedeutet
+> wird. Zweitens: der Abbruch lässt den geteilten Worktree auf dem Wegwerf-Zweig **mit gesetzter
+> Mutation** stehen. Vor der nächsten Messung `git branch --show-current` gegenlesen und die Datei
+> gegen die unberührte Kopie diffen; sonst misst der Folgelauf still die Mutation mit.
+
 > 🔴 **Einen Wegwerf-Namen NIE ein zweites Mal benutzen, ohne ihn vorher auf `origin` zu löschen.**
 > Liegt der Zweig dort schon, wird der Push als non-fast-forward abgewiesen — und der Lauf misst
 > dann den **alten** Inhalt. Gemessen 2026-08-23 (`einsatzmonitor#14`): acht von neun Fällen einer
@@ -386,6 +421,31 @@ Delphi = DUnitX (`$VAULT/referenz/dunitx-patterns.md`,
 > einzutreten. Aufgefallen ist es nur, weil die Ausgabe keine Fallnamen enthielt. Also die Fallzahl
 > in **beide** Richtungen prüfen, und bei Rot zusätzlich die **Namen** der roten Fälle gegen die
 > Erwartung halten.
+
+> 🔴 **Eine isolierte A/B-Messung kann stimmen und trotzdem nicht das beschreiben, was der Fix
+> tatsächlich ablegt.** Die saubere Laborvariante („nur Parameter X, sonst nichts") beantwortet
+> *welcher Bestandteil die Wirkung trägt*. Sie beantwortet **nicht**, wie sich das Erzeugnis in der
+> Form verhält, die im Betrieb entsteht — dort steht der neue Bestandteil neben allem, was das
+> Fremdsystem schon mitgeliefert hat, und die beiden können einander schlagen.
+>
+> Gemessen 2026-08-23 (`schn_ivena#124`): Eine Variantentabelle zeigte sauber, dass von drei
+> Query-Parametern nur einer die Auswertung trägt — gemessen an einer URL **ohne** die anderen
+> beiden. Persistiert wird aber die Server-URL, und die führt einen der beiden bereits. In dieser
+> Kombination **gewinnt der mitgelieferte Parameter**: die Anzeige blieb auf dem alten Stand, obwohl
+> der neue danebenstand. Der Code-Kommentar sagte da schon eine Aktualität zu, die es nicht gab; die
+> Lücke fand der lokale Review-Agent, nicht die zwölf grünen Tests.
+>
+> Prüffrage vor jedem „damit ist es belegt": *Habe ich die Variante gemessen, die hinterher wirklich
+> gespeichert/ausgeliefert wird — oder nur die aufgeräumte?* Die Kombination gehört zusätzlich
+> gemessen, und was dabei **nicht** behoben wird, in Kommentar, PR-Body und eigenen Vorgang.
+
+> ⚠️ **Abgerufene Fremd-Artefakte (HTML-Seiten, Logs) sind selten UTF-8 — `grep` ohne `-a` meldet
+> darauf stillschweigend „kein Treffer".** Gemessen 2026-08-23 (`schn_ivena#124`): sieben abgerufene
+> ISO-8859-Seiten wurden per `grep -q` auf einen Marker geprüft; `grep` hielt sie für binär und gab
+> für **jede** Zeile Exit 1 zurück — die Tabelle las sich als „kein Parameter wirkt", das Gegenteil
+> des wahren Befunds. Also `LC_ALL=C grep -a` und in jede Probentabelle **eine Spalte aufnehmen, die
+> an einem anderen Werkzeug hängt** (hier die Byte-Grösse der Seite): sie war das Einzige, was den
+> Widerspruch sichtbar machte. Verwandt, gleiche Bauart: `$VAULT/referenz/stille-messfallen-shell-git.md`.
 
 > 🔴 **Dateiinhalte NIE per `base64 -d` aus der Contents-API lesen, ohne die Vollständigkeit zu prüfen.**
 > `gh api ".../contents/<pfad>" --jq .content | base64 -d` kann **still abbrechen** und einen Teil der
