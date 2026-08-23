@@ -270,6 +270,21 @@ Delphi = DUnitX (`$VAULT/referenz/dunitx-patterns.md`,
 > gegen den alten und einmal gegen den neuen Test fahren. Nur der Unterschied zwischen beiden Läufen ist
 > der Beleg — ein einzelner roter Lauf ist keiner. Die Tabelle mit beiden Spalten gehört in den PR-Body.
 >
+> 🔴 **Zwei Mechaniken, ohne die die Probe SELBST lügt** — beide am 2026-08-23 (`edp-ctrl#55`) bezahlt:
+>
+> - **Ein Übersetzungsfehler sieht aus wie eine bestandene Mutation.** Ein `if false {` auf den einzigen
+>   Nutzer eines Imports lässt das Paket nicht mehr bauen: `go test` meldet `FAIL`, aber **kein einziger
+>   Test ist gelaufen**. Die Auswertung muss `[build failed]` / `declared and not used` / `cannot use` /
+>   `undefined:` abfangen und den Fall als **ungültig** melden statt als rot. Drei von 22 Mutationen
+>   fielen darauf; alle drei liessen sich umbauen, sodass sie nur den Prüfgegenstand treffen —
+>   `if false && <original>` statt `if false`, und einen Format-Platzhalter samt Argument entfernen
+>   statt nur den Text.
+> - **Eine Mutation kann den Zieltest HÄNGEN lassen, statt ihn rot zu machen.** Wird eine Zeitgrenze
+>   entfernt, wartet der Test bis zum Go-Vorgabewert von 10 Minuten — und die ganze Probenreihe läuft in
+>   den Deckel des aufrufenden Kommandos. Also `go test -timeout 40s` fahren und einen Hänger als Rot
+>   werten, **aber nur**, wenn der Zieltest im Goroutine-Dump steht; sonst hängt etwas anderes und die
+>   Probe belegt nichts.
+>
 > Verwandt, eine Ebene höher: [[tim/feedback/pruefungen-muessen-sich-selbst-erklaeren]] — dort auch der
 > Befund, dass der **Behebungsvorschlag** einer Prüfung selbst ein Prüfgegenstand ist. Im selben Lauf
 > riet die Meldung, „die erwartete Anzahl anzupassen"; `Anzahl = 0` war gültig und machte die Prüfung
@@ -506,6 +521,11 @@ ihn **nicht** — dann auf einen fremd gehaltenen Lock **nicht warten**, aber ih
 > die VM gar nicht brauchen (unerreichbarer Host, DNS), laufen ohne Lock — dann auch nicht darauf warten.
 > Für einen **dauerhaften `sc`-Fehler** ohne Dienst-Manipulation: `sc query \\10.255.255.1` liefert
 > reproduzierbar `[SC] … FEHLER 123:`, rein lesend (gemessen 2026-08-21, `edp-ctrl#28`).
+>
+> **Das alte Binary fürs A/B beschaffen, ohne den Arbeitsbaum anzufassen:**
+> `git archive HEAD | tar -x -C <tmpdir>` legt den committeten Stand daneben — kein `git stash`, kein
+> Risiko, uncommittete Änderungen zu verlieren (dieselbe Gefahr wie bei der `git checkout --`-Warnung
+> oben). Dort bauen und beide Binaries nacheinander gegen dieselbe Gegenstelle fahren.
 >
 > **Den Fall auf der echten VM herstellen, ohne ein Repo anzufassen:** `gitSyncVM` fährt `fetch` +
 > `checkout -B` + `reset --hard`, aber **kein `git clean`** — eine **untrackte** Datei im
