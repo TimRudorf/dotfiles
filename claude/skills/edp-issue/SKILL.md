@@ -352,6 +352,15 @@ Delphi = DUnitX (`$VAULT/referenz/dunitx-patterns.md`,
 > `head -c 6 <datei> | xxd` gegenlesen. Und **jede** Auswertung eines Testlaufs prüft `TotalCount`
 > zusätzlich zu `FailedCount` — ein Lauf ohne Tests ist kein grüner Lauf. Weitere Fälle derselben Bauart:
 > `$VAULT/referenz/stille-messfallen-shell-git.md`.
+>
+> ⚠️ **Und er ist auch kein roter.** Bricht ein Testskript vor dem ersten Fall ab, ist der
+> Rückgabewert ungleich null — beim Rot-vor-Grün-Schritt liest sich das wie eine **geglückte
+> Reproduktion**. Gemessen 2026-08-23 (`edp/.github#155`): ein `$` in der Datentabelle eines
+> `set -u`-Skripts (`{$R}` im Begründungstext, in Doppelquotes) beendete den Lauf mit
+> „R ist nicht gesetzt", Status 1, **null geprüfte Fälle** — und der erwartete rote Lauf schien
+> einzutreten. Aufgefallen ist es nur, weil die Ausgabe keine Fallnamen enthielt. Also die Fallzahl
+> in **beide** Richtungen prüfen, und bei Rot zusätzlich die **Namen** der roten Fälle gegen die
+> Erwartung halten.
 
 > 🔴 **Dateiinhalte NIE per `base64 -d` aus der Contents-API lesen, ohne die Vollständigkeit zu prüfen.**
 > `gh api ".../contents/<pfad>" --jq .content | base64 -d` kann **still abbrechen** und einen Teil der
@@ -742,6 +751,19 @@ kein `.gitignore`-Eintrag, keine Rotation, kein PR ([[tim/feedback/edp-secrets-n
   Genau **ein** passendes wählen (im Zweifel das dominante Änderungsmotiv des PRs). Bewusst reine Release-Notes-
   Flags (`merge:no-release-note`, `merge:release-note-etc`) nur setzen, wenn das erkennbar gewollt ist.
 
+  > 🔴 **Diese Liste ist der gemeinsame Nenner, nicht der Bestand des Repos.** Einzelne Repos führen
+  > mehr, und dann ist das speziellere Label das richtige. `edp/.github` etwa führt 15 `merge:*`,
+  > darunter `merge:ci/workflows` („Änderung an CI/Workflows — Pipelines, Actions, Automatisierung"),
+  > `merge:task`, `merge:note`, `merge:brainstorming`, `merge:security-issue`, `merge:sonstiges`.
+  > Die Definitionsquelle mit Beschreibungen ist `.github/labels.yml` des jeweiligen Repos;
+  > `gh label list -R … --json name` reicht für die blosse Menge.
+  >
+  > ⚠️ **Und ein Präzedenzfall altert.** `merge:ci/workflows` kam in `edp/.github` erst mit PR #129
+  > dazu — ältere PRs an derselben Datei tragen deshalb `merge:task` und sind **kein** Vorbild mehr.
+  > Also nicht den ähnlichsten alten PR kopieren, sondern die letzten ~30 gemergten ansehen
+  > (`gh pr list --state merged --limit 30 --json number,title,labels`) und prüfen, was seit
+  > Einführung des passenderen Labels tatsächlich verwendet wird.
+
 - **`todo:*`-Label** — was nach dem Merge-Ready-Zustand noch an **menschlicher** Arbeit offen ist:
   - `todo:review` — praktisch immer setzen (Code/Konzept braucht menschliches Review über das lokale hinaus).
   - `todo:testing` — zusätzlich setzen, wenn die Änderung sinnvoll noch einen **manuellen** Funktionstest durch
@@ -881,6 +903,37 @@ eigentlichen Merge dem Team/Reviewer überlassen — **nicht selbst mergen**.
 > Auslöser beseitigt und die Ursache stehen lassen — Go und Frontend prüften weiter still den falschen
 > Baum. Prüffrage: *ist die benannte Stelle die einzige Betroffene, oder nur die lauteste?* Wenn ein
 > Mechanismus geteilt ist, gehört der Fix an die Wurzel ([[tim/feedback/generisch-ueber-oekosysteme]]).
+
+> 🔴 **Und vor jeder Messung durchspielen, wie ein echter TREFFER aussehen würde.** Die Regeln oben
+> schützen gegen *zu wenig* Messung. Dieser Fall ist die Umkehrung: eine Messung kann org-weit
+> vollständig, sauber gegengeprüft und trotzdem wertlos sein, weil sie am **falschen Mechanismus**
+> ansetzt. Eine Sonde, die bei einem echten Treffer gar nicht anschlagen könnte, liefert kein
+> „unbedenklich" — sie liefert überhaupt kein Ergebnis, und zwar in Form eines Satzes, der wie ein
+> Ergebnis klingt.
+>
+> Gemessen 2026-08-23 (`edp/.github#155`): Belegt werden sollte, dass ein `*.dof` in der
+> `.gitignore`-Vorlage kein Bau-Risiko trägt. Der Beleg lautete „keine `.dpr`, `.dpk` oder `.dproj`
+> der Organisation bindet eine `.dof` ein" — erhoben über flache Klone aller 102 Repos mit
+> Delphi-Quellen, 2327 Dateien, Dateizahl je Repo gegengeprüft, Falschtreffer auf `.DoFontChange`
+> erkannt und ausgefiltert. Handwerklich einwandfrei. Nur: **eine `.dof` wird nie eingebunden** — die
+> Delphi-6/7-IDE lädt sie über den gleichen Basisnamen. Die Suche hätte dasselbe Ergebnis geliefert,
+> wenn jedes Repo betroffen gewesen wäre. Mit der tragfähigen Frage — *liegt eine gleichnamige
+> `.dproj` daneben?* — kippte das Ergebnis: 4 von 6 Fundstellen waren der einzige Träger der
+> Bauoptionen, und der PR musste nach dem Review umgedreht werden.
+>
+> Zwei Verschärfungen, die den Fall teuer machen:
+>
+> - **Der Satz klang wie ein Ergebnis.** „Keine `.dpr` bindet eine `.dof` ein" ist wahr. Wahr und
+>   wertlos sieht aus wie wahr und tragend.
+> - **Der Issue-Text hatte den Fehlschluss vorgegeben** und die Frage deshalb als „beides vertretbar"
+>   eingestuft. Eine übernommene Beweisführung wird nicht dadurch belastbar, dass sie im Vorgang steht
+>   — die Wirkungsbehauptung des Melders gehört genauso an der Quelle gemessen wie seine Fundstellen
+>   ([[tim/feedback/korrektur-erreicht-alle-traeger]]).
+>
+> Und der Grund, warum die Testsuite hier nicht hilft: die vier Fälle waren mutationsfest und haben
+> trotzdem die falsche Entscheidung festgenagelt. **Ein scharfer Test über einer falschen Prämisse
+> zementiert sie** — gefangen hat es erst der lokale Review-Agent (Core-Schritt 8c).
+> Volltext: [[tim/feedback/urteil-braucht-vollstaendige-messung]].
 
 ## Zusatz zu Core-Schritt 8b (CI beobachten)
 
