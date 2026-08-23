@@ -205,15 +205,34 @@ Delphi = DUnitX (`$VAULT/referenz/dunitx-patterns.md`,
 > Die Mutations-Ergebnisse gehören als Tabelle in den PR-Body — sie sind der Beleg, den ein Reviewer
 > sonst selbst herstellen müsste.
 >
-> 🔴 **Die Probe braucht zwei Fälle, die keine Mutation sind: eine unveränderte Baseline und mindestens
-> eine Gegenrichtung.** Ohne Baseline („unverändert → grün") merkt man nicht, wenn eine Prüfung nach
-> einer Korrektur *immer* rot ist; ohne Gegenrichtung („das darf NICHT rot machen") nicht, wenn sie
-> *zu viel* fängt. Die Probe deshalb als Skript bauen, das je Fall aus einer **frischen Kopie** startet
+> 🔴 **Die Probe braucht drei Fälle, die keine Mutation sind: eine unveränderte Baseline, mindestens
+> eine Gegenrichtung und eine Verdrahtungsprobe.** Ohne Baseline („unverändert → grün") merkt man
+> nicht, wenn eine Prüfung nach einer Korrektur *immer* rot ist; ohne Gegenrichtung („das darf NICHT
+> rot machen") nicht, wenn sie *zu viel* fängt; ohne Verdrahtungsprobe („fällt auf, wenn die Prüfung
+> ihren Gegenstand gar nicht mehr erreicht?") nicht, wenn sie lautlos leerläuft.
+> Die Probe deshalb als Skript bauen, das je Fall aus einer **frischen Kopie** startet
 > und Rückgabewert **und** Meldungstext prüft — dann fällt beides sofort auf.
 > Gemessen 2026-08-21 (`delphi-devsetup#43`): Ein Fix gegen einen zu **engen** Prüfbestand geriet zu
 > **weit** und liess den Bestand leerlaufen; sichtbar wurde das ausschliesslich an der roten Baseline.
 > Ein reiner „macht es rot?"-Durchgang hätte alle sieben Mutationen als bestanden gemeldet, während die
 > Prüfung nichts mehr prüfte.
+>
+> 🔴 **Die Verdrahtungsprobe wird am häufigsten vergessen — und Mutationsfestigkeit ersetzt sie
+> nicht.** Gemessen 2026-08-23 (`installer#133`, PR #147): eine Zusicherung lief über eine **im Test
+> notierte Liste** von `.iss`-Sektionen. Ein Tippfehler darin (`'Run'` → `'Runn'`) machte sie
+> vollständig wirkungslos — die Suite blieb grün, **auch mit dem Originalfehler in der `.iss`**. Der
+> Erkenner selbst war zu diesem Zeitpunkt in **beide** Richtungen mutationsfest (stumpf → rot,
+> überempfindlich → rot): geprüft war die *Funktion*, nicht ihre *Anbindung*. Gefunden hat es der
+> lokale Review-Agent, nicht die grüne Suite. A/B mit derselben Doppelmutation: vorher
+> `total=143 rot=0`, nachher `total=146 rot=1`.
+>
+> **Prüffrage:** führt die Prüfung eine **Aufzählung** mit sich — Sektionsnamen, Dateiendungen,
+> Produkt-/Repo-Listen, Suchmuster? Dann ist diese Aufzählung selbst ein Prüfgegenstand und gehört
+> **gegen die Wirklichkeit erhoben, nicht notiert**: aus den Dateien erheben, welche Fälle es
+> tatsächlich gibt, und fordern, dass jeder davon in der Liste steht. Das schliesst drei Lücken auf
+> einmal — den Tippfehler, das stille Weglassen eines Eintrags und das Nachwachsen (ein neuer Fall
+> wird rot, statt unbemerkt durchzurutschen). Rezept und Messung:
+> `$VAULT/projekte/installer/pester-verifikation.md` § 2.
 >
 > 🔴 **Die frische Kopie selbst kann die Baseline rot machen — und dann meldet JEDE Mutation
 > „bestanden".** Die Vorrichtung soll je Fall aus einer unberührten Kopie starten; genau dabei geht
@@ -285,6 +304,12 @@ Delphi = DUnitX (`$VAULT/referenz/dunitx-patterns.md`,
 > **vollständigen** Testnamen. Ein Vergleich gegen `ErkenntDenEinzeiler` statt
 > `Selbstprobe_ErkenntDenEinzeiler` meldet „nicht erfüllt", obwohl die Detailliste stimmt; im Zweifel
 > gewinnt die Detailliste ([[tim/feedback/kopfzahlen-aus-detailliste-nachrechnen]]).
+>
+> ⚠️ **Die erwartete Liste mit echten Umlauten notieren.** Testnamen tragen hier ä/ö/ü/ß
+> ([[tim/feedback/umlauts]]); eine in ASCII geschriebene Erwartung (`laesst` statt `lässt`) trifft nie
+> und meldet „ABWEICHUNG", obwohl die Detailliste stimmt. Gemessen 2026-08-23 (`installer#133`): zwei
+> Proberunden hintereinander so fehlbewertet. Symptom: **genau ein** Fall weicht ab, und seine roten
+> Namen lesen sich beim Nachsehen alle richtig.
 
 > 🔴 **Die Mutationsprobe NICHT über einen Schwarm von `workflow_dispatch`-Läufen fahren.** Ist die
 > Dev-VM belegt, liegt der Ausweg über die CI nahe — er kann sich aber selbst zerstören: am
@@ -951,8 +976,25 @@ eigentlichen Merge dem Team/Reviewer überlassen — **nicht selbst mergen**.
 >
 > Gemessen 2026-08-23 (`installer#95`): drei Läufe hintereinander rot, jedes Mal ein **anderes**
 > Produkt, immer dieselbe Zeile — ein Aussetzer der Release-Ablage in einem Codepfad, den der PR
-> nicht berührt. Wechselnde Betroffene bei gleichbleibender Fehlerstelle ist das Muster; ein echter
-> Defekt trifft immer dieselben.
+> nicht berührt. Wechselnde Betroffene bei gleichbleibender Fehlerstelle sind ein **Hinweis** auf
+> einen Aussetzer.
+>
+> 🔴 **Die Umkehrung gilt aber NICHT: gleichbleibende Betroffene sind kein Beleg für einen echten
+> Defekt.** Gemessen 2026-08-23 (`installer#133`): nach dem Erstlauf traf es **dreimal in Folge
+> dasselbe Produkt** (`web`) an derselben Zeile — der vierte Lauf war grün, es war durchgehend ein
+> Aussetzer. Wer der Faustregel folgt, sucht ab dem zweiten Mal einen Defekt an `web`, den es nicht
+> gibt. Entschieden hat erst eine **anders konstruierte** Messung am Gegenstand statt am Symptom
+> ([[tim/feedback/urteil-braucht-vollstaendige-messung]]): Zustand der Assets über die API
+> (`state`/`size`), denselben Download mit denselben Argumenten **lokal** nachstellen, und die
+> Anforderungslisten vergleichen — das grüne `server` forderte eine echte **Obermenge** dessen, woran
+> `web` scheiterte.
+>
+> ⚠️ **Und die Baseline prüfen, bevor man sich auf sie beruft.** „Auf `dev` ist es grün" trägt nur,
+> wenn der dortige Lauf **dieselben Eingaben** hatte. Im selben Vorfall war das zentral gepinnte
+> Redist-Bundle 15 Minuten vor dem eigenen Lauf auf eine neue Fassung gezogen worden; der letzte
+> grüne `dev`-Lauf hatte noch die alte gezogen und war damit keine Vergleichsgrundlage. Bei einem
+> Fehler im Beschaffungspfad also `createdAt` des Release bzw. den Pin gegen die eigene Laufzeit
+> halten.
 >
 > Das Ergebnis gehört **in den PR-Body**, nicht weggeschwiegen: welcher Job, welche Zeile, der
 > Gleichheitsbeleg, wie oft. Und wenn es dafür schon einen Vorgang gibt, gehört die Häufigkeit als
