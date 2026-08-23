@@ -424,6 +424,27 @@ ihn **nicht** — dann auf einen fremd gehaltenen Lock **nicht warten**, aber ih
 > verbleibenden Treffer **einzeln zitieren** und die gewählte Lesart in **Issue-Kommentar und PR-Body**
 > begründen. Ein Kriterium ist eine Absicht in Kommandoform — trifft das Kommando mehr als die Absicht,
 > gewinnt die Absicht, aber nur ausgesprochen.
+>
+> 🔴 **Dritter Fall: das Kriterium nennt einen Mechanismus, den dieses Repo gar nicht fährt.** Dann
+> scheitert der wörtliche Nachweis, und das Fehlerbild zeigt auf die eigene Änderung. Gemessen
+> 2026-08-23 (`schn_ivena#113`): gefordert war „nach dem Merge ein Release auf `dev` erzeugen und
+> prüfen, dass die Notes Überschriften tragen". `actions/release-publish` ruft `generate-notes` aber
+> **ausschliesslich** im Modus `explicit`; `rolling` und `tagpush` setzen Festtext, und `explicit`
+> erreicht nur, wer `versioned-release` bzw. `versioned-release-on-bump` übergibt — beide zentral auf
+> `false`. Wer das Kriterium wörtlich versucht, bekommt den Rolling-Festtext und hält die Datei für
+> kaputt.
+>
+> Zwei Regeln daraus: **die Wirkungsbehauptung eines Kriteriums an der Quelle messen, bevor man sie im
+> PR wiederholt** — und zwar zusätzlich **am Produkt** (`gh release list` plus einen Body ansehen), weil
+> das den Zweig zeigt, der tatsächlich läuft. Merksatz: **ein Endpunkt-Beleg ist ein Beleg über den
+> Endpunkt, nicht über die Anlage.** Entfaltet eine eingespielte Datei ihre Wirkung erst über eine
+> Pipeline, ist die erste Frage nicht „liest jemand die Datei?", sondern „betritt die Pipeline diesen
+> Zweig überhaupt?" — hier hätte ein Blick auf drei Release-Bodies das in zwei Minuten entschieden. Und: die im PR-Text zitierte Begründung darf keine
+> **weitergereichte** sein. Hier stand der unbedingte Satz im Kopfkommentar der Vorlage
+> (`repo-templates/release.yml`) — er stimmt für `explicit` und wurde ungeprüft übernommen, was ein
+> `todo:testing` kostete, das wieder gesetzt werden musste
+> ([[tim/feedback/korrektur-erreicht-alle-traeger]]). Die gewählte Lesart samt ausführbarem Ersatzweg
+> gehört als Kommentar ans Issue, nicht nur in den PR.
 
 > 🔴 **Wo ein CI-Artefakt vorliegt, wird AM ARTEFAKT gemessen — ein selbst nachgebautes Erzeugnis ist
 > eine Hypothese über den Bau, kein Beleg.** Der Delphi-Lauf hängt das Bauergebnis an
@@ -547,6 +568,21 @@ ihn **nicht** — dann auf einen fremd gehaltenen Lock **nicht warten**, aber ih
 > eine Aussage, die der Fix ungültig macht. Vor dem Push einmal nach Text**trägern** der Zusage suchen, die
 > man gerade bricht ([[tim/feedback/korrektur-erreicht-alle-traeger]]).
 
+> **Ausnahme — die Änderung ist `.github/release.yml`** (Release-Notes-Kategorien): weder Dev-VM noch
+> CI-Artefakt, aber **vor dem Merge live messbar**. `POST /repos/<repo>/releases/generate-notes` erzeugt
+> nur Text und legt kein Release an, und `target_commitish` bestimmt, von welchem Ref die Konfiguration
+> gelesen wird — damit lässt sich die eigene, noch ungemergte Fassung gegen `dev` als A/B fahren. Fehlt
+> ein passend gelabelter Pull Request im eigenen Repo, an einem Repo mit **byte-identischer** Datei
+> messen (Prüfsumme vergleichen). Rezept, Fallen und die gemessenen Regeln (erster Treffer gewinnt,
+> `exclude` schlägt `categories`, `New Contributors` bleibt unberührt):
+> `$VAULT/referenz/edp-release-notes-kategorien.md`.
+>
+> ⚠️ Beim Vergleich zweier solcher Dateien **YAML parsen statt greppen**: `^\s+- \K\S+$` zieht bei
+> `- 'merge:release-note-etc'` die Anführungszeichen mit und trifft nie — in diesem Lauf beschrieb das
+> zwei Repos falsch. Und `exclude`- von `categories`-Einträgen **getrennt** zählen, sonst zählt ein
+> Ausschluss als Deckung. Dass die Kopfzahl trotzdem stimmen kann, macht es unauffällig
+> ([[tim/feedback/kopfzahlen-aus-detailliste-nachrechnen]]).
+
 > **Ausnahme — die Änderung IST eine CI-/Delivery-Workflow-Datei** (z.B. `.github/workflows/delivery.yml`
 > selbst): Die lässt sich nicht via `/edp-develop` auf die Dev-VM deployen. Verifikation dann **artefakt-basiert**:
 > `branch-build.yml` baut bei jedem Feature-Push die `.exe` als Workflow-Artefakt (kein Release); für den
@@ -589,6 +625,12 @@ Raten (gemessen 2026-08-21, `edp-ctrl#47`). Reihenfolge: PR anlegen, Nummer lese
 > - **Geschlossen ≠ behoben.** Fünf Vorgänge standen als `completed` geschlossen, während die Dateien
 >   unverändert im Baum lagen. Das ist ein eigener Befund und wird **berichtet**, nicht eigenmächtig
 >   durch Wiedereröffnen korrigiert — ein geschlossener Vorgang kann eine bewusste Entscheidung sein.
+> - 🔴 **Auch nach dem Namen des SCHALTERS suchen, nicht nur nach der Beschwerde.** Sieht ein Fund wie
+>   ein Konstruktionsmangel aus, ist er oft ein bewusst gewählter Zustand — und der Vorgang, der das
+>   entschieden hat, heisst nach dem **Mechanismus**, nicht nach dem Symptom. Gemessen 2026-08-23: eine
+>   Suche nach „Notes entstehen nicht" fand nichts; erst die Suche nach `versioned-release` fand
+>   `edp/.github#142`, wo genau dieser Zustand entschieden worden war. Ohne den Zwischenschritt wäre ein
+>   Issue gegen eine getroffene Entscheidung entstanden.
 
 ⚠️ **Secrets sind von „Randfund mitfixen" ausgenommen:** erfassen als Issue, sonst nichts — keine Löschung,
 kein `.gitignore`-Eintrag, keine Rotation, kein PR ([[tim/feedback/edp-secrets-nur-als-issue]]).
@@ -616,6 +658,13 @@ kein `.gitignore`-Eintrag, keine Rotation, kein PR ([[tim/feedback/edp-secrets-n
   - `todo:review` — praktisch immer setzen (Code/Konzept braucht menschliches Review über das lokale hinaus).
   - `todo:testing` — zusätzlich setzen, wenn die Änderung sinnvoll noch einen **manuellen** Funktionstest durch
     einen Menschen braucht (typisch bei UI-/Workflow-Änderungen; bei reinem Refactoring/Doku i.d.R. nicht nötig).
+
+    > 🔴 **Das Label hängt nicht an der Änderungsart, sondern an einer einzigen Prüffrage: *entsteht der
+    > offene Nachweis von allein, sobald die Anlage läuft?*** Ja → weg damit. Nein → dran, egal wie
+    > harmlos die Änderung aussieht. Gemessen 2026-08-23 (`schn_ivena#129`): einmal gesetzt ohne
+    > Begründung, einmal entfernt mit einer Begründung, die an der Quelle nicht hielt — beide Male war
+    > die Änderungsart der Massstab statt der Nachweis. Eine reine Konfigurationsdatei kann `todo:testing`
+    > brauchen, ein UI-Umbau mit belegtem Durchlauf nicht.
 
 **Copilot wird nicht mehr angefordert** — der Bot ist auf der Instanz inaktiv, `--add-reviewer` ist ein stiller
 No-op ([[tim/feedback/pr-review-lokaler-agent]]).
@@ -830,6 +879,19 @@ Normalfall, sobald der PR Markdown oder YAML berührt hat.
 > Die Review-Notiz an den PR nennt **auch die Funde ohne Befund** („geprüft und in Ordnung") — sie sagt
 > dem menschlichen Reviewer, was er *nicht* mehr selbst durchgehen muss, und ist damit die halbe
 > Ersparnis.
+>
+> Sie benennt dabei den **Prüfstand, nicht den Prüfer**: „skeptisch gegen den serverseitigen Head
+> `<sha>` geprüft, Schwerpunkte: …". Eine Einleitung über den Apparat ist ein Verweis auf die
+> Arbeitsweise und gehört nicht in Repo-sichtbaren Text ([[tim/feedback/keine-jarvis-referenzen-extern]]);
+> der Prüfstand trägt dieselbe Information und ist zudem nachprüfbar. Fällt so eine Formulierung
+> nachträglich auf, **alle** Träger gegenprüfen — PR-Body, Issue-Kommentare, abgeleitete Vorgänge.
+
+> ⚠️ **Ein gekürztes Beleg-Zitat muss die Kürzung markieren — sonst kürzt man die Widerlegung weg.**
+> Gemessen 2026-08-23 (`schn_ivena#129`): der PR-Body zitierte die A/B-Ausgabe und endete **genau vor**
+> dem Abschnitt `## New Contributors`, in dem der angeblich ausgeschlossene Cascade-Pull-Request noch
+> stand. Die widerlegende Zeile war in der eigenen Messung enthalten, nur nicht im Zitat. Also: entweder
+> vollständig zitieren oder `[…]` setzen — und vor dem Einfügen einmal fragen, *was ich gerade
+> weglasse* ([[tim/feedback/urteil-braucht-vollstaendige-messung]]).
 
 > 🔴 **Wer einem Review-Fund widerspricht, muss die Gegenprobe ANDERS konstruieren als die
 > ursprüngliche Messung.** Der Core verlangt, Funde selbst zu verifizieren statt sie blind zu
@@ -889,5 +951,43 @@ das verhindert doppelte Arbeit an derselben Datei.
 > `pins/redist-bundle.txt` der Schalter, der ausrollt; `release.yml` fasst ihn **nicht** an. Ein Release
 > ohne nachgezogenen Pin ist für jeden Konsumenten folgenlos. Rezept:
 > `$VAULT/referenz/edp-redist-komponente-pruefen.md`.
+
+## Zusatz: zwei Sessions am selben Vorgang
+
+Der Skill läuft autonom und im Hintergrund — es kann eine **zweite Session denselben Vorgang halten**.
+Bisher stand dazu nur die Dev-VM-Regel ([[tim/feedback/dev-vm-exklusiv-belegen]]); die deckt eine
+geteilte *Maschine* ab, nicht einen geteilten *Vorgang*. Gemessen 2026-08-23 an `schn_ivena#113`, wo
+zwei Sessions parallel liefen:
+
+- **Ein leerer Bestand ist eine Momentaufnahme, keine Zusicherung.** `gh pr list --head <branch>` lieferte
+  um 19:11 nichts; um 19:14 legte die andere Session PR #129 an. Abgefangen hat es `gh pr create` selbst
+  („a pull request for branch … already exists: …#129") — diese Ablehnung ist **kein Fehler, sondern die
+  Abstimmung**: nicht mit einem neuen Branch daran vorbeiarbeiten, sondern den bestehenden PR
+  übernehmen. Umgekehrt gilt: **einen fremden Remote-Branch zum eigenen Vorgang als Signal lesen**, dass
+  jemand daran ist, und vor dem Weiterbauen dessen Stand prüfen statt neu anzufangen.
+- **Der Worktree ist geteilt, und ein Branch-Wechsel darin ist für die andere Session unsichtbar.** Ein
+  Wegwerf-Branch für eine Messung liess `.worktrees/<vorgang>/<repo>` kurzzeitig auf `tmp/…` stehen,
+  **während** der Review-Agent dort las. Er hat es bemerkt und gegen den serverseitigen Head neu
+  gemessen — das war Aufmerksamkeit, kein Verfahren. Deshalb: vor einem Branch-Wechsel im geteilten
+  Worktree ansagen, und den Wechsel nicht über einen laufenden Review legen.
+- **Review-Agenten grundsätzlich gegen den serverseitigen PR-Head beauftragen**, nicht gegen „das
+  Arbeitsverzeichnis" (`gh pr view <nr> --json headRefOid`, danach `gh api …/contents/<pfad>?ref=<sha>`
+  mit Grössenabgleich). Ein Arbeitsverzeichnis kann während des Laufs wandern; ein SHA nicht.
+- **Doppelte Review-Notizen zusammenführen.** Zwei Sessions setzten binnen einer Minute zwei lange,
+  weitgehend deckungsgleiche Notizen an denselben PR. Das ist für den menschlichen Reviewer Rauschen und
+  hebt die Ersparnis auf, die die Notiz bringen soll. Die vollständigere stehen lassen, die eigene auf
+  die **Delta-Funde** einkürzen (`gh api -X PATCH repos/<org>/<repo>/issues/comments/<id>`).
+- **Randfunde nicht doppelt erfassen.** Vor jedem `gh issue create` gilt ohnehin die Bestandsprüfung
+  ([[tim/feedback/issue-bestand-pruefen-vor-neuanlage]]); bei paralleler Arbeit kommt hinzu, dass der
+  Bestand **während des Laufs wächst**. Hier hatte die andere Session zwei der drei Randfunde bereits
+  angelegt — abstimmen, wer welchen nimmt, statt Dubletten zu erzeugen.
+- **Widerspricht die andere Session einem eigenen Befund, gilt dieselbe Regel wie beim Review-Agenten:**
+  die Gegenprobe **anders konstruieren** ([[tim/feedback/urteil-braucht-vollstaendige-messung]]). In
+  diesem Lauf hatte sie in beiden Richtungen recht — einmal lag ihre Detailliste falsch (Regex zog
+  Anführungszeichen mit, die Kopfzahl stimmte trotzdem), einmal meine Wirkungsbehauptung.
+
+**Schreibende Aktionen sind billig zu koordinieren, teuer zurückzunehmen.** Wer am gemeinsamen PR-Body
+schreibt, sagt es an; wer wartet, fasst ihn nicht an. Alles andere (Issue-Kommentare, eigene Vorgänge,
+Vault) läuft parallel ohne Absprache.
 
 Abschließend `skill-optimize` mit `edp-issue` aufrufen.
