@@ -235,6 +235,15 @@ Delphi = DUnitX (`$VAULT/referenz/dunitx-patterns.md`,
 > Ein reiner „macht es rot?"-Durchgang hätte alle sieben Mutationen als bestanden gemeldet, während die
 > Prüfung nichts mehr prüfte.
 >
+> 🔴 **`git archive HEAD` archiviert den COMMITTETEN Stand — die eigene, noch uncommittete Änderung
+> ist darin nicht enthalten.** Dann misst jeder Fall den Stand *vor* dem Fix, und die ganze Reihe
+> meldet dieselbe Trefferliste. Gemessen 2026-08-24 (`installer#134`): dreizehn Fälle, jeder mit
+> denselben 24 roten Tests — exakt der Liste des Rot-vor-Grün-Laufs. Das Symptom unterscheidet sich
+> vom roten Bestand oben: die Zahlen liegen nicht nur *nahe beieinander*, sie sind **identisch**, und
+> zwar mit einem Lauf, den man vorhin schon gesehen hat. Prüffrage: *kenne ich diese Fundliste
+> bereits?* Also **vor** der Reihe committen (oder `git archive $(git stash create)` nehmen) — und
+> die Baseline als eigenen Fall mitführen, die hier als Einzige Alarm schlug.
+>
 > 🔴 **Die Verdrahtungsprobe wird am häufigsten vergessen — und Mutationsfestigkeit ersetzt sie
 > nicht.** Gemessen 2026-08-23 (`installer#133`, PR #147): eine Zusicherung lief über eine **im Test
 > notierte Liste** von `.iss`-Sektionen. Ein Tippfehler darin (`'Run'` → `'Runn'`) machte sie
@@ -265,6 +274,19 @@ Delphi = DUnitX (`$VAULT/referenz/dunitx-patterns.md`,
 > vorauszusetzen, und in der Kopie herstellen, was die Suite braucht (`git init` + `git remote
 > add …`).
 >
+> 🔴 **Dieselbe Familie eine Ebene tiefer: eine TESTFIXTURE, die den Prüfgegenstand neu
+> serialisiert, misst eine Datei, die es so nie gibt.** Wer eine Probe-Kopie über
+> `yaml.safe_dump` / `json.dumps` / einen Formatter erzeugt, bekommt zwar denselben *Inhalt*, aber
+> fremde Einrückung, Anführungszeichen und Schlüsselreihenfolge — und alles, was an der **Form**
+> hängt (ein einzufügender Textblock, ein Zeilenanker, ein Diff), scheitert daran. Gemessen
+> 2026-08-24 (`edp/.github#161`): eine Probe, die den vom Prüfer vorgeschlagenen Behebungsblock
+> anwendet, brach für 9 von 17 Fällen mit „kein gültiges YAML mehr" ab. Der Prüfling war in Ordnung,
+> die Vorrichtung nicht — und das Fehlerbild zeigte auf den Prüfling.
+>
+> Fixtures deshalb **textuell aus dem echten Artefakt** ableiten (Zeile entfernen, Zeile einfügen),
+> nicht über einen Serialisierer. Prüffrage: *unterscheidet sich meine Fixture in irgendetwas von
+> der Datei, die im Betrieb vorliegt — und hängt der Prüfgegenstand daran?*
+>
 > 🔑 **Sicherer als jede Nachbildung: gar nicht kopieren.** Die Umgebung vollständig
 > herzustellen ist Rätselraten — was die Suite braucht, steht nirgends. Wo der Prüfgegenstand
 > **eine Datei** ist (ein Skript, eine Konfiguration), mutiert man sie **im echten Baum** und
@@ -284,6 +306,34 @@ Delphi = DUnitX (`$VAULT/referenz/dunitx-patterns.md`,
 > als der Hinweistext ausgedünnt wurde. Auffällig wurde es erst durch die Mutationsprobe. Also: die Mutation
 > so wählen, dass sie **nur den Gegenstand** trifft, nicht dessen Beschreibung — und wenn die Suite dabei
 > grün bleibt, ist der Test schuld, nicht die Mutation.
+>
+> 🔴 **Zweite Bauart derselben Falle: der Marker steht in der eigenen Argumentliste.** Eine gute
+> Fehlermeldung führt das **Kommando zum Nachspielen** mit — also steht alles, was man dem Prüfling
+> übergibt, hinterher in der Meldung. Eine Zusicherung „die Meldung enthält, was das Werkzeug gesagt
+> hat" ist dann schon dadurch grün, dass sie den **Aufruf** zitiert. Gemessen 2026-08-24
+> (`installer#134`): der Marker `HTTP 500 …` stand im `-Command`-Argument des Ersatzkommandos; mit
+> einem Prüfling, der die Ausgabe wieder verwarf, blieb genau der wichtigste Fall grün. A/B mit
+> derselben Mutation: Marker im Argument `rot=2`, Marker in einer **Datei** `rot=3`.
+>
+> 🔴 **Dritte Bauart, die teuerste: der Marker steht in der eigenen ZUSAMMENFASSUNG.** Oben kam
+> der Text von aussen (Kommentar, Argument); hier erzeugt ihn der **Prüfling selbst** an einer
+> zweiten Stelle. Fast jeder Bericht führt eine Kopf- oder Zählzeile mit — und die nennt
+> typischerweise *alle* Klassen, Kategorien oder Sollwerte, über die er berichtet, auch die mit
+> Wert null. Eine Zusicherung `case "$out" in *unbestimmbar*` ist dann **immer** erfüllt, weil
+> „0 unbestimmbar" in der Zählzeile steht.
+>
+> Gemessen 2026-08-24 (`edp-runtime-redist#28`): sieben Zusicherungen waren so entwertet — vier auf
+> die Einstufungsklassen, drei auf Pfad, Soll-Fassung und Soll-SHA256, die alle auch im Berichtskopf
+> stehen. Aufgefallen ist es nur, weil die Mutationsprobe die **Namen** der roten Fälle vergleicht:
+> die Mutation machte die Suite rot, aber über *andere* Tests als die, die den Fall abdecken sollten.
+> Belastbar ist eine Zusicherung auf die **Fundzeile in einem Stück**
+> (`grep -qE '^- .*— unbestimmbar:'`), nicht auf den Gesamttext.
+>
+> Prüffrage vor jeder Textzusicherung: *auf wie vielen Wegen kann dieser Text in die Meldung
+> gelangen?* Mehr als einer heisst, der Test misst nicht, was er behauptet. Kopfzeilen, Legenden,
+> Zählzeilen und Fehlermeldungen zählen mit — und sie entstehen oft **später** als der Test. Marker
+> deshalb in eine Datei legen und nur den Pfad übergeben — und dieselbe Frage für Dateinamen,
+> Testnamen und Zwecktexte stellen.
 
 > 🔴 **Mutationsfest heisst nicht, dass der Test den Produktivpfad trifft.** Die Mutationsprobe belegt,
 > dass die Zusicherung scharf ist — nicht, dass der geprüfte Zustand im Betrieb überhaupt vorkommt. Vor
@@ -397,7 +447,8 @@ Delphi = DUnitX (`$VAULT/referenz/dunitx-patterns.md`,
 > **den Rückgabewert des Push lesen**.
 
 > 🔴 **Eine Mutationsprobe kann an der MUTATION scheitern — dann ist der Lauf ungültig, nicht rot.**
-> Zwei Bauarten, beide am 2026-08-23 (`einsatzmonitor#14`) bezahlt:
+> Drei Bauarten; die ersten beiden am 2026-08-23 (`einsatzmonitor#14`) bezahlt, die dritte am
+> 2026-08-24 (`edp/.github#161`):
 >
 > 1. **Die Mutation übersetzt nicht.** Ein herausgeschnittener `ELSE IF`-Zweig liess ein `END` ohne
 >    Semikolon vor dem nächsten `END;` stehen; `Tests Found` erscheint dann gar nicht. Wer nur
@@ -408,17 +459,82 @@ Delphi = DUnitX (`$VAULT/referenz/dunitx-patterns.md`,
 >    hiess in der Signatur aber *ganze Zeile*: das Fenster wurde breiter statt enger, Funde wurden
 >    **unterdrückt** statt falsche erzeugt, und es wurden die falschen Zusicherungen rot. Sichtbar
 >    war das nur, weil die Auswertung die **Namen** der roten Fälle gegen eine erwartete Liste hält.
+> 3. **Der Anker trifft die falsche Fundstelle.** Ein Textersatz mit `count=1` nimmt das **erste**
+>    Vorkommen — und nach einem Umbau steht derselbe Satzanfang oft in einer zweiten, harmlosen
+>    Meldung. Die Mutation greift dann sauber, nur eben am falschen Ort: der Fall meldet
+>    „0 rote Fälle" und liest sich als **fehlgeschlagen**, obwohl er gar nicht gemessen hat.
+>    Gemessen 2026-08-24: die Anker für `Sonderfall:` und `Repo:` landeten beide in der
+>    Leer-/Kaputt-Meldung statt in der Fehlendes-Label-Meldung. Also den Anker so wählen, dass er
+>    **eindeutig** ist (ein Stück der Nachbarzeile mitnehmen), und nach jedem Umbau des
+>    Prüfgegenstands die Anker neu gegenlesen — eine Mutationsreihe altert mit dem Code, den sie
+>    prüft.
 >
 > Also je Fall eine **erwartete Namensliste** führen und maschinell vergleichen — mit den
 > **vollständigen** Testnamen. Ein Vergleich gegen `ErkenntDenEinzeiler` statt
 > `Selbstprobe_ErkenntDenEinzeiler` meldet „nicht erfüllt", obwohl die Detailliste stimmt; im Zweifel
 > gewinnt die Detailliste ([[tim/feedback/kopfzahlen-aus-detailliste-nachrechnen]]).
 >
+> ⚠️ **Diese Liste altert mit den Meldungstexten — und zwar genau dann, wenn das Review sie
+> umformuliert.** Zwei Fallen, beide am 2026-08-24 (`edp-runtime-redist#28`) zugeschlagen: eine
+> Erwartung zeigte auf einen Text, den der Fix ersetzt hatte, und eine auf den **PASS-Text** statt
+> den **FAIL-Text** desselben Falls (`pass "die Fundzeile nennt den Pfad"` gegen
+> `bad "Pfad in der Fundzeile ($…)"` — verschiedene Zeichenketten). Beide Male meldete die Reihe
+> „falsch-rot" für eine Mutation, die einwandfrei gegriffen hatte.
+>
+> Das Fehlerbild ist gutartig, aber es kostet einen ganzen Durchgang: **genau ein** Fall weicht ab,
+> und seine roten Namen lesen sich beim Nachsehen alle richtig. Deshalb nach **jeder** Änderung an
+> einem Meldungstext die Erwartungsliste nachziehen, den erwarteten Text aus dem `bad`-Zweig
+> abschreiben (nie aus dem `pass`-Zweig), und einen abweichenden Fall einzeln nachfahren statt die
+> ganze Reihe zu wiederholen.
+>
+> 🔴 **Am Ende die Zahl der ERGEBNISZEILEN gegen die Zahl der Fälle halten.** Eine Probenreihe kann
+> mittendrin sterben — und eine Reihe, die vorzeitig endet, sieht in der Ausgabe aus wie eine, die
+> durchgelaufen ist. Gemessen 2026-08-24 (`installer#134`): zweimal starb derselbe Hintergrundlauf
+> nach Fall 12 von 17, ohne Fehlermeldung; aufgefallen ist es nur an der Zeilenzahl. Dieselbe Familie
+> wie „`Total` mitlesen" — nur eine Ebene höher.
+>
+> ⚠️ Und **nicht über den Prozessnamen auf das Ende warten**: `until ! pgrep -f 'mut/lauf.sh'` findet
+> sich selbst (das Muster steht in der eigenen Kommandozeile) und wird nie fertig; `pkill -f` tötet
+> aus demselben Grund den eigenen Lauf mit. Beides am 2026-08-24 zugeschlagen, einmal verstärkt durch
+> einen gleichnamigen Prozess aus einer parallelen Session. Belastbar ist ein Kriterium am
+> **Ergebnis**: `until [ "$(grep -c '^…' ergebnis.txt)" -ge <fallzahl> ]`. Das kann sich nicht selbst
+> treffen und unterscheidet „fertig" von „gestorben".
+>
 > ⚠️ **Die erwartete Liste mit echten Umlauten notieren.** Testnamen tragen hier ä/ö/ü/ß
 > ([[tim/feedback/umlauts]]); eine in ASCII geschriebene Erwartung (`laesst` statt `lässt`) trifft nie
 > und meldet „ABWEICHUNG", obwohl die Detailliste stimmt. Gemessen 2026-08-23 (`installer#133`): zwei
 > Proberunden hintereinander so fehlbewertet. Symptom: **genau ein** Fall weicht ab, und seine roten
 > Namen lesen sich beim Nachsehen alle richtig.
+
+> 🔴 **Eine Bedingung STRUKTURELL zu prüfen ist keine Prüfung — sie muss ausgewertet werden.**
+> Bei einer `if:`-Bedingung, einer Regel, einer Konfigurationszeile ist die naheliegende Zusicherung
+> eine über ihre **Form**: welchen Wert sie liest, was sie *nicht* enthält, ob der zweite Operand noch
+> dasteht. Alle drei können richtig und zusammen wirkungslos sein.
+>
+> Gemessen 2026-08-24 (`installer#145`, PR #152): drei solche Merkmale sicherten die Bedingung eines
+> Workflow-Schritts ab — sie stützt sich auf genau eine Schritt-Ausgabe, sie zerlegt den Ref nicht
+> selbst, sie fragt den Signatur-Schalter ab. Die zwei naheliegendsten Fehler gingen trotzdem durch:
+>
+> | Mutation | Wirkung im Betrieb | Suite |
+> | --- | --- | --- |
+> | `== 'true'` → `== 'false'` | Hinweis bei jedem Zweig-Bau, **nie** beim Release | 671, **0 rot** |
+> | `&&` → `\|\|` | der zweite Operand wird bedeutungslos | 671, **0 rot** |
+>
+> Beide Merkmale bleiben ja erfüllt. Geprüft war **worauf** die Bedingung sich stützt, nicht **was sie
+> ergibt** — dieselbe Fehlerklasse wie der Defekt, gegen den der Vorgang antrat, eine Ebene höher.
+> Gefunden hat es der lokale Review-Agent, nicht die 14-Fälle-Mutationsprobe: die hatte die Struktur
+> um die Bedingung herum variiert, nie den **Vergleichswert** und nie den **Verknüpfungsoperator**.
+>
+> **Prüffrage vor jeder Zusicherung über eine Bedingung:** *bleibt sie erfüllt, wenn ich den
+> Vergleichswert umdrehe oder `&&` durch `||` ersetze?* Wenn ja, misst sie die Form.
+>
+> Abhilfe ist ein kleiner Auswerter für den **tatsächlich benutzten** Teil der Ausdruckssprache plus
+> je Lauf ein Fall „darf feuern / darf nicht feuern". Drei Randbedingungen, sonst sieht auch das nur
+> nach Messung aus: der Auswerter braucht **eigene Selbstproben** (rechnet er falsch, melden alle
+> Fälle darüber still grün); was er nicht versteht, **meldet er statt zu raten** (ein unbekannter
+> Kontextwert wird im Betrieb still zu `''` — genau der nächste Defekt); und **Kurzschluss ist treu**:
+> `||` bricht ab, sobald links wahr ist, ein unverstandener Teil dahinter wird nie erreicht und ändert
+> die erwartete Rot-Zahl. Rezept und Messung: `$VAULT/projekte/installer/pester-verifikation.md` § 7.
 
 > 🔴 **Ein Test, der seinen Sollwert aus der Konstante des Produktivcodes zieht, kann nicht rot
 > werden.** Er prüft dann nur, ob beide Seiten dieselbe Zahl nehmen — ein Zahlendreher ändert beide
@@ -575,6 +691,23 @@ Delphi = DUnitX (`$VAULT/referenz/dunitx-patterns.md`,
 >
 > Weichen sie ab, ist die Messung ungültig — **nicht** der Befund. Dieselbe Bauart wie die anderen
 > stillen Nullen: `$VAULT/referenz/stille-messfallen-shell-git.md`.
+
+> 🔴 **`gh api --paginate` bricht mit einer TEILLISTE ab — eine Prüfung auf Leerheit greift dann
+> nicht.** Es schreibt **jede Seite sofort** nach stdout und endet bei einem Fehler auf einer
+> *späteren* Seite mit Rückgabewert ≠ 0; die Variable ist dann nicht leer, sondern unvollständig.
+> Gemessen 2026-08-24 (`edp-runtime-redist#28`) an der GHE-Instanz: bei `per_page=5` kam die erste
+> Zeile nach 515 ms, die letzte nach 13,4 s über 31 Seiten — und eine Kommandosubstitution behält
+> die Teilausgabe bei Rückgabewert 1. Ein `[ -z "$liste" ] && exit` greift damit **nur** im
+> seltenen Totalausfall.
+>
+> Besonders teuer, wenn die Kopfzahl aus derselben Teilliste stammt („Geprüft: X von X Repos"):
+> dann behauptet der Bericht Vollzähligkeit über eine Stichprobe. In einer org-weiten Wache lag
+> genau dieser Weg offen — 136 Repos sind zwei Seiten, ein 502 auf der zweiten hätte genügt, und
+> das automatisch geführte Bestands-Issue wäre als „nichts mehr gefunden" **geschlossen** worden.
+> Also den **Rückgabewert** prüfen und ihn von der Leermenge unterscheiden (zwei verschiedene
+> Aussagen, zwei verschiedene Meldungen). Ein Testfall dafür braucht einen Stub, der
+> **Teilausgabe UND Rückgabewert 1** liefert; ein vorhandener Fall „leere Liste" deckt ihn nicht ab.
+> Volltext: `$VAULT/referenz/stille-messfallen-shell-git.md` § 24.
 
 > ⚠️ **Zwei weitere stille Nullen bei `gh`, beide in diesem Lauf zugeschlagen:**
 >
@@ -1297,6 +1430,23 @@ Normalfall, sobald der PR Markdown oder YAML berührt hat.
 
 ## Zusatz zu Core-Schritt 8c (lokales Review)
 
+> 🔴 **Den Fortschritt eines Review-Agents NICHT über einen Nebenwert messen — und ihn nicht auf
+> Verdacht abbrechen.** Ein laufender Agent schreibt sein Transkript nicht fortlaufend; die
+> Dateigröße bleibt minutenlang konstant, obwohl er arbeitet. Die Laufzeitangabe einer Agentenliste
+> zählt außerdem **Rechenzeit**, nicht Wanduhr — bei mehreren parallelen Sitzungen steht sie fast
+> still, während real eine halbe Stunde vergeht.
+>
+> Gemessen 2026-08-24 (`installer#145`): ein Agent wurde deswegen zweimal für hängend gehalten und
+> gestoppt. Beide Male meldete er beim Abbruch, dass er lokal arbeitet und fast fertig ist — der
+> Abbruch selbst war die einzige Störung. Der Fund, den er danach lieferte, war der wertvollste des
+> ganzen Vorgangs.
+>
+> Belastbar ist nur die **Fertigmeldung**. Dauert es zu lange, ist der richtige Schritt eine
+> Nachricht an den Agenten („berichte jetzt, auch unvollständig, und nenne, was du **nicht** gemessen
+> hast") — kein Abbruch. Ein Teilbericht mit klarer Abgrenzung ist mehr wert als ein vollständiger,
+> der nie ankommt. Und solange der Agent liest, **nichts im geteilten Worktree ändern**.
+
+
 > 🔴 **Der vom Review vorgeschlagene FIX ist selbst eine Behauptung — und wird genauso gemessen wie
 > der Fund.** Der Core verlangt, Funde zu verifizieren statt blind umzusetzen; das schützt vor
 > falschen Funden, nicht vor einem **richtigen Fund mit untauglicher Behebung**. Die ist gefährlicher:
@@ -1311,6 +1461,24 @@ Normalfall, sobald der PR Markdown oder YAML berührt hat.
 >
 > Die **untaugliche** Variante gehört danach als Warnung an die Fundstelle („`2>$null` behebt das
 > NICHT, gemessen am …") — sonst vereinfacht sie der Nächste in gutem Glauben wieder hinein.
+
+> 🔴 **Und dem eigenen Diff die Frage stellen: entwertet meine Ergänzung einen bestehenden
+> Schutzmechanismus?** Etwas zu einer vorhandenen Prüfung *hinzuzufügen* fühlt sich wie Verstärkung
+> an und kann das Gegenteil sein — ein Wächter, der eine Bedingung prüft, wird wirkungslos, sobald
+> ein Summand dazukommt, der immer erfüllt ist.
+>
+> Gemessen 2026-08-24 (`edp/.github#161`): Der Aggregat-Guard „alle Stufen abgeschaltet → rot" las
+> `enabled: ${{ inputs.binaries }}`. Eine neue Stufe wurde brav ergänzt —
+> `${{ inputs.binaries }} ${{ inputs.release-notes }}` —, und weil die neue Stufe per Default an ist
+> und in 127 von 136 Repos strukturell grün meldet, konnte der Guard **nie wieder feuern**. Ein Repo
+> mit `binaries: false` hätte ein grünes Aggregat ohne eine einzige wirksame Prüfung bekommen. Das
+> ist die Umkehrung von [[tim/feedback/programmier-grundsaetze]] („ein Schalter, der nichts mehr
+> steuert, ist ein Defekt"): hier steuert der Schalter noch, nur der **Wächter** nicht mehr.
+>
+> Prüffrage vor jeder Ergänzung an einem Wächter, einer Schwelle, einer `needs`- oder
+> `enabled`-Liste: *unter welcher Bedingung wird dieser Mechanismus nach meiner Änderung noch rot —
+> und ist diese Bedingung praktisch erreichbar?* Ist sie es nicht, gehört die Ergänzung nicht dorthin;
+> der Grund kommt als Kommentar daneben, sonst trägt sie der Nächste in gutem Glauben wieder ein.
 
 > 🔴 **Der Review-Agent kann den geteilten Worktree auf einen losen HEAD stellen — und der nächste
 > eigene Push geht dann ins Leere, ohne zu scheitern.** Der Auftrag „prüfe gegen den serverseitigen
