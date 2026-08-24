@@ -201,11 +201,43 @@ Datei-Encoding strikt beachten ([[tim/feedback/datei-encoding]], `$VAULT/referen
 > In UTF-8-mit-BOM-Repos ist der BOM Teil des Vertrags: beim byte-genauen Patchen mit `utf-8-sig`
 > dekodieren, mit vorangestelltem `\xef\xbb\xbf` zurückschreiben und danach auf U+FFFD prüfen.
 
+> 🔴 **Encoding ist nicht alles — die ZEILENENDEN gehören mitgemessen.** IDE-erzeugte Projektdateien
+> (`.dproj`, `.dfm`, `.groupproj`) tragen **CRLF**, auch in Repos ohne `.gitattributes`. Wer sie mit
+> einem Werkzeug im Textmodus zurückschreibt (Python `io.open(..., 'w')`, viele Editoren auf Linux),
+> dreht die **ganze Datei** still auf LF. Der Inhalt stimmt, der Diff ist Unsinn.
+>
+> Gemessen 2026-08-24 (`schn_ivena#90`): zwei eingefügte `<DCCReference>`-Zeilen ergaben
+> **282 geänderte Zeilen**. Aufgefallen ist es nur am `--stat`; die Datei selbst sah in jedem Editor
+> korrekt aus, und die CI hätte nichts gemeldet.
+>
+> ```bash
+> git show "origin/<base>:<pfad>" | grep -c $'\r'   # Soll-Zahl VOR dem Edit
+> grep -c $'\r' <pfad>                              # Ist-Zahl danach — muss gleich sein
+> git diff --stat origin/<base> -- <pfad>           # zwei Zeilen Edit = zwei Zeilen Diff
+> ```
+>
+> Für solche Dateien **byte-genau arbeiten**: Ausgangsstand mit `git show` als Bytes holen, die
+> Einfügung als `bytes` mit `\r\n` ersetzen, mit `'wb'` schreiben. Ein Textmodus-Schreiben ist hier
+> immer falsch — auch dann, wenn es „funktioniert hat".
+
 ### `«TESTS»` — DUnitX / go test / Repo-Standard
 
 Delphi = DUnitX (`$VAULT/referenz/dunitx-patterns.md`,
 `$VAULT/projekte/edpweb/dunitx-test-harness-pickup.md`), Go = `go test`, Frontend = Repo-Standard
 ([[tim/feedback/delphi-tests-immer]]). Build/Deploy **nur** via `/edp-develop`.
+
+> 🔴 **DUnitX-Assert-Meldungen ASCII halten — Kommentare behalten echte Umlaute.** Die Suite ist eine
+> Delphi-**Konsolenanwendung**; ihre Ausgabe verlässt den Prozess in der Codepage der Konsole. Umlaute
+> und Gedankenstriche in Meldungstexten kommen im CI-Log als Ersatzzeichen an (`Prüfen` → `Pr?fen`,
+> `—` → `ù`). Betroffen sind **ausschliesslich Zeichenketten**; Kommentare liest man im Editor.
+>
+> Das steht im Volltext in `$VAULT/referenz/dunitx-patterns.md` — hier als Verweis, weil es sonst
+> erst **nach** dem Schreiben der Tests auffällt. Gemessen 2026-08-24 (`schn_ivena#90`): 34 Meldungen
+> mussten nachträglich transliteriert werden, weil die Note erst mitten im Lauf gelesen wurde.
+>
+> ⚠️ Beim Umstellen **kein Datenliteral** mitnehmen (Testdaten, Dateinamen, erwartete Fault-Texte des
+> Fremdsystems). Und der **Bestand** eines Repos ist oft noch nicht umgestellt — den nicht nebenbei
+> mitkonvertieren, sondern als eigenen Vorgang auskoppeln ([[tim/feedback/randfunde-als-issue]]).
 
 > **Rot vor Grün, ohne gegen „nur grün committen" zu verstossen: zwei Commits.** Der Core verlangt bei
 > Bugs erst den reproduzierenden Test (rot), [[tim/feedback/delphi-tests-immer]] verlangt, nur grün zu
@@ -438,6 +470,21 @@ Delphi = DUnitX (`$VAULT/referenz/dunitx-patterns.md`,
 > Mutation** stehen. Vor der nächsten Messung `git branch --show-current` gegenlesen und die Datei
 > gegen die unberührte Kopie diffen; sonst misst der Folgelauf still die Mutation mit.
 
+> 🔴 **Die Umkehrung gilt auch: ein NEUER Test kann die Suite aufhängen — und das Fehlerbild zeigt
+> auf die Werkzeugkette.** Der Bau ist grün, `Fuehre Tests aus…` steht da, und dann kommt nichts.
+> Das sieht aus wie eine klemmende Dev-VM oder ein Netzproblem, und der zurückbleibende Prozess
+> verstärkt den Verdacht noch.
+>
+> Gemessen 2026-08-24 (`schn_ivena#90`): eine neue Strukturprüfung maskierte Kommentare mit einem
+> Zeichen-Scanner aus verschachtelten Schleifen — zwei Läufe gingen drauf, bevor klar war, dass der
+> Test selbst die Ursache ist. Prüffrage nach jedem Hänger: *was ist seit dem letzten grünen Lauf
+> dazugekommen?* Kam ein Test dazu, ist er der erste Verdächtige, nicht die VM.
+>
+> **Vorbeugung:** ein Scanner über Quelltext wird als Zustandsautomat mit **genau einem Schritt je
+> Durchlauf** geschrieben (`for I := 1 to N` mit `case Zustand of`). Dann ist der Abbruch eine
+> Eigenschaft der Konstruktion statt das Ergebnis einer Fallunterscheidung. Rezept:
+> `$VAULT/referenz/dunitx-patterns.md`.
+
 > 🔴 **Einen Wegwerf-Namen NIE ein zweites Mal benutzen, ohne ihn vorher auf `origin` zu löschen.**
 > Liegt der Zweig dort schon, wird der Push als non-fast-forward abgewiesen — und der Lauf misst
 > dann den **alten** Inhalt. Gemessen 2026-08-23 (`einsatzmonitor#14`): acht von neun Fällen einer
@@ -445,6 +492,29 @@ Delphi = DUnitX (`$VAULT/referenz/dunitx-patterns.md`,
 > hätte ohne Gültigkeitsprüfung als „rot" gezählt. Also je Fall zuerst
 > `git push origin --delete <zweig>` (idempotent, braucht kein Force), dann anlegen und pushen — und
 > **den Rückgabewert des Push lesen**.
+
+> 🔴 **Der Rückgabewert allein reicht nicht — der DELETE kann still scheitern.** Am 2026-08-24
+> (`schn_ivena#90`) war die GHE-Instanz für ein paar Minuten zäh; das `--delete` lief ins Leere
+> (Ausgabe unterdrückt), der Folge-Push wurde als non-fast-forward abgewiesen, und ohne Guard hätte
+> der Fall gegen den Code des Vorgängers gemessen.
+>
+> Belastbar ist ein **Abgleich am Server**, nicht am Exit-Code:
+>
+> ```bash
+> LOKAL=$(git rev-parse HEAD)
+> git push -q --force origin "$ZWEIG"
+> FERN=$(git ls-remote origin "refs/heads/$ZWEIG" | cut -f1)
+> [ "$LOKAL" = "$FERN" ] || { echo "UNGUELTIG: Push nicht angekommen"; continue; }
+> ```
+>
+> Force-Push auf einen **Wegwerf**-Zweig ist unbedenklich und spart den Delete-Schritt ganz. Der Fall
+> gehört als **ungültig** protokolliert, nicht als rot — und am Ende der Reihe gegengelesen, dass die
+> Zahl der Ergebniszeilen der Zahl der Fälle entspricht.
+
+> ⚠️ **`nohup … &` im Werkzeugaufruf überlebt den Aufruf NICHT.** Eine so gestartete Mutationsreihe
+> ist beendet, sobald das Kommando zurückkehrt — die Ausgabedatei bleibt bei der Kopfzeile stehen und
+> sieht aus wie ein Hänger. Für Läufe, die den Zeitdeckel sprengen, den Hintergrundmodus des
+> Werkzeugs benutzen (`run_in_background`), nicht `nohup`. Gemessen 2026-08-24 (`schn_ivena#90`).
 
 > 🔴 **Eine Mutationsprobe kann an der MUTATION scheitern — dann ist der Lauf ungültig, nicht rot.**
 > Drei Bauarten; die ersten beiden am 2026-08-23 (`einsatzmonitor#14`) bezahlt, die dritte am
@@ -1429,6 +1499,17 @@ Normalfall, sobald der PR Markdown oder YAML berührt hat.
   grün waren.
 
 ## Zusatz zu Core-Schritt 8c (lokales Review)
+
+> 🔴 **Dem Review-Agenten das GEMESSENE Encoding mitgeben — `/edp-review` nennt Windows-1252 als
+> Default.** Jener Skill weist an, `.pas`/`.dfm` per `iconv -f WINDOWS-1252` zu lesen und `grep -a`
+> zu benutzen. In einem umgestellten Repo (`edp/schn_ivena`: UTF-8 mit BOM, CI-erzwungen) ist das
+> falsch: der Agent liest Mojibake, hält korrekte Dateien für kaputt und meldet Encoding-Funde, die
+> keine sind — oder übersieht echte, weil seine Trefferlisten leer bleiben.
+>
+> Der Auftrag muss das Encoding deshalb **ausdrücklich überschreiben**, mit dem Messkommando dazu
+> (`file -b <datei>`) und dem Hinweis, dass ein Umlaut-Fund nur zählt, wenn `grep -c $'\uFFFD'`
+> wirklich U+FFFD findet. Gemessen 2026-08-24 (`schn_ivena#90`).
+
 
 > 🔴 **Den Fortschritt eines Review-Agents NICHT über einen Nebenwert messen — und ihn nicht auf
 > Verdacht abbrechen.** Ein laufender Agent schreibt sein Transkript nicht fortlaufend; die
