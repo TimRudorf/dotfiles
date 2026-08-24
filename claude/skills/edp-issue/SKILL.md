@@ -557,6 +557,36 @@ Delphi = DUnitX (`$VAULT/referenz/dunitx-patterns.md`,
 > abschreiben (nie aus dem `pass`-Zweig), und einen abweichenden Fall einzeln nachfahren statt die
 > ganze Reihe zu wiederholen.
 >
+> 🔴 **Je Fall belegen, dass die Mutation den Baum WIRKLICH verändert hat.** Eine Mutation, die
+> nicht greift, ist der stillste aller Fehlschläge: die Lage baut, die Testzahl stimmt, die Suite
+> ist grün — und der Fall zählt als bestandene Gegenrichtung oder, schlimmer, als „die Prüfung hält
+> stand". Gemessen 2026-08-24 (`einsatzmonitor#19`): eine Ersetzung mit Backslash im Suchtext
+> (`unit\Test.X.pas` durch mehrere Ebenen Quoting) traf nie, und der Verdrahtungsfall meldete
+> unverändert 35 statt der erwarteten 32 Tests. Aufgefallen ist es nur, weil die **erwartete
+> Testanzahl** je Fall mitgeführt wurde.
+>
+> Zwei Zeilen genügen, und sie gehören in jede Probenvorrichtung:
+>
+> ```bash
+> eval "$mutation"
+> git diff --quiet && { echo "$fall | UNGUELTIG: Mutation hat den Baum nicht veraendert"; return; }
+> ```
+>
+> Dazu je Fall eine **erwartete Testanzahl** — sie fängt genau die Fälle, in denen sich die Zahl der
+> Fälle ändern soll (Verdrahtungsprobe) oder eben nicht ändern darf.
+
+> 🔴 **`Tests Failed` allein ist die falsche Kopfzahl — DUnitX zählt Ausnahmen als `Errored`.** Wer
+> die Kopfzahl gegen die Länge der erwarteten Namensliste hält, bekommt eine Abweichung gemeldet,
+> obwohl die Detailliste stimmt: ein Fall, der eine Ausnahme ungefangen durchreicht, erscheint unter
+> **`Tests With Errors`** und nicht unter `Tests Failed`. Gemessen 2026-08-24 (`einsatzmonitor#19`):
+> `rot=1` bei zwei roten Namen, und beide Namen waren richtig
+> ([[tim/feedback/kopfzahlen-aus-detailliste-nachrechnen]] — die Detailliste gewinnt).
+>
+> Also `Failed` **und** `Errored` addieren, und die Namen aus **beiden** Abschnitten einsammeln. Der
+> Befund dahinter ist zugleich ein Testmangel: eine ungefangene Ausnahme nennt nur den Ist-Zustand,
+> nicht Soll, Grund und Behebung ([[tim/feedback/pruefungen-muessen-sich-selbst-erklaeren]]) — der
+> Fall gehört so gebaut, dass er die Ausnahme fängt und als Fehlschlag mit voller Meldung ausgibt.
+
 > 🔴 **Am Ende die Zahl der ERGEBNISZEILEN gegen die Zahl der Fälle halten.** Eine Probenreihe kann
 > mittendrin sterben — und eine Reihe, die vorzeitig endet, sieht in der Ausgabe aus wie eine, die
 > durchgelaufen ist. Gemessen 2026-08-24 (`installer#134`): zweimal starb derselbe Hintergrundlauf
@@ -953,6 +983,43 @@ ihn **nicht** — dann auf einen fremd gehaltenen Lock **nicht warten**, aber ih
 > (keine der drei DLLs in einer der Tabellen) hielt; falsch war allein die Zahl, die seine
 > Vollständigkeit belegen sollte. Gehört in dieselbe Reihe wie die anderen stillen Nullen:
 > `$VAULT/referenz/stille-messfallen-shell-git.md`.
+
+> 🔴 **Am Artefakt gemessen und trotzdem falsch: eine STRINGTABELLE ist kein Kontrollfluss.** Die
+> Regeln oben sorgen dafür, dass man die richtige Datei vollständig liest. Dieser Fall ist die
+> nächste Stufe: man liest sie vollständig, sieht mehrere Namen **nebeneinander** liegen und liest
+> daraus eine **Reihenfolge** ab, die es nicht gibt. Benachbarte Literale sind eine Folge davon, wie
+> der Übersetzer Konstanten ablegt — sie sagen nichts darüber, ob, wann und in welcher Ordnung der
+> Code sie benutzt.
+>
+> Gemessen 2026-08-24 (`einsatzmonitor#19`): Die `einsatzmonitor.exe` trägt
+> `libcrypto-3-x64.dll`, `libcrypto-1_1-x64.dll` und `libeay32.dll` als drei aufeinanderfolgende
+> UTF-16-Zeichenketten. Daraus wurde die Erzählung „Indy geht die Kette der Reihe nach durch und
+> fällt still auf die 1.0-Reihe zurück". Am Lader nachgelesen gibt es diese Kette unter Windows
+> nicht: `LoadSSLCryptoLibrary` ist ein `if/else-if/else` mit **genau einem** `SafeLoadLibrary` je
+> Fall, und `Load` bricht nach dem ersten Fehlschlag ab. Es ist ein Entweder-oder, kein Nacheinander.
+>
+> Teuer war daran zweierlei. Erstens hatte die **eigene** Messung die Erzählung von Anfang an
+> widerlegt: ein CI-Lauf meldete `Failed to load libeay32.dll`, während `libcrypto-3-x64.dll`
+> unmittelbar daneben lag — bei einer Kette wäre sie versucht worden. Wer eine Beobachtung sieht,
+> die zur eigenen Erklärung nicht passt, hat den Widerspruch **schon gemessen** und muss ihn nur
+> noch lesen; die Messung gewinnt gegen die Erzählung, immer. Zweitens stand die falsche Aussage
+> am Ende in vier Dateien, im PR-Body, in zwei Issue-Kommentaren und in einer Vault-Note
+> ([[tim/feedback/korrektur-erreicht-alle-traeger]]) — gefunden hat sie erst der lokale
+> Review-Agent.
+>
+> **Prüffrage vor jeder Aussage über einen Ablauf:** *Habe ich den Code gelesen, der die Reihenfolge
+> herstellt — oder nur die Daten, mit denen er arbeitet?* Reihenfolgen, Bedingungen und Rückfälle
+> stehen im Lader, nicht im Speicherabbild. Und die Zielplattform mitprüfen: dieselbe Funktion trug
+> die Mehrnamen-Schleife sehr wohl, nur im **POSIX**-Zweig.
+
+> ⚠️ **Was ein Test über die HERKUNFT einer geladenen Bibliothek beweisen kann, ist begrenzt.**
+> `edp/delphi-devsetup > lib/TestRun.ps1` legt die Dateien aus dem `Redist`-Block zwar neben die
+> Test-Exe (`:173`), setzt aber zusätzlich den **Repo-Wurzel vorne auf den `PATH`** des
+> Testprozesses (`:205`). Liegen dort noch getrackte Kopien derselben DLLs, kann ein Test nicht
+> unterscheiden, welcher der beiden Wege gegriffen hat — ein Fall, der „die Bereitstellung
+> funktioniert" behauptet, belegt in Wahrheit nur „irgendeine passende Datei war erreichbar".
+> Gemessen 2026-08-24 (`einsatzmonitor#19`); dort ist der Unterschied auf den Nachfolgevorgang
+> abgetreten, der die getrackten Kopien entfernt.
 
 **Repro-/Test-Wissen zuerst nutzen, nicht neu erfinden:**
 - Backend deterministisch per HTTP-Form-POST: `$VAULT/referenz/edpweb-testing/index.md` (Hub → `setup`, `auth`,
@@ -1499,6 +1566,35 @@ Normalfall, sobald der PR Markdown oder YAML berührt hat.
   grün waren.
 
 ## Zusatz zu Core-Schritt 8c (lokales Review)
+
+> 🔴 **Ein Fund kann die richtige Zeile zitieren und trotzdem falsch sein — weil er den falschen
+> GELTUNGSBEREICH meint.** Eine Fundstelle mit Datei und Zeilennummer wirkt geprüft; nachschlagen
+> bestätigt den Wortlaut, und damit gilt der Fund als bestätigt. Übersehen wird dabei die Frage, zu
+> **welcher Einheit** die Zeile gehört — Klasse, Sichtbarkeitsblock, `$IFDEF`-Zweig, Plattform.
+>
+> Gemessen 2026-08-24 (`einsatzmonitor#19`): Der Agent meldete, ein Nachfahre im Testcode sei
+> überflüssig, `Init` sei „public — `IdSSLOpenSSL.pas:650/651`". Die Zeilen stimmen wörtlich, gehören
+> aber zu `TIdServerIOHandlerSSLOpenSSL` (`:612-687`). Bei der **Client**-Klasse
+> `TIdSSLIOHandlerSocketOpenSSL` (`:522-611`), um die es ging, steht `Init` in `:553` unter
+> `protected`; `public` beginnt erst `:569`. Der Nachfahre war nötig.
+>
+> Die Gegenprobe muss deshalb **anders konstruiert** sein als das Zitat
+> ([[tim/feedback/urteil-braucht-vollstaendige-messung]]): nicht dieselbe Zeile noch einmal lesen,
+> sondern die **Grenzen** bestimmen und prüfen, welche die fragliche Zeile einschliesst.
+>
+> ```bash
+> # alle Klassendeklarationen mit Zeilennummer -> Grenzen ablesen
+> ssh <host> "powershell -NoProfile -Command \"\$t=Get-Content '<datei>'; \
+>   0..900 | ForEach-Object { if(\$t[\$_] -match '^\s*T\w+\s*=\s*class') { '{0}: {1}' -f (\$_+1), \$t[\$_].Trim() } }\""
+> ```
+>
+> Dieselbe Frage stellt sich bei `$IFDEF`: eine Zeile im `WINDOWS`-Zweig und eine im `POSIX`-Zweig
+> stehen in derselben Funktion und beschreiben verschiedenes Verhalten. Ein Zitat ohne Zweigangabe
+> ist keine Messung.
+>
+> Und die Umkehrung gilt auch: **ein Fehlalarm entwertet die übrigen Funde nicht.** In diesem Lauf
+> waren fünf von sechs Funden berechtigt, darunter der schwerste. Wer nach dem ersten widerlegten
+> Punkt aufhört, verliert die anderen.
 
 > 🔴 **Dem Review-Agenten das GEMESSENE Encoding mitgeben — `/edp-review` nennt Windows-1252 als
 > Default.** Jener Skill weist an, `.pas`/`.dfm` per `iconv -f WINDOWS-1252` zu lesen und `grep -a`
