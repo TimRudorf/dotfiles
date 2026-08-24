@@ -264,6 +264,17 @@ Delphi = DUnitX (`$VAULT/referenz/dunitx-patterns.md`,
 > erklärbar (dort 11–16 statt 0–5). Deshalb die **Baseline als eigenen Fall mitführen** statt sie
 > vorauszusetzen, und in der Kopie herstellen, was die Suite braucht (`git init` + `git remote
 > add …`).
+>
+> 🔑 **Sicherer als jede Nachbildung: gar nicht kopieren.** Die Umgebung vollständig
+> herzustellen ist Rätselraten — was die Suite braucht, steht nirgends. Wo der Prüfgegenstand
+> **eine Datei** ist (ein Skript, eine Konfiguration), mutiert man sie **im echten Baum** und
+> stellt sie danach aus einer vorher gesicherten Kopie unter `$CLAUDE_JOB_DIR/tmp` wieder her
+> — nie per `git checkout --`, das verwirft stillschweigend Uncommittetes. Dann ist die
+> Umgebung per Konstruktion die richtige. Am Ende der Reihe `diff` gegen die Sicherung und das
+> Ergebnis mit ausgeben; ohne diesen Nachweis bleibt offen, ob eine Mutation stehen geblieben
+> ist. Gemessen 2026-08-24 (`edp/.github#158`): eine `tar --exclude=.git`-Kopie nahm der
+> `uses`-Prüfung den Checkout, gegen den sie interne Referenzen auflöst — die Baseline war rot,
+> und alle acht Mutationen lasen sich als „greift".
 
 > ⚠️ **Ein Test kann den falschen Text lesen und ist dann grün, ohne etwas zu messen.** Nicht nur „greift
 > die Prüfung?", sondern „greift sie auf den **Prüfgegenstand**?". Gemessen 2026-08-21 (installer#132): eine
@@ -325,6 +336,14 @@ Delphi = DUnitX (`$VAULT/referenz/dunitx-patterns.md`,
 > `delivery.yml` baut auf `feature/**`, `bugfix/**`, `hotfix/**`, `project/**` — ein `tmp/**` löst nichts
 > aus und hinterlässt damit auch kein Waisen-Release.
 >
+> 🔴 **Dieselbe Falle lokal: eine Probe, die je Fall aus `git archive HEAD` eine frische Kopie
+> zieht, sieht NICHTS, was noch nicht committet ist.** Der Lauf misst dann den Stand von vorhin und
+> meldet jede Mutation als bestanden — schweigend, weil eine unveränderte Kopie ja baut und die
+> Testzahl stimmt. Gemessen 2026-08-24 (`edp-ctrl#56`): nach einer Review-Runde standen 22 Fälle
+> bereit, während der Fix nur im Arbeitsverzeichnis lag. Also **vor jeder Probenrunde committen**
+> und den gemessenen Stand gegenlesen (`git rev-parse --short HEAD` im Kopf der Ausgabe);
+> `git status --short` muss leer sein.
+>
 > 🔴 **Ein abgebrochener Testlauf lässt das Test-Binary auf der VM zurück — der nächste Lauf hängt
 > dann bei „Fuehre Tests aus…" ohne Ausgabe.** Gemessen 2026-08-23 (`schn_ivena#124`): eine
 > Mutationsreihe lief in den Zeitdeckel des aufrufenden Kommandos, der Aufruf wurde getötet,
@@ -373,6 +392,29 @@ Delphi = DUnitX (`$VAULT/referenz/dunitx-patterns.md`,
 > und meldet „ABWEICHUNG", obwohl die Detailliste stimmt. Gemessen 2026-08-23 (`installer#133`): zwei
 > Proberunden hintereinander so fehlbewertet. Symptom: **genau ein** Fall weicht ab, und seine roten
 > Namen lesen sich beim Nachsehen alle richtig.
+
+> 🔴 **Ein Test, der seinen Sollwert aus der Konstante des Produktivcodes zieht, kann nicht rot
+> werden.** Er prüft dann nur, ob beide Seiten dieselbe Zahl nehmen — ein Zahlendreher ändert beide
+> zugleich, die Suite bleibt grün, und der Zweig feuert im Betrieb nie mehr. Gemessen 2026-08-24
+> (`edp-ctrl#56`): die Mutation `errFehlendeTabelle = 1146 → 1147` liess **jede** Zusicherung grün,
+> weil der Test die Fehlernummer über eben diese Konstante setzte.
+>
+> Betroffen ist alles, was **Vertrag eines Fremdsystems** ist und nicht eigene Wahl: Fehlernummern,
+> Protokoll-Codes, Statuswerte, Feldnamen einer fremden API, Pfade eines fremden Werkzeugs. Die
+> gehören im Test **ausgeschrieben**, mit einer Zeile, warum. Prüffrage: *kommt der erwartete Wert
+> aus derselben Datei, die ich prüfe?* Dann ist es keine Zusicherung, sondern eine Tautologie —
+> dieselbe Bauart wie eine Attrappe, die die Konstante des Produktivcodes wiederverwendet.
+
+> 🔴 **Nach einem Umbau der TESTDATEI die Probe erneut fahren — ein Block-Ersatz nimmt
+> Zusicherungen mit, und die Gesamtzahl verrät es nicht.** Gemessen 2026-08-24 (`edp-ctrl#56`):
+> beim Umstellen der Tabellen-Tests verschwanden drei Zusicherungen ersatzlos; weil zeitgleich
+> neue dazukamen, blieb die Testanzahl **exakt gleich** (109). Gefunden hat es allein der
+> Abgleich der roten **Namen** — zwei Fälle, die vorher rot waren, kamen grün zurück.
+>
+> Daraus zwei Gewohnheiten: die Zahl der Testfunktionen vor und nach dem Umbau vergleichen
+> (`grep -c '^func Test'` je Datei, nicht nur die Summe über alle), und eine einmal aufgestellte
+> Mutationsprobe als **Regressionsnetz** behandeln statt als Einmal-Nachweis — sie ist nach jeder
+> Änderung an Tests oder Prüfcode neu zu fahren, nicht nur nach einer Änderung am Produktivcode.
 
 > 🔴 **Die Mutationsprobe NICHT über einen Schwarm von `workflow_dispatch`-Läufen fahren.** Ist die
 > Dev-VM belegt, liegt der Ausweg über die CI nahe — er kann sich aber selbst zerstören: am
@@ -428,6 +470,17 @@ Delphi = DUnitX (`$VAULT/referenz/dunitx-patterns.md`,
 > lautlos wirkungslos. Den eigenen Rat also durchspielen, als befolge ihn jemand wörtlich und faul — und
 > den entwertenden Randfall nicht nur in Prosa ausschließen, sondern **hart** (eigene Zusicherung auf
 > die Konfiguration).
+>
+> 🔴 **Und ihn an einer FEINDSELIGEN Lage durchspielen, nicht an der aufgeräumten.** „Ich habe das
+> vorgeschlagene Kommando ausgeführt und danach war es grün" ist kein Beleg, wenn die Probe-Lage nur
+> genau die Zeilen enthält, die es treffen soll. Die Frage ist nicht *tut es, was es soll?*, sondern
+> *was fasst es sonst noch an?* — also die Lage gezielt mit den Nachbarn bestücken, die derselbe
+> Suchbegriff trifft: derselbe Wert in einer Kommentarzeile, in einer `run:`-Zeile, in einem
+> Vorgabewert, dazu ein Pfad mit Leerzeichen. Gemessen 2026-08-24 (`edp/.github#158`): ein
+> empfohlenes `sed` war auf keine Zeilenart verankert und die Pfade ungequotet. An der freundlichen
+> Lage lief es sauber; an der feindseligen drehte es einen Historien-Kommentar in sein Gegenteil und
+> kommentierte in einer `run:`-Zeile das `&& make build` aus — der Rat zerstörte das Kommando, das er
+> reparieren sollte. Gefunden hat das der lokale Review-Agent, nicht der grüne Durchspiel-Test.
 
 > ⚠️ **Die Vorfassung für das A/B byte-genau zurückspielen — und die Testanzahl mitlesen.**
 > `git show <ref>:<datei> | Set-Content -Encoding utf8BOM` erzeugt einen **doppelten BOM**: `git show`
