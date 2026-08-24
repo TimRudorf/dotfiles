@@ -828,6 +828,24 @@ Raten (gemessen 2026-08-21, `edp-ctrl#47`). Reihenfolge: PR anlegen, Nummer lese
 >   Suche nach „Notes entstehen nicht" fand nichts; erst die Suche nach `versioned-release` fand
 >   `edp/.github#142`, wo genau dieser Zustand entschieden worden war. Ohne den Zwischenschritt wäre ein
 >   Issue gegen eine getroffene Entscheidung entstanden.
+> - 🔴 **`gh search issues` taugt dafür NICHT — es scheitert auf der Instanz und sieht dabei aus wie
+>   „keine Treffer".** Gemessen 2026-08-24 (`delphi-devsetup#63`): der Dienst antwortet für diese Repos
+>   mit `Invalid search query … cannot be searched`, Rückgabewert **1**, Meldung auf **stderr**. Wer
+>   `2>/dev/null … || echo "(keine)"` schreibt, verwirft die Erklärung und bildet Fehlschlag und
+>   Leermenge auf dieselbe Zeichenkette ab — fünf Suchen meldeten so „nichts gefunden", darunter eine
+>   nach `config.psd1`, obwohl `#28` genau davon handelt. Belastbar ist, den Bestand zu **ziehen** und
+>   lokal zu durchsuchen; das erfüllt zugleich die Forderung „Titel UND Body":
+>
+>   ```bash
+>   gh issue list -R einsatzleitsoftware.ghe.com/edp/<repo> --state all --limit 200 \
+>     --json number,title,state,body > /tmp/issues.json
+>   jq -r '.[] | select((.title + " " + .body) | test("<begriff>"; "i")) | "\(.number) [\(.state)] \(.title)"' \
+>     /tmp/issues.json
+>   ```
+>
+>   Und **immer einen Kontrollbegriff mitlaufen lassen**, von dem feststeht, dass er treffen muss —
+>   ohne ihn ist „nichts gefunden" nicht von „nicht gesucht" zu unterscheiden
+>   ([[referenz/stille-messfallen-shell-git]] § 18).
 
 ⚠️ **Secrets sind von „Randfund mitfixen" ausgenommen:** erfassen als Issue, sonst nichts — keine Löschung,
 kein `.gitignore`-Eintrag, keine Rotation, kein PR ([[tim/feedback/edp-secrets-nur-als-issue]]).
@@ -892,6 +910,24 @@ No-op ([[tim/feedback/pr-review-lokaler-agent]]).
 > Nebenwirkung: die gleichnamigen Läufe teilen sich die Concurrency-Gruppe, einer endet `cancelled` —
 > für die Bewertung zählt allein der jüngste. Gemessen 2026-08-21 (`schn_ivena#128`): vier `Merge-Label`-
 > Läufe, `FAILURE` → `CANCELLED` → 2× `SUCCESS`, PR trotzdem `CLEAN`.
+>
+> 🔴 **„PR trotzdem `CLEAN`" gilt aber nicht immer** — der abgebrochene Lauf kann als
+> `mergeStateStatus=UNSTABLE` stehenbleiben, bei ausnahmslos grüner CI und grünem `ci-summary`.
+> Gemessen 2026-08-24 (`delphi-devsetup#75`): drei `Merge-Labels`-Läufe, `CANCELLED` + 2× `SUCCESS`,
+> alle 13 Checks `pass`/`skipping`, `mergeable=MERGEABLE` — und trotzdem `UNSTABLE`, weil der Rollup den
+> Abbruch mitzählt. Das ist **kein** Befund aus dem eigenen Diff (der Workflow prüft nur, ob ein
+> `merge:*`-Label existiert) und auch kein Grund, `pr-fertig-erst-wenn-mergebar` aufzugeben: den
+> abgebrochenen Lauf gezielt nachziehen, dann ist der Zustand `CLEAN`.
+>
+> ```bash
+> gh run list -R einsatzleitsoftware.ghe.com/edp/<repo> --branch <branch> --limit 10 \
+>   --json databaseId,name,conclusion -q '.[] | select(.conclusion=="cancelled") | .databaseId'
+> gh run rerun <id> -R einsatzleitsoftware.ghe.com/edp/<repo>
+> ```
+>
+> ⚠️ Der Workflow heisst in der Lauf-Liste **`Merge-Labels`** (Mehrzahl), der Check dagegen
+> `Merge-Label` — `gh run list --workflow "Merge-Label"` scheitert mit
+> `could not find any workflows named`. Über `--branch` statt `--workflow` gehen.
 
 ### `«ABSCHLUSS»` — merge-ready, Merge macht das Team
 
