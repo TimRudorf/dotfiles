@@ -622,6 +622,27 @@ ihn **nicht** — dann auf einen fremd gehaltenen Lock **nicht warten**, aber ih
 > der die Aussage hing ([[tim/feedback/urteil-braucht-vollstaendige-messung]]). Vor dem Variieren also
 > fragen, **welche Grösse die Aussage trägt** — und die variieren.
 
+> 🔴 **Und dem PE-Parser nicht glauben, wenn er eine Tabelle als vollständig ausgibt.** `pefile`
+> (gemessen an 2024.8.26) bricht bei grossen Delphi-Artefakten still ab: an `einsatzmonitor.exe`
+> wirft es intern `Excessive number of imports 8193 (>8192)` und liefert für die
+> **Delay-Import-Tabelle** eine Teilliste — 8 statt 15 Deskriptoren, und zwischen zwei Aufrufen im
+> selben Skript sogar unterschiedlich lange (8 bzw. 13 Namen). Abgeschnitten wird vor `gdiplus.dll`
+> mit seinen 200+ Symbolen. Damit ist „DLL X steht **nicht** in der Tabelle" aus einer
+> pefile-Ausgabe **kein Befund** — und zwar eine Aussage, die in die **beruhigende** Richtung irrt.
+>
+> Belastbar ist nur der **Handlauf über das Deskriptor-Array** bis zum Null-Eintrag
+> (`IMAGE_IMPORT_DESCRIPTOR` 20 B, `IMAGE_DELAYLOAD_DESCRIPTOR` 32 B; Rezept mit Code in
+> `edp/schn_vorlage#42`). Dass der Handlauf nicht selbst trunkiert, ist mitzuprüfen: er muss an
+> einem **echten Null-Deskriptor** enden, nicht am Bildende, und die Verzeichnisgrösse deckt weit
+> mehr Einträge ab als gefunden werden.
+>
+> Gemessen 2026-08-24 (`einsatzmonitor#17`): die pefile-Zahl stand bereits im Deskriptor, im PR-Body
+> **und** im Nachmess-Kommentar am Issue, bevor sie auffiel — drei Träger für eine Zahl aus einem
+> einzigen Werkzeugaufruf ([[tim/feedback/korrektur-erreicht-alle-traeger]]). Der Befund selbst
+> (keine der drei DLLs in einer der Tabellen) hielt; falsch war allein die Zahl, die seine
+> Vollständigkeit belegen sollte. Gehört in dieselbe Reihe wie die anderen stillen Nullen:
+> `$VAULT/referenz/stille-messfallen-shell-git.md`.
+
 **Repro-/Test-Wissen zuerst nutzen, nicht neu erfinden:**
 - Backend deterministisch per HTTP-Form-POST: `$VAULT/referenz/edpweb-testing/index.md` (Hub → `setup`, `auth`,
   `snippets`, `actions-<bereich>`, `db-kerntabellen`).
@@ -1146,6 +1167,35 @@ Normalfall, sobald der PR Markdown oder YAML berührt hat.
 >
 > Die **untaugliche** Variante gehört danach als Warnung an die Fundstelle („`2>$null` behebt das
 > NICHT, gemessen am …") — sonst vereinfacht sie der Nächste in gutem Glauben wieder hinein.
+
+> 🔴 **Der Review-Agent kann den geteilten Worktree auf einen losen HEAD stellen — und der nächste
+> eigene Push geht dann ins Leere, ohne zu scheitern.** Der Auftrag „prüfe gegen den serverseitigen
+> Head-SHA" verleitet den Agenten dazu, ebendiesen SHA im Arbeitsverzeichnis auszuchecken; danach ist
+> HEAD detached. Ein Fix-Commit landet auf dem losen HEAD, und `git push origin <branch>` schiebt
+> anschliessend den **unveränderten** Branch-Ref — Rückgabewert 0, mit `-q` ohne jede Ausgabe. Der
+> danach beobachtete CI-Lauf gehört dem **alten** Commit und ist grün; die Korrektur war nie auf dem
+> Server, und der PR trägt sie nicht.
+>
+> Gemessen 2026-08-24 (`einsatzmonitor#17`): aufgefallen erst daran, dass
+> `gh pr view --json headRefOid` noch den alten SHA zeigte, nachdem der Fix angeblich gepusht war.
+> Der Abschnitt „zwei Sessions am selben Vorgang" unten warnt vor Branch-Wechseln durch eine
+> **parallele Session** — hier war es der **eigene** Agent, und der Fall tritt schon in einer
+> Ein-Sitzungs-Bearbeitung auf.
+>
+> Drei Gewohnheiten, alle billig:
+>
+> ```bash
+> git branch --show-current                 # leer = detached; VOR jedem Commit prüfen
+> git push origin <branch>                  # nie mit -q, die Ausgabe IST der Beleg
+> git ls-remote origin refs/heads/<branch>  # serverseitigen SHA danach gegenlesen
+> ```
+>
+> Die Regel dahinter: **ein Push gilt erst als erfolgt, wenn der serverseitige SHA gegengelesen
+> ist** (`git ls-remote` oder `gh pr view <nr> --json headRefOid`). Und ein grüner CI-Lauf belegt
+> nicht, dass er den eigenen Stand gemessen hat — erst der SHA-Abgleich macht ihn zu einem Beleg
+> ([[tim/feedback/urteil-braucht-vollstaendige-messung]]). Wer den Worktree wieder einfängt:
+> `git checkout -B <branch> <commit>` nach einer Fast-Forward-Probe
+> (`git merge-base --is-ancestor <alt> <neu>`).
 
 > 🔴 **Ändert die Review-Runde das Verhalten, sind die im PR-Body zitierten Belege selbst Träger einer
 > überholten Aussage.** Ein Ausgabe-Block, ein Log-Auszug, eine Mutationstabelle im PR-Body war eine
