@@ -328,6 +328,33 @@ Delphi = DUnitX (`$VAULT/referenz/dunitx-patterns.md`,
 > XML-Fassung ein Feld, die WSDL-Fassung nicht. Beim Absichern also **beide** Fassungen gegeneinander
 > lesen, nicht nur die eine ergänzen.
 
+> 🔴 **Und mutationsfest heisst nicht, dass die BEDINGUNG des Tests eingetreten ist.** Bei einem
+> Nebenläufigkeitstest sind alle inhaltlichen Zusicherungen — keine zerrissene Zeile, richtige
+> Anzahl, jeder Nutztext genau einmal — von einem streng **seriellen** Ablauf ebenfalls erfüllt.
+> Arbeitet die Maschine die Schreiber nacheinander ab, ist „grün" nicht zu unterscheiden von „es gab
+> nichts zu sperren", und eine entfernte Sperre kommt unbemerkt durch — auf einem Ein-Kern-Läufer
+> oder unter Volllast also genau dann, wenn man sich am wenigsten darauf verlässt. Jeder solche Test
+> braucht deshalb eine eigene Zusicherung, **dass das Rennen überhaupt stattgefunden hat**; ein Lauf,
+> der keines erzeugt, muss rot werden statt still grün. Eine nicht entscheidbare Messung ist kein
+> bestandener Test.
+>
+> ⚠️ **Diese Zusicherung am GEGENSTAND messen, nicht am Erzeugnis.** Naheliegend ist, im Ergebnis zu
+> zählen — bei einem Logfile etwa, ob aufeinanderfolgende Zeilen den Schreiber wechseln. Das ist aber
+> genau die Grösse, die der Fix selbst verändert: eine Sperre vergibt nicht fair, ein Thread bekommt
+> sie mehrfach hintereinander und schreibt längere Strecken am Stück. Die Prüfung misst dann
+> teilweise ihre eigene Wirkung und wird zufallsabhängig. Belastbar ist eine Messung **an der
+> Quelle**: der Höchststand gleichzeitig im geschützten Abschnitt stehender Threads, im Testthread
+> per `TInterlocked` erhoben. Ein wartender Thread zählt mit — er *ist* im Abschnitt, ohne Sperre
+> wäre er der zweite Schreiber im Puffer gewesen.
+>
+> Gemessen 2026-08-24 (`delphi-components#56`): die Zeilenwechsel-Fassung lieferte in einem Lauf
+> **15 Wechsel bei 2000 Einträgen** gegen eine Schranke von 16, in mehreren anderen Läufen und in der
+> CI dagegen Hunderte. Aufgefallen ist das nicht am Fix, sondern am **Gegenrichtungs-Fall** der
+> Mutationsprobe („harmloser Kommentar muss grün bleiben") — der ist damit nicht nur der Wächter
+> gegen zu scharfe Prüfungen, sondern auch der gegen **flakey** Prüfungen, und das ist der teurere
+> Fall: eine flakey-rote Prüfung wird über kurz oder lang entschärft statt verstanden. Nach dem Umbau
+> auf den Höchststand sechs Läufe zur Absicherung, alle grün.
+
 > ⚠️ **Eine Mutation wirkt erst, wenn sie gepusht ist.** `edp-ctrl dev test` synchronisiert den
 > **gepushten** Branch auf die VM — eine nur lokal gesetzte Mutation ist für den Lauf unsichtbar, und das
 > Ergebnis liest sich wie „der Test hält". Dafür einen **Wegwerf-Branch** nehmen (`tmp/<vorgang>-…`),
