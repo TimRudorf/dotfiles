@@ -288,6 +288,34 @@ Delphi = DUnitX (`$VAULT/referenz/dunitx-patterns.md`,
 > einzeln** prüfen — hat ein Feld zwei „ungültig"-Werte (dort `0` aus einem wörtlichen DB-Wert und `-1`
 > als „nicht gesetzt"), fängt ein Guard `<> 0` den einen ab und lässt den anderen durch; mit nur einem
 > geprüften Sentinel sieht das kein Test.
+>
+> 🔴 **Zweite Bauart derselben Falle: der falsche EINSTIEGSPUNKT.** Oben ging es um einen Zustand, den
+> die Produktion nie erreicht. Hier gibt es den Zustand sehr wohl — nur läuft die Produktion durch eine
+> **andere Funktion**, als der Test prüft. Typisch bei Mappern, Parsern und Adaptern, die in zwei
+> Fassungen vorliegen (eine für das echte Objekt, eine für XML-/JSON-Fixtures). Die Mutationsprobe ist
+> dann vollständig erfüllt und belegt trotzdem nichts: sie mutiert die Fassung, die nur Tests aufrufen.
+>
+> Gemessen 2026-08-24 (`schn_ivena#108`): ein Test auf `TZuweisungMapper.FromXmlNode` sollte den
+> Funkrufnamen absichern. Die Produktion ruft ausschliesslich `FromWsdl`
+> (`Ivena.Production.SoapClient` an drei Stellen); `FromXmlNode` hat **keinen** Produktivaufrufer. Ein
+> Verlust der Zuweisung in `FromWsdl` wäre grün durchgelaufen — genau die Regression, gegen die der Test
+> antrat. Gefunden hat es wieder der lokale Review-Agent, nicht die erfüllte Mutationsprobe.
+>
+> **Prüfschritt vor dem Schreiben, ein Kommando:** die zu testende Funktion im `src/`-Baum nach ihren
+> **Aufrufern** durchsuchen und die Treffer in Produktions- und Testcode trennen.
+>
+> ```bash
+> grep -rn '<FunktionsName>' src/ --include='*.pas' | grep -v '<eigene-unit>.pas:'
+> ```
+>
+> Kein Treffer ausserhalb von `tests/` heisst: dieser Einstieg ist nicht der Betriebspfad. Dann den
+> Produktivpfad **zusätzlich** abdecken und den Fixture-Test als solchen benennen — und die
+> Mutationsprobe je Fassung einzeln fahren: jede Mutation darf nur **ihren** Test rot machen, der andere
+> muss grün bleiben. Erst dieses Paar belegt, dass beide Pfade getrennt abgesichert sind.
+>
+> Nebenbefund derselben Stelle: liegen zwei Fassungen nebeneinander, driften sie. Dort mappte die
+> XML-Fassung ein Feld, die WSDL-Fassung nicht. Beim Absichern also **beide** Fassungen gegeneinander
+> lesen, nicht nur die eine ergänzen.
 
 > ⚠️ **Eine Mutation wirkt erst, wenn sie gepusht ist.** `edp-ctrl dev test` synchronisiert den
 > **gepushten** Branch auf die VM — eine nur lokal gesetzte Mutation ist für den Lauf unsichtbar, und das
