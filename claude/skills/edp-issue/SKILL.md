@@ -246,6 +246,35 @@ Delphi = DUnitX (`$VAULT/referenz/dunitx-patterns.md`,
 > den **gepushten** Stand, also beide Commits einzeln pushen und den roten Lauf mit seinen Zahlen
 > festhalten — er ist die Reproduktion und gehört in den PR-Body. CI läuft ohnehin nur auf dem Kopf des
 > Pull Requests, ein roter Zwischen-Commit erzeugt also keinen roten Lauf.
+>
+> 🔴 **In Delphi heisst „rot" trotzdem: es muss ÜBERSETZEN.** Ein Commit 1, der neue Typen oder
+> Signaturen aufruft, die es im Prüfling noch nicht gibt, scheitert am Compiler — und ein Lauf ohne
+> `Tests Found` ist keine Messung, sondern ein Bindungsfehler. Anders als bei einem Skript kann man
+> das nicht in Hüllen wegfangen. Also gehört die **API-Fläche** (neuer Record, geänderte Signatur,
+> Verdrahtung durch Service und Factory) **mit in Commit 1**, das Verhalten aber ausdrücklich
+> **nicht** — dann übersetzt die Suite, die neuen Fälle sind echt rot, und der Commit-Text sagt, dass
+> das Verhalten unverändert ist. Gemessen 2026-08-25 (`schn_ivena#130`): der erste Anlauf brach mit
+> `E2004 Bezeichner redeklariert` ab, weil eine Unit doppelt in `interface`- und
+> `implementation`-`uses` stand — der Lauf trug keine einzige Testzahl und hätte als „rot" gezählt
+> werden können.
+
+> 🔴 **Und dieser rote Lauf muss WURFSICHER sein, sonst ist er rot und trotzdem keine Messung.**
+> Commit 1 ruft naturgemäss Funktionen auf, die es im Prüfling noch gar nicht gibt — oder übergibt
+> Parameter, die noch nicht existieren. Beides wirft schon bei der Bindung, und unter
+> `$ErrorActionPreference = 'Stop'` (bzw. `set -e`) reisst der erste Wurf die **restliche Datei**
+> mit. Der Rückgabewert ist dann ungleich null, es sieht nach geglückter Reproduktion aus, und alles
+> dahinter wurde nie ausgeführt.
+>
+> Gemessen 2026-08-24 (`delphi-devsetup#83`), zweimal in einem Lauf: **83 PASS / 39 FAIL** statt 122
+> Prüfungen, später **144 statt 154** — beide Male fiel der Rest lautlos aus. Aufgefallen ist es nur
+> an der Summe.
+>
+> Zwei Handgriffe: die Aufrufe in **Hüllen** legen, die einen Wurf in einen Wert verwandeln, den
+> **keine** Zusicherung akzeptiert (eine Zeichenkette `WURF: …` scheitert an jedem `-eq`-Vergleich).
+> Wo das nicht geht, weil beide Wahrheitswerte erwartet werden, die Würfe **zählen** und am Ende des
+> Falls auswerten — sonst liest sich ein Wurf für die verneinenden Zusicherungen wie ein bestandener
+> Fall. Und in **beiden** Läufen gegenlesen: `PASS + FAIL` muss die Zahl der Zusicherungen ergeben.
+> Dasselbe gilt später für die Mutationsprobe, siehe dort.
 
 > **Ein grüner Test, der nicht rot werden kann, belegt nichts.** Jede neue Schutzmaßnahme einmal
 > **mutationsprüfen**: die Logik gezielt kaputtmachen, Suite laufen lassen, Rot sehen, zurückbauen. Und
@@ -366,6 +395,32 @@ Delphi = DUnitX (`$VAULT/referenz/dunitx-patterns.md`,
 > Zählzeilen und Fehlermeldungen zählen mit — und sie entstehen oft **später** als der Test. Marker
 > deshalb in eine Datei legen und nur den Pfad übergeben — und dieselbe Frage für Dateinamen,
 > Testnamen und Zwecktexte stellen.
+
+> 🔴 **Vierte Bauart, und die einzige, die auch bei einem EINDEUTIGEN Marker zuschlägt: das
+> ABSTANDSFENSTER.** Die drei oben fragen, ob der Text auf mehreren Wegen entstehen kann. Hier ist
+> der Text eindeutig — nur reicht der Ausschnitt zu weit. Wer einen Zweig über
+> `(?s)'anker'\s*\)\s*\{(.{0,1200}?)-Level\s+WARN` greift, prüft nicht den Zweig, sondern „ab
+> dem Anker bis zum nächsten `-Level WARN`". Löscht jemand das `-Level WARN` **im Zweig**, läuft die
+> lazy Suche einfach bis zum übernächsten weiter und die Zusicherung bleibt grün. Ein Zweig ist kein
+> Abstand.
+>
+> Gemessen 2026-08-24 (`delphi-devsetup#83`) in zwei Stärken. Mild: `-Level WARN` aus einem Zweig
+> entfernt, Suite grün, weil zehn Zeilen tiefer das nächste stand. Schwer: ein Ausschnitt „ab dem
+> Aufruf bis **Dateiende**" liess drei Zusicherungen über eine Nachkontrolle grün, während diese
+> (a) in ein `if ($false)` gesperrt, (b) auf `-Ist $x -Soll $x` verdreht und (c) auf den falschen
+> Ordner gelenkt wurde. Sie behaupteten eine Wirkung und massen die Anwesenheit zweier Bezeichner.
+> Gefunden hat beides erst der lokale Review-Agent bzw. die Mutationsprobe — nicht die grüne Suite.
+>
+> Belastbar ist ein Ausschnitt über **Klammer-Abgleich**: ein Zweig endet an seiner eigenen
+> schliessenden Klammer, da kann sich kein Nachbar einschleichen. Drei Dinge gehören dazu, sonst
+> sieht auch das nur nach Messung aus — eine **Selbstprobe des Ausschneiders** (rechnet er falsch,
+> meldet alles darüber still grün), eine Zusicherung, dass der Ausschnitt **nicht leer** ist, und
+> eine, dass er den **Nachbarn nicht enthält**. Prüffrage: *bleibt meine Zusicherung erfüllt, wenn
+> ich den Marker im Zweig lösche?* Wenn ja, misst sie den Abstand statt den Zweig.
+>
+> ⚠️ Verwandt und im selben Lauf zugeschlagen: ein Variablen-Marker **ohne Wortgrenze**. `\$pin`
+> trifft auch `$pinRoh`, `\$tag` auch `$tagAlt` — zwei Mutationen blieben deswegen grün. In
+> Regex-Zusicherungen auf Bezeichner gehört `\b` ans Ende.
 
 > 🔴 **Mutationsfest heisst nicht, dass der Test den Produktivpfad trifft.** Die Mutationsprobe belegt,
 > dass die Zusicherung scharf ist — nicht, dass der geprüfte Zustand im Betrieb überhaupt vorkommt. Vor
@@ -569,11 +624,24 @@ Delphi = DUnitX (`$VAULT/referenz/dunitx-patterns.md`,
 >
 > ```bash
 > eval "$mutation"
-> git diff --quiet && { echo "$fall | UNGUELTIG: Mutation hat den Baum nicht veraendert"; return; }
+> [ -z "$(git status --porcelain)" ] && { echo "$fall | UNGUELTIG: Mutation hat den Baum nicht veraendert"; return; }
 > ```
 >
 > Dazu je Fall eine **erwartete Testanzahl** — sie fängt genau die Fälle, in denen sich die Zahl der
 > Fälle ändern soll (Verdrahtungsprobe) oder eben nicht ändern darf.
+>
+> ⚠️ **Bewusst `git status --porcelain`, nicht `git diff --quiet`.** Letzteres meldet auch
+> **stat-dirty** Einträge als Änderung — Dateien, deren Zeitstempel sich geändert hat, während der
+> Inhalt gleich ist. Genau das erzeugt die Vorrichtung selbst, wenn sie je Fall aus einer Sicherung
+> zurückspielt. Der Baseline-Fall meldet dann „nicht unverändert", obwohl der Baum sauber ist.
+> Gemessen 2026-08-25 (`schn_ivena#130`).
+>
+> 🔴 **Und die Sicherungskopien mit Modus 644 anlegen — Git verfolgt das Executable-Bit.**
+> `install -D` setzt Kopien auf **755**, `shutil.copy2` überträgt den Modus beim Zurückspielen mit.
+> Danach steht jede zurückgespielte Datei als `M` im Status, obwohl der Inhalt stimmt: die Baseline
+> ist nie sauber, und die Prüfung „hat die Mutation den Baum verändert?" ist dauerhaft erfüllt und
+> damit wirkungslos. Im selben Lauf bezahlt. Also `install -m 644` bzw. `cp`, und zum Zurückspielen
+> `shutil.copyfile` (nur Inhalt) statt `copy2` (Inhalt **und** Modus).
 
 > 🔴 **`Tests Failed` allein ist die falsche Kopfzahl — DUnitX zählt Ausnahmen als `Errored`.** Wer
 > die Kopfzahl gegen die Länge der erwarteten Namensliste hält, bekommt eine Abweichung gemeldet,
@@ -582,8 +650,18 @@ Delphi = DUnitX (`$VAULT/referenz/dunitx-patterns.md`,
 > `rot=1` bei zwei roten Namen, und beide Namen waren richtig
 > ([[tim/feedback/kopfzahlen-aus-detailliste-nachrechnen]] — die Detailliste gewinnt).
 >
-> Also `Failed` **und** `Errored` addieren, und die Namen aus **beiden** Abschnitten einsammeln. Der
-> Befund dahinter ist zugleich ein Testmangel: eine ungefangene Ausnahme nennt nur den Ist-Zustand,
+> Also `Failed` **und** `Errored` addieren, und die Namen aus **beiden** Abschnitten einsammeln.
+>
+> ⚠️ **Beim Einsammeln der Namen: auf „Failing Tests" folgt eine LEERZEILE.** Ein naheliegendes
+> `Failing Tests(.*?)(\n\s*\n|\Z)` mit `re.S` bricht deshalb sofort ab und liefert eine **leere**
+> Namensliste — während die Kopfzahl korrekt `rot=1` meldet. Der Fall wird dann gegen eine leere
+> Erwartung verglichen und als **erfüllt** gebucht, obwohl ein Test rot war. Gemessen 2026-08-25
+> (`schn_ivena#130`): so ging ein fremder, sporadisch roter Test still als „Baseline in Ordnung"
+> durch. Belastbar ist, ab dem Marker **alle** Folgezeilen zu lesen und Namenszeilen an ihrer Form
+> zu erkennen (mindestens zwei Punkte, kein `:`, kein Leerzeichen) — und den Parser einmal gegen
+> einen **bekannten** roten Lauf zu prüfen, bevor die Reihe startet.
+>
+> Der Befund dahinter ist zugleich ein Testmangel: eine ungefangene Ausnahme nennt nur den Ist-Zustand,
 > nicht Soll, Grund und Behebung ([[tim/feedback/pruefungen-muessen-sich-selbst-erklaeren]]) — der
 > Fall gehört so gebaut, dass er die Ausnahme fängt und als Fehlschlag mit voller Meldung ausgibt.
 
@@ -1020,6 +1098,27 @@ ihn **nicht** — dann auf einen fremd gehaltenen Lock **nicht warten**, aber ih
 > funktioniert" behauptet, belegt in Wahrheit nur „irgendeine passende Datei war erreichbar".
 > Gemessen 2026-08-24 (`einsatzmonitor#19`); dort ist der Unterschied auf den Nachfolgevorgang
 > abgetreten, der die getrackten Kopien entfernt.
+
+> 🔴 **Eine gescheiterte Live-Verifikation ist zuerst ein Verdacht gegen den AUFBAU, nicht gegen
+> den Fix.** Die Versuchslage wird meist eigens angelegt — und sie kann eine Eigenschaft verletzen,
+> auf die der Prüfling sich stützt. Dann meldet der Lauf „wirkt nicht", obwohl der Code sich exakt
+> wie entworfen verhält.
+>
+> Gemessen 2026-08-25 (`schn_ivena#130`): Der A/B-Aufbau legte für **dieselbe** `patient_id`
+> nacheinander zwei Zuweisungen an — eine je Phase. Der Fix identifiziert die Zuweisung über ihre
+> `zuweisung_id`; die Rückfrage lieferte die der ersten Phase, der Abgleich verwarf sie
+> folgerichtig, und das Ergebnis sah aus wie der unbehobene Defekt. Mit einem Patienten, der genau
+> **eine** Zuweisung hatte, lief derselbe Test auf Anhieb durch.
+>
+> Prüffrage vor jedem „der Fix wirkt live nicht": *über welchen Schlüssel identifiziert der Code
+> seinen Gegenstand — und ist dieser Schlüssel in meiner Versuchslage eindeutig?* Praktisch heisst
+> das: den Ausgangszustand **vor** dem Aufbau messen (kennt das Fremdsystem diese ID schon?), und
+> den Auslöser sowie die erwartete Antwort **unmittelbar vor** dem Lauf einzeln gegenprüfen. Zwei
+> Aufrufe, die den Fehlschlag sofort einordnen.
+>
+> Der Umweg lohnt trotzdem: dieselbe Fehlmessung deckte auf, dass die Mainis-Doku 2.2 zu
+> `get_zuweisung(patient_id)` widerlegt ist (sie liefert die **erste** Zuweisung des Patienten,
+> nicht die zuletzt angelegte). Ein Fehlschlag im Aufbau ist oft ein Befund über das Fremdsystem.
 
 **Repro-/Test-Wissen zuerst nutzen, nicht neu erfinden:**
 - Backend deterministisch per HTTP-Form-POST: `$VAULT/referenz/edpweb-testing/index.md` (Hub → `setup`, `auth`,
@@ -1656,6 +1755,48 @@ Normalfall, sobald der PR Markdown oder YAML berührt hat.
 > `enabled`-Liste: *unter welcher Bedingung wird dieser Mechanismus nach meiner Änderung noch rot —
 > und ist diese Bedingung praktisch erreichbar?* Ist sie es nicht, gehört die Ergänzung nicht dorthin;
 > der Grund kommt als Kommentar daneben, sonst trägt sie der Nächste in gutem Glauben wieder ein.
+
+> 🔴 **Die Umkehrung derselben Frage, und sie wird häufiger vergessen: ein Fix macht eine bestehende
+> MELDUNG zur Lüge, indem er einen neuen Weg zu ihr öffnet.** Oben wird der Wächter stumpf; hier
+> bleibt alles scharf, nur erreicht plötzlich ein Zustand eine Fehlermeldung, die für ihn nie
+> geschrieben wurde. Der Diff sieht dabei völlig harmlos aus — die Meldung wird ja nicht angefasst.
+>
+> Gemessen 2026-08-24 (`delphi-devsetup#83`): eine Idempotenz-Prüfung wurde versionsbewusst, damit
+> ein gehobener Pin auch auf eingerichteten Rechnern nachzieht. Damit erreichte erstmals der Zustand
+> „provisioniert, nur veraltet" den Fehlerpfad, der bis dahin nur „gar nicht provisioniert" sah. Die
+> dortige Meldung war für den neuen Zustand in **vier Punkten falsch**: sie behauptete fehlende
+> Dateien, die dort liegen, tote Suchpfade, die heil sind, und sagte einen Übersetzungsfehler voraus,
+> der nicht kommt. Kein Randfall — die README des Repos sagte für genau diesen Vorgang voraus, dass
+> hinter einem gemeinsamen Anschluss nur der **erste** Rechner durchkommt; alle übrigen hätten den
+> roten Block mit den vier falschen Aussagen bekommen. Gefunden hat es der lokale Review-Agent.
+>
+> **Prüffrage nach jedem Fix, der eine Verzweigung ändert:** *welche Zustände erreichen jetzt Code,
+> den sie vorher nicht erreicht haben — und stimmen die Meldungen dort für sie noch?* Am billigsten
+> beantwortet man sie rückwärts: jede `Write-…`/`throw`-Stelle unterhalb der geänderten Verzweigung
+> einmal daraufhin lesen, für welchen Zustand ihr Text geschrieben wurde. Stimmt er nicht mehr für
+> alle, braucht die Stelle einen zweiten Zweig — und der gehört mutationsgeprüft wie jede andere
+> Zusicherung, in beide Richtungen (der alte Text muss für den alten Zustand erhalten bleiben).
+
+> 🔴 **Und die Menge der ANGENOMMENEN Werte muss mit der Menge der VERGLEICHBAREN zusammenfallen.**
+> Wo eine Stelle einen Konfigurationswert *annimmt* und eine andere ihn *vergleicht*, klaffen die
+> beiden Prüfungen fast immer auseinander — und in der Lücke liegen Werte, die durchgelassen werden
+> und nie gleich sein können. Bei einer Idempotenz-Prüfung ist das kein Schönheitsfehler, sondern
+> ein Dauer-Vorgang bei jedem Lauf.
+>
+> Gemessen 2026-08-24 (`delphi-devsetup#83`): die Annahme lehnte nur Trennzeichen ab (`[\s,:]`), der
+> Vergleich verlangte je Stelle eine Ziffernfolge. `13.6.8.2.`, `13..6.8.2` und `v13.6.8.2` gingen
+> damit durch und meldeten zwangsläufig „ungleich" — ein einzelner überzähliger Punkt in der
+> Konfiguration hätte auf **jedem** Rechner bei **jedem** Lauf einen Download ausgelöst und die
+> Grenze von einem Download pro IP-Adresse und Tag verbrannt. Vor dem Vorgang war derselbe Tippfehler
+> folgenlos; der Fix hatte die Lücke selbst geöffnet.
+>
+> **Prüffrage:** *gibt es einen Wert, den die Annahme durchlässt und den der Vergleich nie als gleich
+> erkennt?* Wenn ja, gehört er als **eigener Ausgang** behandelt (melden, nicht handeln) — und nicht
+> stillschweigend in den „ungleich"-Zweig. Ob zusätzlich die Annahme verschärft wird, ist eine
+> getrennte Frage und im Zweifel **nein**: eine Schreibweise, die die eigene Engine nicht lesen kann,
+> ist nicht automatisch eine, die das Fremdsystem ablehnt — daran die ganze Phase scheitern zu lassen
+> wäre eine Vermutung mit hartem Preis. Den Tippfehler im **eigenen** Repo fängt stattdessen eine
+> Zusicherung auf den tatsächlich konfigurierten Wert.
 
 > 🔴 **Der Review-Agent kann den geteilten Worktree auf einen losen HEAD stellen — und der nächste
 > eigene Push geht dann ins Leere, ohne zu scheitern.** Der Auftrag „prüfe gegen den serverseitigen

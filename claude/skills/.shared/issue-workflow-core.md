@@ -132,7 +132,7 @@ mit einer schwächeren Ersatzprüfung kaschieren. Nicht bestanden → zurück zu
 ## Schritt 8: PR erstellen und bis zum Abschluss treiben
 
 **8a — PR** gemäß `«PR»` erstellen. Im Autonomie-Modus ohne Zwischenbestätigung.
-`Closes/Fixes #<nr>` je vollständig erledigtem Issue in den Body, nur teilweise Bezüge als `Ref #<nr>`
+`Closes/Fixes #<nr>` je vollständig erledigtem Issue in den Body **und in die Commit-Botschaft** (eine Überarbeitung des Body-Textes entfernt das Schlüsselwort sonst still; nach jeder Body-Änderung `--json closingIssuesReferences` gegenlesen), nur teilweise Bezüge als `Ref #<nr>`
 ([[tim/feedback/pr-issues-auto-schliessen]]).
 
 **8b — CI beobachten** ([[tim/feedback/ci-nach-push-beobachten]]): Run-Status abwarten; bei Fehlschlag Logs
