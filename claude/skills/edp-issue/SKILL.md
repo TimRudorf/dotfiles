@@ -746,6 +746,23 @@ Delphi = DUnitX (`$VAULT/referenz/dunitx-patterns.md`,
 > Bundle-Download); `workflow_dispatch` ist der Weg für eine **Einzelmessung**. Ist der Lock belegt:
 > die Reihe als Hintergrundlauf aufsetzen, der auf den Lock wartet, ihn holt und im Abbruchpfad
 > wieder freigibt — warten ist billiger als eine ungültige Messung.
+>
+> 🔑 **Läuft parallel ein Review-Agent, die Reihe in einem ZWEITEN Worktree fahren.** Die
+> Mutationsprobe schaltet den Branch um und schreibt je Fall in die Quelldateien — genau das, was
+> der Abschnitt zum lokalen Review verbietet, solange der Agent liest. Statt zu warten oder ihm den
+> Baum unter den Füssen wegzuziehen, bekommt die Reihe ihren eigenen Baum; beide Stände liegen
+> nebeneinander, und `--project-root` zeigt auf das jeweilige Elternverzeichnis:
+>
+> ```bash
+> git worktree add ~/dev/EDP/.worktrees/<vorgang>-mut/<repo> -b tmp/<vorgang>-mut <fix-sha>
+> edp-ctrl dev test <repo> --project-root ~/dev/EDP/.worktrees/<vorgang>-mut
+> # danach: git worktree remove --force …, git branch -D, git push origin --delete
+> ```
+>
+> Der VM-Lock bleibt die geteilte Ressource — der zweite Worktree entkoppelt nur die **lokalen**
+> Bäume, nicht die VM. Gemessen 2026-08-25 (`schn_ivena#134`): Review-Agent und zehnteilige
+> Mutationsreihe liefen so störungsfrei nebeneinander, der Fix-Worktree blieb die ganze Zeit auf
+> dem PR-Head.
 
 > ⚠️ **Zum Zurückbauen einer Mutation NIE `git checkout -- <datei>`.** Das stellt aus dem **Index** her und
 > verwirft dabei stillschweigend jede noch nicht committete Änderung in derselben Datei — in diesem Lauf
@@ -1131,9 +1148,21 @@ ihn **nicht** — dann auf einen fremd gehaltenen Lock **nicht warten**, aber ih
 - Repo-spezifische Notes unter `$VAULT/projekte/<repo>/` und `$VAULT/referenz/` (z.B. `delphi-live-debug-vm.md`).
 
 > **Dev-VM-Verifikation — drei wiederkehrende Vorbedingungen:**
-> 1. **Feature-Branch vorher auf `origin` pushen** (alle Repos) — der Git-Sync von `edp-ctrl dev compile`/
->    `test` vergleicht `HEAD..origin/<branch>`; ein nie gepushter Branch bricht mit „unbekannter Commit …
->    origin/<branch>" ab (nicht als VM-/Compile-Fehler fehldeuten).
+> 1. 🔴 **Ein lokaler Commit bleibt NICHT lokal — `edp-ctrl dev compile`/`test` pusht den Branch
+>    selbst.** Gemessen 2026-08-25 am Quelltext (`edp-ctrl > dev/dev.go:188`, `:207-227`): fehlt der
+>    Remote-Branch, wird das ausdrücklich als „push-nötig" behandelt (`ahead := "1"`) und
+>    `git push --quiet -u origin <branch>` ausgeführt — auch für einen brandneuen, nie gepushten
+>    Zweig. Der hier früher beschriebene Abbruch mit „unbekannter Commit … origin/<branch>" tritt
+>    **nicht** ein.
+>
+>    **Die Folge ist eine stille Fehlmessung beim Rot-vor-Grün.** Wer den Fix-Commit bewusst nur
+>    lokal hält, um den roten Lauf gegen den Test-Commit zu messen, pusht ihn mit dem nächsten
+>    `dev test` — der „rote" Lauf misst dann den Fix und wird grün. Das Fehlerbild ist harmlos
+>    („die Tests halten ja"), und genau deshalb teuer. Zwei Wege, die tragen: den roten Lauf über
+>    `gh workflow run ci.yml --ref <branch>` messen (Einzelmessung, siehe die Mutationsprobe-Regel
+>    oben) und den Fix erst danach pushen — oder den Test-Commit auf einem Wegwerf-Zweig messen.
+>    Vor jeder Messung gegenlesen, welchen SHA `origin/<branch>` wirklich trägt
+>    (`git ls-remote origin refs/heads/<branch>`).
 > 2. **edpweb-DUnitX-Suite nach einem vorherigen `compile` fahren** — das Test-`.dproj` ist
 >    Win64-orientiert und reused die `..\Win64\Release`-DCUs des Haupt-Builds (inkl. CCR.Exif).
 >    ⚠️ **`--platform Win64` NICHT mehr von Hand setzen — hier stand jahrelang das Gegenteil.** `edp-ctrl
