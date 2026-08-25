@@ -16,7 +16,7 @@ Voraussetzungen gemäß `requirement-checker` Skill validieren. Bei Fehlschlag a
 
 ## Verbindungsdaten
 
-- **SSH-Host**: `vm-eifert-develop` (muss in `~/.ssh/config` konfiguriert sein)
+- **SSH-Host**: `eifert-dev` (muss in `~/.ssh/config` konfiguriert sein)
 - **MariaDB-Binary**: `C:\Program Files\MariaDB 10.11\bin\mysql.exe`
 - **User**: `root`
 - **Passwort**: `EDP`
@@ -42,7 +42,7 @@ Aus `$ARGUMENTS` die auszuführende SQL-Query ableiten:
 Query per SSH auf der Dev-VM ausführen:
 
 ```bash
-ssh vm-eifert-develop "\"C:\\Program Files\\MariaDB 10.11\\bin\\mysql.exe\" -u root -pEDP EDPdb -e \"{query}\""
+ssh eifert-dev "\"C:\\Program Files\\MariaDB 10.11\\bin\\mysql.exe\" -u root -pEDP EDPdb -e \"{query}\""
 ```
 
 **Hinweise:**
