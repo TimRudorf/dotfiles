@@ -220,6 +220,17 @@ Datei-Encoding strikt beachten (, `$VAULT/referenz/edp-cascade-encoding-check.md
 > Einfügung als `bytes` mit `\r\n` ersetzen, mit `'wb'` schreiben. Ein Textmodus-Schreiben ist hier
 > immer falsch — auch dann, wenn es „funktioniert hat".
 
+> 🔴 **Und der `.dproj`-Eintrag allein LINKT eine neue Testunit nicht.** Maßgeblich für den Bau ist
+> die `uses`-Liste im **`.dpr`** (`Test.Foo in 'unit\Test.Foo.pas',`); die `<DCCReference>` in der
+> `.dproj` ist nur die IDE-Sicht. Wer nur die `.dproj` ergänzt, bekommt einen grünen Lauf, in dem
+> die neue Prüfung **gar nicht enthalten** ist — und ihr Fehlen meldet niemand.
+>
+> Gemessen 2026-08-26 (`schn_ivena#139`): der Rot-vor-Grün-Lauf fand **403 statt 407** Tests, vier
+> Quellprüfungen liefen nicht mit. Aufgefallen ist es ausschliesslich daran, dass die **erwartete
+> Testanzahl** mitgeführt wurde (Baseline + neue Fälle) — ohne diese Zahl wäre der Vorgang mit
+> einer Prüfung gemergt worden, die nie gelaufen ist. Also beide Dateien ergänzen und nach dem
+> ersten Lauf `Tests Found` gegen die Erwartung rechnen.
+
 ### Versionsnummer — erst messen, WER versioniert
 
 🔴 **Nicht von Hand bumpen, ohne vorher geprüft zu haben, ob das Repo das selbst tut.** Die
@@ -231,6 +242,23 @@ Prüfung, ein Aufruf:
 ```bash
 git show origin/dev:.github/workflows/delivery.yml | grep -n "version-bump"
 ```
+
+> 🔴 **Ein Treffer heisst nicht, dass der Schalter dort gesetzt ist — der Schalter gehört
+> ZENTRAL.** In den `schn_*`-Repos steht an dieser Stelle nur ein Kommentar, und zwar einer, der
+> das Gegenteil dessen bedeutet, wonach man sucht: `# ⚠️ version-bump steht hier BEWUSST NICHT.`
+> (Begründung im Repo: ein übergebener Wert — auch `false` — schlüge den Default des gerufenen
+> Workflows, dann müsste man zum Umlegen jedes Repo einzeln anfassen). Maßgeblich ist der
+> **zentrale Default**:
+>
+> ```bash
+> gh api --hostname einsatzleitsoftware.ghe.com -H "Accept: application/vnd.github.raw" \
+>   "repos/edp/.github/contents/.github/workflows/delivery.yml?ref=dev" | grep -A14 'version-bump:'
+> ```
+>
+> Gemessen 2026-08-26 (`schn_ivena#139`): dort steht `default: true`, seit 2026-08-03 an. Wer den
+> repo-lokalen Kommentar als „nicht konfiguriert → also manuell" liest, baut genau den Fehler aus
+> `#138` nach. Gegenprobe in zehn Sekunden: `git tag --sort=-v:refname | head -3` gegen den Wert
+> im `.dproj` halten — liegt die Tag-Linie davor, versioniert die Pipeline.
 
 **`version-bump: true` → Finger weg von der `VerInfo`.** Der Lauf liest das `merge:*`-Label des
 Pull Requests, legt den `v*`-Tag an und **injiziert** die Version beim Bau in die VerInfo. Ein
