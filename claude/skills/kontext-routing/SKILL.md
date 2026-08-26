@@ -1,3 +1,8 @@
+---
+name: kontext-routing
+description: Routing zwischen Tims privaten und dienstlichen Konten bei Diensten, die er doppelt hat (GitHub/GHE, Mail, Kalender, Cloud). Welcher Zugang gilt wann, woran der Kontext zu erkennen ist und was bei Mehrdeutigkeit passiert. Nutzen, sobald ein Dienst mit zwei Konten im Spiel ist — Mail, Kalender, gh CLI, Repos, Cloud-Speicher.
+---
+
 # CONTEXTS — Routing zwischen privaten und dienstlichen Konten
 
 Einige Services existieren in zwei Varianten — privat (`_PRIVATE`) und dienstlich (`_WORK`). Diese Datei legt fest, wann welche zu nehmen ist.

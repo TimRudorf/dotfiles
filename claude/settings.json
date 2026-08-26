@@ -68,6 +68,14 @@
             "command": "$HOME/dotfiles/claude/scripts/jarvis-repo-clean-check.sh"
           }
         ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "$HOME/dotfiles/claude/scripts/jarvis-memory-sync.sh"
+          }
+        ]
       }
     ]
   },
@@ -79,5 +87,7 @@
   "tui": "fullscreen",
   "skipDangerousModePermissionPrompt": true,
   "theme": "auto",
-  "agentPushNotifEnabled": true
+  "agentPushNotifEnabled": true,
+  "autoMemoryEnabled": true,
+  "autoMemoryDirectory": "~/jarvis-wiki/memory"
 }
