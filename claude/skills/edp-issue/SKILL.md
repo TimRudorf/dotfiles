@@ -220,24 +220,45 @@ Datei-Encoding strikt beachten ([[tim/feedback/datei-encoding]], `$VAULT/referen
 > Einfügung als `bytes` mit `\r\n` ersetzen, mit `'wb'` schreiben. Ein Textmodus-Schreiben ist hier
 > immer falsch — auch dann, wenn es „funktioniert hat".
 
-### Versionsnummer — Bump gehört in denselben Commit
+### Versionsnummer — erst messen, WER versioniert
 
-Jede Änderung an **ausgeliefertem** Code in einem `schn_*`-Repo braucht einen SemVer-Bump im
-selben Commit ([[tim/feedback/versionsnummer-bei-code-aenderung]]; Schema und Bump-Tabelle:
-`$VAULT/referenz/edp-schnittstellen-versionierung.md`). Bugfix = Patch. Numerische
-`<VerInfo_Release>`-Felder **und** der `FileVersion=`-String müssen in **allen** Release-Configs
-denselben Wert tragen — nur den String zu bumpen ist wirkungslos, der Build zieht die
-numerischen Felder. Kein Bump bei reiner Doku-/Test-/CI-/Kommentar-Änderung.
+🔴 **Nicht von Hand bumpen, ohne vorher geprüft zu haben, ob das Repo das selbst tut.** Die
+Annahme „`schn_*` versioniert manuell" ist überholt und steht so auch noch in
+`$VAULT/referenz/edp-schnittstellen-versionierung.md`.
 
-> 🔴 **`git add -A && git commit` in EINEM Bash-Aufruf hebelt den Guard-Hook aus.** Er prüft die
-> **gestagten** Dateien; in dieser Form ist zur PreToolUse-Zeit noch nichts gestaged, er sieht
-> keine Änderung und schweigt. Gemessen 2026-08-26 (`schn_ivena#138`): der Fix-Commit ging ohne
-> Bump durch und fiel erst beim Nachlesen der Regel auf, lange nach dem Push. Also `git add` als
-> **eigenen** Aufruf ausführen — dann greift der Hook, und der Bump landet im selben Commit
-> statt als nachgelagerter `chore(version)`-PR.
+Prüfung, ein Aufruf:
+
+```bash
+git show origin/dev:.github/workflows/delivery.yml | grep -n "version-bump"
+```
+
+**`version-bump: true` → Finger weg von der `VerInfo`.** Der Lauf liest das `merge:*`-Label des
+Pull Requests, legt den `v*`-Tag an und **injiziert** die Version beim Bau in die VerInfo. Ein
+Hand-Bump ist dann nicht nur überflüssig, sondern schädlich: der committete Wert steht ohnehin
+hinter der Tag-Linie, und ihn „einen Schritt weiter" zu setzen erzeugt eine Nummer, die einem
+**früheren echten Release** entspricht.
+
+> Gemessen 2026-08-26 (`schn_ivena#138`): `.dproj` stand auf `1.2.1.0`, die Tag-Linie auf
+> `v1.2.4`. Der Hand-Bump auf `1.2.2.0` kollidierte mit dem existierenden Tag `v1.2.2`; die
+> Pipeline vergab für denselben Merge `v1.2.5` und baute `1.2.5.252` in die EXE. Zurückgenommen
+> mit PR #156, der vorbestehende Drift als eigener Vorgang (`schn_ivena#157`) ausgekoppelt.
 >
-> Gegenprobe nach dem Deploy: das Startup-Log des Dienstes nennt die `FileVersion` — dort steht,
-> ob der Bump wirklich im Binary angekommen ist.
+> ⚠️ Der committete Wert ist trotzdem nicht folgenlos: **der IDE-/`edp-ctrl dev compile`-Bau
+> liest ihn** (dort erschien im Startup-Log genau `1.2.2.0`). Ein falscher Wert ist also eine
+> Rückverfolgbarkeits-Falle, kein Schönheitsfehler — und genau deshalb wird er nicht geraten.
+
+**Nur wenn `version-bump` fehlt oder `false` ist**, gilt das manuelle Schema
+([[tim/feedback/versionsnummer-bei-code-aenderung]]): SemVer-Bump im selben Commit, Bugfix =
+Patch, numerische `<VerInfo_Release>`-Felder **und** der `FileVersion=`-String in **allen**
+Release-Configs synchron (nur den String zu bumpen ist wirkungslos, der Build zieht die
+numerischen Felder). Kein Bump bei reiner Doku-/Test-/CI-/Kommentar-Änderung.
+
+> ⚠️ Dann gilt auch: **`git add -A && git commit` in EINEM Bash-Aufruf hebelt den Guard-Hook
+> aus.** Er prüft die **gestagten** Dateien; in dieser Form ist zur PreToolUse-Zeit noch nichts
+> gestaged, er sieht keine Änderung und schweigt. `git add` als **eigenen** Aufruf ausführen.
+
+Gegenprobe in beiden Fällen: das Startup-Log des Dienstes bzw. `FILEVERSION` im Delivery-Log
+nennt die Nummer, die wirklich im Binary steht.
 
 ### `«TESTS»` — DUnitX / go test / Repo-Standard
 
