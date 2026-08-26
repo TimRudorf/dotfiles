@@ -20,12 +20,15 @@ cd "$DOTFILES"
 command -v stow >/dev/null || { echo "stow fehlt — bitte installieren." >&2; exit 1; }
 
 # Alte handverlinkte Symlinks entfernen, sonst bricht stow mit einem Konflikt
-# ab. Nur solche, die ins Repo zeigen — fremde Dateien bleiben unangetastet.
-for f in CLAUDE.md PERSONA.md PERSONALITY.md PROFILE.md settings.json skills; do
-  t="$HOME/.claude/$f"
-  if [ -L "$t" ] && [[ "$(readlink "$t")" == *"/dotfiles/claude/"* ]]; then
-    rm "$t"
-  fi
+# ab. Erfasst wird das Muster, nicht eine Namensliste: jeder Symlink direkt in
+# ~/.claude/, der irgendwo ins dotfiles-Repo zeigt, stammt aus dem alten
+# Handbetrieb — auch tote, die nach einer Umbenennung zurueckblieben
+# (CONTEXTS.md, PERSONA.md). Eine Aufzaehlung wuerde beim naechsten Umbenennen
+# wieder unvollstaendig.
+find "$HOME/.claude" -maxdepth 1 -type l -print0 2>/dev/null | while IFS= read -r -d "" t; do
+  case "$(readlink "$t")" in
+    */dotfiles/claude/*) rm "$t" ;;
+  esac
 done
 
 stow --restow --target="$HOME" claude
