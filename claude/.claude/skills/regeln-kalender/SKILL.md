@@ -27,10 +27,8 @@ vor JEDER Termin-/Tagesplanung Outlook-ICS (`WORK_CAL_ICS`) pullen, auch an "kei
 
 ## kalender-attendee-events-tabu
 
-Events mit fremden Attendees (ATTENDEE ≠ Tim) sind read-only: nie autonom löschen/verschieben/überschreiben — auch nicht durch Routinen, Tag+7, kohaerenz.py oder Dedup-Heuristik. Bei Konflikt weicht IMMER der Block ohne Attendees, sonst request_approval. Volltext: `~/VAULT_BACKUP/jarvis-wiki-2026-08-26/tim/feedback/kalender-attendee-events-tabu.md` (Archiv)
+Events mit fremden Attendees (ATTENDEE ≠ Tim) sind read-only: nie autonom löschen/verschieben/überschreiben — auch nicht durch Routinen, Tag+7, kohaerenz.py oder Dedup-Heuristik. Bei Konflikt weicht IMMER der Block ohne Attendees, sonst request_approval. Volltext:
 
 ---
 
-Was hier steht, ist die **geltende Fassung**. Die ausführlichen Begründungen
-von früher liegen im Archiv unter `~/VAULT_BACKUP/jarvis-wiki-2026-08-26/tim/feedback/` — dort nachlesen,
-wenn ein Grenzfall unklar bleibt, aber im Zweifel gilt dieser Text.
+Was hier steht, ist die **geltende Fassung**.
