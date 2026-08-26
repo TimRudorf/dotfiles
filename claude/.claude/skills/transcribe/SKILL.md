@@ -12,8 +12,8 @@ Aufzeichnungen → Telegram-Ping „N neue Aufzeichnung(en) … am Mac `/transcr
 geht an den Mac, tippt `/transcribe`, wir machen es zusammen — inkl. SSO-Login, falls
 ein Cookie abgelaufen ist (Re-Auth geht NUR am Mac, headed).
 
-Architektur & Hintergrund: [[projekte/lernplan/vorlesungs-transkription/konzept]] §6 Phase B
-+ [[projekte/lernplan/vorlesungs-transkription/pipeline-bugfix-pickup]]. Die eigentliche
+Architektur & Hintergrund:  §6 Phase B
++ . Die eigentliche
 ASR-Maschinerie (Download/Chunking/gpt-4o-transcribe/Frontmatter/Verify) liegt im Skill
 [[lecture-transcribe]] — dieser Skill ist nur der Queue-Treiber drumherum.
 
@@ -78,4 +78,4 @@ Transkript stichprobenartig ansehen (falsche Sprache → Prompt-Echo, siehe refe
   Transkripte dazukamen.
 
 ## Verwandt
-- [[lecture-transcribe]] (Tooling/manueller Einzel-Modus) · [[projekte/lernplan/vorlesungs-transkription/konzept]] · `moodle_sync.py` (Container-Detection, docker-compose-Repo)
+- [[lecture-transcribe]] (Tooling/manueller Einzel-Modus) ·  · `moodle_sync.py` (Container-Detection, docker-compose-Repo)

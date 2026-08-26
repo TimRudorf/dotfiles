@@ -30,16 +30,14 @@ Tims Kalender ist iCloud, **nicht** Google, **nicht** Nextcloud. Bei jedem Kalen
 
 Bevor ein neues Event ins iCloud geschrieben wird (und auch bevor verschoben wird), **immer erst lesen**:
 
-1. Über alle relevanten iCloud-Kalender (`Privat`, `Studium`, `EifertSystemsGmbH`) am gleichen Tag(en) suchen — `cal.search(start, end, event=True, expand=True)` — plus Outlook-ICS via `WORK_CAL_ICS` (siehe [[referenz/calendar-arbeit-ics]]).
+1. Über alle relevanten iCloud-Kalender (`Privat`, `Studium`, `EifertSystemsGmbH`) am gleichen Tag(en) suchen — `cal.search(start, end, event=True, expand=True)` — plus Outlook-ICS via `WORK_CAL_ICS`.
 2. **Duplikat?** (gleiche Person/Thema im SUMMARY oder überlappendes Zeitfenster ±15 min oder gleicher externer Identifier wie Zoom-Meeting-ID): das **bestehende Event updaten** (`event_by_url(...)`, `ev.data = neue_ical`, `ev.save()`) — UID beibehalten. **Niemals** ein paralleles zweites Event anlegen.
-3. **Konflikt mit anderem Termin?** Kleinere Bewegungen (Lernblock kürzen, Soft-Anker schieben) selbst lösen + per `notify_user` informieren ([[tim/feedback/planer-eigenstaendig]]). Bei Pflicht-Konflikt oder Unklarheit: `request_approval` mit Konflikt-Beschreibung.
+3. **Konflikt mit anderem Termin?** Kleinere Bewegungen (Lernblock kürzen, Soft-Anker schieben) selbst lösen + per `SendMessage` an die Sitzung `jarvis` informieren. Bei Pflicht-Konflikt oder Unklarheit: eine Rückfrage an Tim mit Konflikt-Beschreibung.
 4. **Soft-Anker** (🌅 Aufstehen, 🌙 Bett, 📚 Lernblock, 🍽 Mittag) zählen nicht als Konflikt — sie sind erwartet.
-
-Volle Begründung: [[tim/feedback/kalender-konflikt-und-duplikate-pruefen]].
 
 ## Workflow
 
-Empfehlung: für non-trivialen Code die Python-`caldav`-Library nutzen — robuster als curl-XML zu basteln. Im jarvis-tasks-Venv schon installiert (`/workspace/jarvis-tasks/.venv/bin/python` (Container) bzw. analoges venv auf dem Mac).
+Empfehlung: für non-trivialen Code die Python-`caldav`-Library nutzen — robuster als curl-XML zu basteln. Im tasks-Venv schon installiert (`/jarvis/tasks/.venv/bin/python` (Container) bzw. analoges venv auf dem Mac).
 
 ```python
 import caldav, os
@@ -275,7 +273,7 @@ X-APPLE-STRUCTURED-LOCATION;VALUE=URI;X-APPLE-MAPKIT-HANDLE=CAES9gIIrk0Qs
  :50.130080,8.668506
 ```
 
-Verifiziert per Apple-Calendar-Eintragung 2026-05-27 (Tim selbst für KW22-Uni-Fokus-Lernblöcke, UID `A9A91E91-…`). MAPKIT-HANDLE direkt aus Apples Quelle übernommen. Beim Anlegen JEDES 📚 Lernblock / 🧠 Anki-Floor → diesen Block 1:1 verwenden, sofern nicht der Block selbst ein eigenes `location`-Override mitbringt. Siehe [[tim/feedback/kalender-location-skw]].
+Verifiziert per Apple-Calendar-Eintragung 2026-05-27 (Tim selbst für KW22-Uni-Fokus-Lernblöcke, UID `A9A91E91-…`). MAPKIT-HANDLE direkt aus Apples Quelle übernommen. Beim Anlegen JEDES 📚 Lernblock / 🧠 Anki-Floor → diesen Block 1:1 verwenden, sofern nicht der Block selbst ein eigenes `location`-Override mitbringt.
 
 **Andere Stamm-Locations:**
 
@@ -355,4 +353,4 @@ Sonst: `bad math expression: operator expected`.
 
 ## Folge-Upgrade (offen)
 
-Eine Python-CLI `jc` analog zu `jarvis-tasks/jt` würde curl-XML-Hand-Patchen ersetzen. Pattern: `caldav` + `icalendar` libs, Subkommandos `list / search / add / update / delete / move`.
+Eine Python-CLI `jc` analog zu `tasks/jt` würde curl-XML-Hand-Patchen ersetzen. Pattern: `caldav` + `icalendar` libs, Subkommandos `list / search / add / update / delete / move`.

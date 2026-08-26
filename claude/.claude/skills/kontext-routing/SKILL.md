@@ -42,7 +42,7 @@ Wenn beide Signale gleich stark sind oder gar keins — **frag**:
 
 *"Soll das auf deinem privaten oder auf dem dienstlichen Nextcloud landen?"*
 
-Per `mcp__bridge__request_approval` mit Options `["privat", "dienstlich"]`. Nicht raten, nicht Default annehmen.
+Per eine Rückfrage an Tim mit Options `["privat", "dienstlich"]`. Nicht raten, nicht Default annehmen.
 
 ### Kontext-Persistenz innerhalb einer Session
 
@@ -65,4 +65,4 @@ Tim's `.zshrc` hat ggf. einen Default gesetzt — prüf via `gh auth status` im 
 - Env-Var-Konvention: `<SERVICE>_PRIVATE_*` und `<SERVICE>_WORK_*`
 - Diese Datei ergänzen (Tabelle + Heuristik-Signale)
 - Betroffene Skills anpassen
-- Änderung in Dotfiles-Repo committen (via `request_approval`, weil globale Regel)
+- Änderung in Dotfiles-Repo committen (via eine Rückfrage an Tim, weil globale Regel)

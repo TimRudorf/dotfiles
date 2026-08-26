@@ -44,3 +44,8 @@ Thumbs.db
 
 # edp-ctrl Skill-Install-Marker (volatil, bumpt bei jedem `edp-ctrl update`)
 claude/skills/*/.version
+
+# Arbeitsverzeichnis, das Claude Code im Repo-Wurzelverzeichnis anlegt, wenn
+# jemand von ~/dotfiles/ aus arbeitet. Der fuehrende Schraegstrich ist wichtig:
+# claude/.claude/ ist das stow-Paket und muss weiter erfasst werden.
+/.claude/

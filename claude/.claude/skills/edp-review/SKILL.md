@@ -45,7 +45,7 @@ Einen Sub-Agent starten. Der Auftrag muss **konkret** sein — ein generisches �
 
 ## Schritt 3: Funde verifizieren
 
-**Nicht ungeprüft übernehmen** ([[tim/feedback/review-verifizieren-und-mitfixen]]). Jeden Fund selbst am Code nachvollziehen:
+**Nicht ungeprüft übernehmen**. Jeden Fund selbst am Code nachvollziehen:
 
 - **Berechtigt** → fixen, Tests ergänzen wo sinnvoll, committen.
 - **Fehlalarm** → verwerfen und im Report kurz begründen, warum er keiner ist.
@@ -58,7 +58,7 @@ Kurze Notiz an den PR: **was geprüft** wurde, **was gefunden**, **was behoben**
 
 Label `todo:review` **bleibt** — der Agent ersetzt Copilot, nicht den Menschen.
 
-Nach einem Fix-Push: CI erneut abwarten ([[tim/feedback/ci-nach-push-beobachten]]) und den PR bis `mergeStateStatus CLEAN` treiben ([[tim/feedback/pr-fertig-erst-wenn-mergebar]]).
+Nach einem Fix-Push: CI erneut abwarten und den PR bis `mergeStateStatus CLEAN` treiben.
 
 ## Regeln
 

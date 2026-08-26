@@ -30,7 +30,7 @@ Wenn Tim eine Verhaltensregel/Korrektur/Präferenz formuliert (auch implizit —
 1. **Volltext-Note** unter `<kebab-slug>.md` mit Frontmatter (`type: feedback`) und Why/How-Callouts. Begründung explizit machen — die hilft mir später bei Edge Cases.
 
 2. **Klassifizieren:**
-   - **Universell** (greift in jeder Session — Stil, Arbeitsphilosophie, Bridge-Hygiene, Approval-Verhalten): One-Liner in CLAUDE.md Block "Universelle Verhaltensregeln" + Eintrag in `$VAULT/INDEX.md` unter "Universelle Regeln". CLAUDE.md-Edit per `request_approval`.
+   - **Universell** (greift in jeder Session — Stil, Arbeitsphilosophie, Bridge-Hygiene, Approval-Verhalten): One-Liner in CLAUDE.md Block "Universelle Verhaltensregeln" + Eintrag in `$VAULT/INDEX.md` unter "Universelle Regeln". CLAUDE.md-Edit per eine Rückfrage an Tim.
    - **Kontextspezifisch** (Domain — Kalender, Mail, Cut, Lernplan, Tasks, Infra, Coding, …): Eintrag in `$VAULT/INDEX.md` unter passender Domain-Sektion. Autonom, kein Approval.
 
 3. **Im Zweifel als universell behandeln** und Tim fragen, ob CLAUDE.md-Edit ok. Versteckt-in-INDEX-aber-eigentlich-universell wird zuverlässig überlesen.
@@ -45,7 +45,7 @@ Volldoku des Workflows: `$VAULT/SCHEMA.md` → "Wenn Tim Feedback gibt".
 |---|---|---|
 | Einzelne Erkenntnis, Präferenz, Fehl-Annahme, Fakt | **Vault-Note** in `$VAULT/` nach `SCHEMA.md` (Types: profil/feedback/projekt/referenz) | nein — normale Tätigkeit |
 | Wiederkehrendes Arbeits-Muster (≥2× erlebt oder absehbar) | **Skill** via `skill-create` | ja — Tim fragen, ob er zustimmt |
-| Globale Regel, die alle zukünftigen Sessions treffen soll | **Edit in `CLAUDE.md` / `PERSONA.md` / `PROFILE.md`** | **ja — `request_approval`**, weil es in die Dotfiles committet + gepusht wird |
+| Globale Regel, die alle zukünftigen Sessions treffen soll | **Edit in `CLAUDE.md` / `PERSONA.md` / `PROFILE.md`** | **ja — eine Rückfrage an Tim**, weil es in die Dotfiles committet + gepusht wird |
 
 ### Skill-Vorschlag-Trigger
 
