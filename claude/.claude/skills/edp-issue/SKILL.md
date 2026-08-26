@@ -54,7 +54,7 @@ gh issue edit <nr> -R einsatzleitsoftware.ghe.com/edp/<repo> --add-label "status
 ```
 
 (`--remove-label` für ein nicht gesetztes Label ist ein No-op — unkritisch.) Read-back nicht nötig, aber bei
-Fehler transparent melden ([[tim/feedback/schreib-verify]]).
+Fehler transparent melden.
 
 ### `«TICKET»` — Zammad
 
@@ -112,7 +112,7 @@ Repo-Checkout gemäß `$VAULT/referenz/edp-project-root-mac.md`.
 > Promotion nach `beta`/`release` ist eine Release-Entscheidung des Teams, kein Bestandteil eines
 > Fixes — und **kein selbst eröffneter Kaskaden-PR**. Ein bestehender Kaskaden-PR darf abgearbeitet
 > werden; eine Auslieferung wird nicht angestossen.
-> Volltext: [[tim/feedback/edp-nur-dev-promotion-ist-teamsache]].
+> 
 >
 > Das gilt **auch dann**, wenn die Fall-A–D-Prüfung unten formal auf `release` oder `beta` zeigt, und
 > **auch dann**, wenn der Issue-Body eine fertige `## Branch & Cascade`-Sektion mit genau dieser Vorgabe
@@ -133,7 +133,7 @@ Den **niedrigsten betroffenen Branch** (Fall A–D) und den Cascade-Pfad bestimm
 repo-eigenen `docs/GIT.md`. **Nicht jedes Repo hat sie** (`edp/einsatzmonitor` führt gar kein `docs/`);
 dann ist der Kopfkommentar von `.github/workflows/auto-cascade.yml` die Quelle im Repo — er benennt die
 Richtung ausdrücklich. Ergänzt durch `$VAULT/referenz/edp-schnittstellen-branch-konvention.md`,
-`$VAULT/projekte/edpweb/architektur.md` (Branching) und [[tim/feedback/issue-fix-branch-cascade-festhalten]].
+`$VAULT/projekte/edpweb/architektur.md` (Branching) und .
 Fix-Branch von der korrekten Basis anlegen (nie auf den Default-Branch direkt committen).
 
 Beim Erfassen (Core-Schritt 1) eine im Issue-Body bereits vorhandene Sektion **`## Branch & Cascade`**
@@ -181,7 +181,7 @@ blind übernommen.
 
 ### `«ENCODING»` — pro Repo messen, Win-1252 ist nur der Regelfall
 
-Datei-Encoding strikt beachten ([[tim/feedback/datei-encoding]], `$VAULT/referenz/edp-cascade-encoding-check.md`)
+Datei-Encoding strikt beachten (, `$VAULT/referenz/edp-cascade-encoding-check.md`)
 — **im Regelfall** Windows-1252 bei `.pas`/`.dpr`/`.dpk`/`.inc`/`.dfm`, UTF-8 bei Frontend/sonstigen. Echte Umlaute.
 
 > 🔴 **„Delphi = Win-1252" ist eine Annahme, keine Messung — einzelne Repos haben umgestellt.**
@@ -247,8 +247,7 @@ hinter der Tag-Linie, und ihn „einen Schritt weiter" zu setzen erzeugt eine Nu
 > liest ihn** (dort erschien im Startup-Log genau `1.2.2.0`). Ein falscher Wert ist also eine
 > Rückverfolgbarkeits-Falle, kein Schönheitsfehler — und genau deshalb wird er nicht geraten.
 
-**Nur wenn `version-bump` fehlt oder `false` ist**, gilt das manuelle Schema
-([[tim/feedback/versionsnummer-bei-code-aenderung]]): SemVer-Bump im selben Commit, Bugfix =
+**Nur wenn `version-bump` fehlt oder `false` ist**, gilt das manuelle Schema: SemVer-Bump im selben Commit, Bugfix =
 Patch, numerische `<VerInfo_Release>`-Felder **und** der `FileVersion=`-String in **allen**
 Release-Configs synchron (nur den String zu bumpen ist wirkungslos, der Build zieht die
 numerischen Felder). Kein Bump bei reiner Doku-/Test-/CI-/Kommentar-Änderung.
@@ -263,8 +262,7 @@ nennt die Nummer, die wirklich im Binary steht.
 ### `«TESTS»` — DUnitX / go test / Repo-Standard
 
 Delphi = DUnitX (`$VAULT/referenz/dunitx-patterns.md`,
-`$VAULT/projekte/edpweb/dunitx-test-harness-pickup.md`), Go = `go test`, Frontend = Repo-Standard
-([[tim/feedback/delphi-tests-immer]]). Build/Deploy **nur** via `/edp-develop`.
+`$VAULT/projekte/edpweb/dunitx-test-harness-pickup.md`), Go = `go test`, Frontend = Repo-Standard. Build/Deploy **nur** via `/edp-develop`.
 
 > 🔴 **DUnitX-Assert-Meldungen ASCII halten — Kommentare behalten echte Umlaute.** Die Suite ist eine
 > Delphi-**Konsolenanwendung**; ihre Ausgabe verlässt den Prozess in der Codepage der Konsole. Umlaute
@@ -277,10 +275,10 @@ Delphi = DUnitX (`$VAULT/referenz/dunitx-patterns.md`,
 >
 > ⚠️ Beim Umstellen **kein Datenliteral** mitnehmen (Testdaten, Dateinamen, erwartete Fault-Texte des
 > Fremdsystems). Und der **Bestand** eines Repos ist oft noch nicht umgestellt — den nicht nebenbei
-> mitkonvertieren, sondern als eigenen Vorgang auskoppeln ([[tim/feedback/randfunde-als-issue]]).
+> mitkonvertieren, sondern als eigenen Vorgang auskoppeln.
 
 > **Rot vor Grün, ohne gegen „nur grün committen" zu verstossen: zwei Commits.** Der Core verlangt bei
-> Bugs erst den reproduzierenden Test (rot), [[tim/feedback/delphi-tests-immer]] verlangt, nur grün zu
+> Bugs erst den reproduzierenden Test (rot),  verlangt, nur grün zu
 > committen. Beides zusammen geht als **Commit 1 = Tests** (an dieser Stelle rot, im Commit-Text
 > ausdrücklich als solcher benannt), **Commit 2 = Fix** (ab hier grün). `edp-ctrl dev test` fährt gegen
 > den **gepushten** Stand, also beide Commits einzeln pushen und den roten Lauf mit seinen Zahlen
@@ -653,7 +651,7 @@ Delphi = DUnitX (`$VAULT/referenz/dunitx-patterns.md`,
 > Also je Fall eine **erwartete Namensliste** führen und maschinell vergleichen — mit den
 > **vollständigen** Testnamen. Ein Vergleich gegen `ErkenntDenEinzeiler` statt
 > `Selbstprobe_ErkenntDenEinzeiler` meldet „nicht erfüllt", obwohl die Detailliste stimmt; im Zweifel
-> gewinnt die Detailliste ([[tim/feedback/kopfzahlen-aus-detailliste-nachrechnen]]).
+> gewinnt die Detailliste.
 >
 > 🔴 **Vor dem Vergleich `tr -d '\r'` — sonst ist die Namensliste LEER und der Fall liest sich als
 > erfüllt.** Die Ausgabe von `edp-ctrl dev test` entsteht auf einer Windows-Maschine und trägt
@@ -719,7 +717,7 @@ Delphi = DUnitX (`$VAULT/referenz/dunitx-patterns.md`,
 > obwohl die Detailliste stimmt: ein Fall, der eine Ausnahme ungefangen durchreicht, erscheint unter
 > **`Tests With Errors`** und nicht unter `Tests Failed`. Gemessen 2026-08-24 (`einsatzmonitor#19`):
 > `rot=1` bei zwei roten Namen, und beide Namen waren richtig
-> ([[tim/feedback/kopfzahlen-aus-detailliste-nachrechnen]] — die Detailliste gewinnt).
+> ( — die Detailliste gewinnt).
 >
 > Also `Failed` **und** `Errored` addieren, und die Namen aus **beiden** Abschnitten einsammeln.
 >
@@ -733,7 +731,7 @@ Delphi = DUnitX (`$VAULT/referenz/dunitx-patterns.md`,
 > einen **bekannten** roten Lauf zu prüfen, bevor die Reihe startet.
 >
 > Der Befund dahinter ist zugleich ein Testmangel: eine ungefangene Ausnahme nennt nur den Ist-Zustand,
-> nicht Soll, Grund und Behebung ([[tim/feedback/pruefungen-muessen-sich-selbst-erklaeren]]) — der
+> nicht Soll, Grund und Behebung — der
 > Fall gehört so gebaut, dass er die Ausnahme fängt und als Fehlschlag mit voller Meldung ausgibt.
 
 > 🔴 **Am Ende die Zahl der ERGEBNISZEILEN gegen die Zahl der Fälle halten.** Eine Probenreihe kann
@@ -750,7 +748,7 @@ Delphi = DUnitX (`$VAULT/referenz/dunitx-patterns.md`,
 > treffen und unterscheidet „fertig" von „gestorben".
 >
 > ⚠️ **Die erwartete Liste mit echten Umlauten notieren.** Testnamen tragen hier ä/ö/ü/ß
-> ([[tim/feedback/umlauts]]); eine in ASCII geschriebene Erwartung (`laesst` statt `lässt`) trifft nie
+>; eine in ASCII geschriebene Erwartung (`laesst` statt `lässt`) trifft nie
 > und meldet „ABWEICHUNG", obwohl die Detailliste stimmt. Gemessen 2026-08-23 (`installer#133`): zwei
 > Proberunden hintereinander so fehlbewertet. Symptom: **genau ein** Fall weicht ab, und seine roten
 > Namen lesen sich beim Nachsehen alle richtig.
@@ -873,7 +871,7 @@ Delphi = DUnitX (`$VAULT/referenz/dunitx-patterns.md`,
 >   werten, **aber nur**, wenn der Zieltest im Goroutine-Dump steht; sonst hängt etwas anderes und die
 >   Probe belegt nichts.
 >
-> Verwandt, eine Ebene höher: [[tim/feedback/pruefungen-muessen-sich-selbst-erklaeren]] — dort auch der
+> Verwandt, eine Ebene höher:  — dort auch der
 > Befund, dass der **Behebungsvorschlag** einer Prüfung selbst ein Prüfgegenstand ist. Im selben Lauf
 > riet die Meldung, „die erwartete Anzahl anzupassen"; `Anzahl = 0` war gültig und machte die Prüfung
 > lautlos wirkungslos. Den eigenen Rat also durchspielen, als befolge ihn jemand wörtlich und faul — und
@@ -1000,7 +998,7 @@ Delphi = DUnitX (`$VAULT/referenz/dunitx-patterns.md`,
 > lokalen Ersatz-Verifikation kaschieren.
 
 **Die Dev-VM ist exklusiv zu belegen** — `compile`, `test` und `service start|stop` erst nach gesetztem
-`C:\vm.lock`, sonst misst eine parallele Session still gegen fremden Code ([[tim/feedback/dev-vm-exklusiv-belegen]]).
+`C:\vm.lock`, sonst misst eine parallele Session still gegen fremden Code.
 
 > 🔴 **Die erste verändernde Aktion an das ERGEBNIS des check-and-set binden, nicht bloss dahinter
 > schreiben.** Der Lock-Aufruf liefert „GESETZT" oder „BELEGT" — steht die Mutation (ein `scp` auf die
@@ -1027,7 +1025,7 @@ Delphi = DUnitX (`$VAULT/referenz/dunitx-patterns.md`,
 > Berechtigung ist deshalb die richtige Form (so hat es `C:\EDP\edpweb` auch). Gemessen 2026-08-26
 > (`edpdesk#84`). ⚠️ Den Wert der alten Berechtigung **nirgends** hinschreiben — und wenn sie auf der
 > Instanz noch gültig ist, gehört sie zurückgezogen: das ist Tims Entscheidung, nicht die des Laufs
-> ([[tim/feedback/edp-secrets-nur-als-issue]]).
+>.
 
 > 🔴 **Ein gescheiterter `dev compile` heisst nicht „auf der Dev-VM ist nichts messbar".** Drei Schritte,
 > bevor daraus ein Blocker im Bericht wird:
@@ -1065,7 +1063,7 @@ Delphi = DUnitX (`$VAULT/referenz/dunitx-patterns.md`,
 > 🔴 **Dev-VM ≠ Build-VM — nicht verwechseln, und die zweite ist autonom NICHT erreichbar.** Die
 > **Dev-VM** (`edp-ctrl config get vm-host`, auf Poseidon `eifert-dev`) ist das Ziel aller Deploys oben.
 > Die **CI-Build-VM** `edpttz-svghr01` = `10.36.10.6` ist eine andere Maschine (Zugang `ssh edpci@…`,
-> [[referenz/delphi-ci-service-account]]) und hängt hinter dem **edp-OpenVPN mit YubiKey-PIN** — ein
+> ) und hängt hinter dem **edp-OpenVPN mit YubiKey-PIN** — ein
 > interaktiver Schritt, den ein autonomer Lauf nicht ausführen kann. Ein Issue, dessen Gegenstand die
 > **Bau-Engine** ist (`delphi-devsetup`, Runner-Provisionierung, Library-Suchpfade), lässt sich also
 > weder per `/edp-develop` deployen noch auf der Build-VM nachmessen. **Nicht daran hängenbleiben** und
@@ -1139,7 +1137,7 @@ ihn **nicht** — dann auf einen fremd gehaltenen Lock **nicht warten**, aber ih
 > **weitergereichte** sein. Hier stand der unbedingte Satz im Kopfkommentar der Vorlage
 > (`repo-templates/release.yml`) — er stimmt für `explicit` und wurde ungeprüft übernommen, was ein
 > `todo:testing` kostete, das wieder gesetzt werden musste
-> ([[tim/feedback/korrektur-erreicht-alle-traeger]]). Die gewählte Lesart samt ausführbarem Ersatzweg
+>. Die gewählte Lesart samt ausführbarem Ersatzweg
 > gehört als Kommentar ans Issue, nicht nur in den PR.
 
 > 🔴 **Wo ein CI-Artefakt vorliegt, wird AM ARTEFAKT gemessen — ein selbst nachgebautes Erzeugnis ist
@@ -1157,7 +1155,7 @@ ihn **nicht** — dann auf einen fremd gehaltenen Lock **nicht warten**, aber ih
 > eingecheckte `.RES` sei von ihren Quellen abgedriftet — sie war aktuell, das CI-Artefakt enthielt alle
 > sieben Abschnitte bytegleich. Drei Aufrufformen desselben Werkzeugs hatten das übereinstimmend
 > „bestätigt": **alle drei bekamen dieselben LF-Eingaben**, variiert war der Aufruf statt der Grösse, an
-> der die Aussage hing ([[tim/feedback/urteil-braucht-vollstaendige-messung]]). Vor dem Variieren also
+> der die Aussage hing. Vor dem Variieren also
 > fragen, **welche Grösse die Aussage trägt** — und die variieren.
 
 > 🔴 **Und dem PE-Parser nicht glauben, wenn er eine Tabelle als vollständig ausgibt.** `pefile`
@@ -1176,7 +1174,7 @@ ihn **nicht** — dann auf einen fremd gehaltenen Lock **nicht warten**, aber ih
 >
 > Gemessen 2026-08-24 (`einsatzmonitor#17`): die pefile-Zahl stand bereits im Deskriptor, im PR-Body
 > **und** im Nachmess-Kommentar am Issue, bevor sie auffiel — drei Träger für eine Zahl aus einem
-> einzigen Werkzeugaufruf ([[tim/feedback/korrektur-erreicht-alle-traeger]]). Der Befund selbst
+> einzigen Werkzeugaufruf. Der Befund selbst
 > (keine der drei DLLs in einer der Tabellen) hielt; falsch war allein die Zahl, die seine
 > Vollständigkeit belegen sollte. Gehört in dieselbe Reihe wie die anderen stillen Nullen:
 > `$VAULT/referenz/stille-messfallen-shell-git.md`.
@@ -1201,7 +1199,7 @@ ihn **nicht** — dann auf einen fremd gehaltenen Lock **nicht warten**, aber ih
 > die zur eigenen Erklärung nicht passt, hat den Widerspruch **schon gemessen** und muss ihn nur
 > noch lesen; die Messung gewinnt gegen die Erzählung, immer. Zweitens stand die falsche Aussage
 > am Ende in vier Dateien, im PR-Body, in zwei Issue-Kommentaren und in einer Vault-Note
-> ([[tim/feedback/korrektur-erreicht-alle-traeger]]) — gefunden hat sie erst der lokale
+> — gefunden hat sie erst der lokale
 > Review-Agent.
 >
 > **Prüffrage vor jeder Aussage über einen Ablauf:** *Habe ich den Code gelesen, der die Reihenfolge
@@ -1243,7 +1241,7 @@ ihn **nicht** — dann auf einen fremd gehaltenen Lock **nicht warten**, aber ih
 - Backend deterministisch per HTTP-Form-POST: `$VAULT/referenz/edpweb-testing/index.md` (Hub → `setup`, `auth`,
   `snippets`, `actions-<bereich>`, `db-kerntabellen`).
 - UI-Reproduktion/Verifikation: `/edp-design-loop` bzw. direkt `/playwright-cli` (Login/Cache-Fallen:
-  [[tim/feedback/code-self-check-vor-review]]).
+  ).
 - DB-Read-Back: `/edp-database` + `$VAULT/referenz/edpweb-testing/db-kerntabellen.md`.
 - FireDAC-Eigenheiten, bevor eine Zusicherung darauf gebaut wird: `$VAULT/referenz/firedac-mysql-verhalten.md`
   — allen voran, dass `RowsAffected` **getroffene** und nicht geänderte Zeilen zählt (FireDAC verbindet
@@ -1277,7 +1275,7 @@ ihn **nicht** — dann auf einen fremd gehaltenen Lock **nicht warten**, aber ih
 >    `git tag --contains`. Nur ein Uralt-Binary (≤ v0.1.1) braucht das Flag noch. Ein `F2048`/`F2613`
 >    beim Testbau bleibt trotzdem erkennenswert: es heisst Plattform-Mismatch zwischen Haupt-Build und
 >    Testbau und hat **nichts** mit dem eigenen Fix zu tun.
->    Details: [[projekte/edpweb/dunitx-test-harness-pickup]].
+>    Details: .
 > 3. 🔴 **Nach der Lock-Freigabe KEINE Messung mehr gegen die VM — auch keine lesende.** Sobald der Lock
 >    weg ist, deployt eine andere Session sofort ihren Branch. Eine Messung danach misst fremden Code, und
 >    das Fehlerbild zeigt auf den **eigenen**: Gemessen 2026-08-19 (#413) kam nach der Freigabe ein
@@ -1308,7 +1306,7 @@ ihn **nicht** — dann auf einen fremd gehaltenen Lock **nicht warten**, aber ih
 > Binary lokal bauen (`go build -o <tmp>/edp-ctrl-fix .`) und **gegen die echte VM** fahren. Der stärkste
 > Beleg ist ein **A/B im selben Lock-Fenster**: altes Binary aus `origin/<base>` und neues direkt
 > hintereinander mit demselben Kommando messen. Über zwei Lock-Fenster hinweg ist ein A/B wertlos, sobald
-> eine parallele Session dazwischen deployt ([[tim/feedback/dev-vm-exklusiv-belegen]]). Fehlerpfade, die
+> eine parallele Session dazwischen deployt. Fehlerpfade, die
 > die VM gar nicht brauchen (unerreichbarer Host, DNS), laufen ohne Lock — dann auch nicht darauf warten.
 > Für einen **dauerhaften `sc`-Fehler** ohne Dienst-Manipulation: `sc query \\10.255.255.1` liefert
 > reproduzierbar `[SC] … FEHLER 123:`, rein lesend (gemessen 2026-08-21, `edp-ctrl#28`).
@@ -1390,7 +1388,7 @@ ihn **nicht** — dann auf einen fremd gehaltenen Lock **nicht warten**, aber ih
 > ⚠️ Und die Frage **rückwärts** stellen: wer verlässt sich heute auf das alte Verhalten? In `#140` sprang
 > `decide` in `delivery.yml` den Delphi-Bau mit der Begründung ab, „das Gate baut denselben Stand" —
 > eine Aussage, die der Fix ungültig macht. Vor dem Push einmal nach Text**trägern** der Zusage suchen, die
-> man gerade bricht ([[tim/feedback/korrektur-erreicht-alle-traeger]]).
+> man gerade bricht.
 
 > **Ausnahme — die Änderung ist `.github/release.yml`** (Release-Notes-Kategorien): weder Dev-VM noch
 > CI-Artefakt, aber **vor dem Merge live messbar**. `POST /repos/<repo>/releases/generate-notes` erzeugt
@@ -1405,7 +1403,7 @@ ihn **nicht** — dann auf einen fremd gehaltenen Lock **nicht warten**, aber ih
 > `- 'merge:release-note-etc'` die Anführungszeichen mit und trifft nie — in diesem Lauf beschrieb das
 > zwei Repos falsch. Und `exclude`- von `categories`-Einträgen **getrennt** zählen, sonst zählt ein
 > Ausschluss als Deckung. Dass die Kopfzahl trotzdem stimmen kann, macht es unauffällig
-> ([[tim/feedback/kopfzahlen-aus-detailliste-nachrechnen]]).
+>.
 
 > **Ausnahme — die Änderung IST eine CI-/Delivery-Workflow-Datei** (z.B. `.github/workflows/delivery.yml`
 > selbst): Die lässt sich nicht via `/edp-develop` auf die Dev-VM deployen. Verifikation dann **artefakt-basiert**:
@@ -1416,7 +1414,7 @@ ihn **nicht** — dann auf einen fremd gehaltenen Lock **nicht warten**, aber ih
 > **Waisen-Release** an (nur der Installer-Job ist test-gated) — das bleibt nach Merge/Branch-Delete zurück und
 > muss manuell weg. Wenn ein Dispatch nötig war: **immer** `gh release list -R einsatzleitsoftware.ghe.com/edp/<repo>`
 > prüfen + jede `<branch>-latest`-Leiche mit `gh release delete <tag> --cleanup-tag --yes` entfernen. Volltext:
-> [[tim/feedback/keine-workflow-dispatch-waisen-releases]], `$VAULT/referenz/edpweb-delivery-pipeline.md`.
+> , `$VAULT/referenz/edpweb-delivery-pipeline.md`.
 > (Ein PR triggert `delivery.yml` **nicht**.)
 >
 > ⚠️ **Ob ein Push auf den eigenen Zweig überhaupt veröffentlicht, steht im Repo — das gehört gelesen,
@@ -1437,12 +1435,11 @@ das Repo pro Branch getrennte Renderer/Module hat (siehe `$VAULT/projekte/edpweb
 Endpunkt-/Repro-Wissen → `$VAULT/referenz/edpweb-testing/` (Hub-Konvention); Architektur/Repro-Ablauf →
 `$VAULT/projekte/<repo>/`. Niemals dupliziert, konsistent mit vorhandenem Frontmatter-/Verifiziert-Marker-Stil.
 Fehlt am Issue die Sektion **`## Branch & Cascade`** (Fix-Branch + Cascade-Pfad + Test-Akzeptanzkriterium),
-diese ergänzen, damit Bearbeiter sie direkt anwenden können ([[tim/feedback/issue-fix-branch-cascade-festhalten]]).
+diese ergänzen, damit Bearbeiter sie direkt anwenden können.
 Schreibaktionen auf GHE via `gh` (Host-Quirks: `$VAULT/referenz/ghe-instance-quirks.md`).
 
 **Randfunde** — was am Rande auffällt, aber eine eigene Entscheidung oder Bauprobe braucht, wird
-ausgekoppelt statt mitgefixt: eigenes Issue mit Messung + `## Branch & Cascade`, Assignee `tim-rudorf`
-([[tim/feedback/randfunde-als-issue]]). ⚠️ **Erst den Vorgang anlegen, dann seine Nummer irgendwo
+ausgekoppelt statt mitgefixt: eigenes Issue mit Messung + `## Branch & Cascade`, Assignee `tim-rudorf`. ⚠️ **Erst den Vorgang anlegen, dann seine Nummer irgendwo
 referenzieren** — die nächste freie Nummer lässt sich nicht vorhersagen (Issues und PRs teilen sie sich;
 in einem Lauf war die geratene bereits vergeben und musste per Folge-Commit korrigiert werden). Das gilt
 **in beide Richtungen**: auch eine PR-Nummer gehört nicht in einen Issue-Kommentar, bevor der PR
@@ -1450,7 +1447,7 @@ existiert. Eine geratene Nummer, die zufällig stimmt, ist der schlechtere Ausga
 Raten (gemessen 2026-08-21, `edp-ctrl#47`). Reihenfolge: PR anlegen, Nummer lesen, dann kommentieren.
 
 > 🔴 **Vor jedem `gh issue create` den Bestand prüfen — offen UND geschlossen, Titel UND Body**
-> ([[tim/feedback/issue-bestand-pruefen-vor-neuanlage]]). Gemessen 2026-08-21 (`edp/datenbank#33`): von 14
+>. Gemessen 2026-08-21 (`edp/datenbank#33`): von 14
 > org-weiten Randfunden waren **12 bereits erfasst**, blind angelegt wären das 12 Dubletten gewesen. Zwei
 > Fallen dabei:
 > - **Titel-Abgleich reicht nicht.** `schn_webhook#13` heißt „Auto generate ssl zertifikat" und behandelt
@@ -1482,10 +1479,10 @@ Raten (gemessen 2026-08-21, `edp-ctrl#47`). Reihenfolge: PR anlegen, Nummer lese
 >
 >   Und **immer einen Kontrollbegriff mitlaufen lassen**, von dem feststeht, dass er treffen muss —
 >   ohne ihn ist „nichts gefunden" nicht von „nicht gesucht" zu unterscheiden
->   ([[referenz/stille-messfallen-shell-git]] § 18).
+>   ( § 18).
 
 > 🔴 **Jedes neu angelegte Issue bekommt einen Type** — `gh issue create … --type "<Type>"`, auch bei
-> Randfunden, Auskopplungen und Notizen ([[tim/feedback/issue-type-immer-setzen]]). „Kein Type passt"
+> Randfunden, Auskopplungen und Notizen. „Kein Type passt"
 > gibt es nicht, dafür ist `Sonstiges` da; nicht reflexhaft `Task` nehmen, die spezifischen Types
 > (`Refactoring`, `Tests`, `CI/Workflows`, `Documentation`, `Security-Issue`, …) tragen die eigentliche
 > Information. Types **live abfragen** statt raten:
@@ -1499,7 +1496,7 @@ Raten (gemessen 2026-08-21, `edp-ctrl#47`). Reihenfolge: PR anlegen, Nummer lese
 > wo beides passt (z. B. `--type "Security-Issue"` **und** `--label "merge:security-issue"`).
 
 ⚠️ **Secrets sind von „Randfund mitfixen" ausgenommen:** erfassen als Issue, sonst nichts — keine Löschung,
-kein `.gitignore`-Eintrag, keine Rotation, kein PR ([[tim/feedback/edp-secrets-nur-als-issue]]).
+kein `.gitignore`-Eintrag, keine Rotation, kein PR.
 
 ### `«PR»` — `/edp-pull-request` + Label-Schema
 
@@ -1552,7 +1549,7 @@ kein `.gitignore`-Eintrag, keine Rotation, kein PR ([[tim/feedback/edp-secrets-n
     > brauchen, ein UI-Umbau mit belegtem Durchlauf nicht.
 
 **Copilot wird nicht mehr angefordert** — der Bot ist auf der Instanz inaktiv, `--add-reviewer` ist ein stiller
-No-op ([[tim/feedback/pr-review-lokaler-agent]]).
+No-op.
 
 > ⚠️ **Der erste `Merge-Label`-Lauf ist rot — das ist kein Befund.** Der Workflow startet mit dem Pull
 > Request, also bevor `--add-label` gelaufen ist, und scheitert mangels `merge:*`-Label. Er heilt sich
@@ -1582,7 +1579,7 @@ No-op ([[tim/feedback/pr-review-lokaler-agent]]).
 
 ### `«ABSCHLUSS»` — merge-ready, Merge macht das Team
 
-Definition of Done ist der **mergebare** Zustand ([[tim/feedback/pr-fertig-erst-wenn-mergebar]]). Den
+Definition of Done ist der **mergebare** Zustand. Den
 eigentlichen Merge dem Team/Reviewer überlassen — **nicht selbst mergen**.
 
 > 🔴 **Sonderfall: ein Klammer-Vorgang, der per Fanout in Einzel-Issues aufgelöst und dann geschlossen
@@ -1605,18 +1602,17 @@ eigentlichen Merge dem Team/Reviewer überlassen — **nicht selbst mergen**.
 > 4. **Bei Überschneidung mit bestehenden Vorgängen dort kommentieren, nicht nur im neuen Issue.** Vier der
 >    acht Repos hatten schon einen offenen oder geschlossenen Vorgang am selben Gegenstand; ohne Kommentar
 >    dort arbeitet der Nächste doppelt oder hält den geschlossenen für erledigt
->    ([[tim/feedback/korrektur-erreicht-alle-traeger]]).
+>.
 
 ### `«TABUS»`
 
 - **Testen/Verifizieren/Reproduzieren IMMER nur in der Dev-Umgebung** (siehe `«VERIFY»`). Lokales
-  Render-Harness / lokaler Build / CI-grün sind KEIN Ersatz ([[tim/feedback/code-self-check-vor-review]]).
+  Render-Harness / lokaler Build / CI-grün sind KEIN Ersatz.
 - **Kein `gh workflow run` auf `delivery.yml`** ohne die Waisen-Release-Nachkontrolle (siehe `«VERIFY»`).
 - **Externer Kundenversand** (Zammad public) nur mit Freigabe und in Tims Duktus (CLAUDE.md).
-- **Keine Jarvis-/Vault-Verweise** in Issue-, PR-, Commit- oder Zammad-Text — der Sachgrund gehört inline
-  ([[tim/feedback/keine-jarvis-referenzen-extern]]).
+- **Keine Jarvis-/Vault-Verweise** in Issue-, PR-, Commit- oder Zammad-Text — der Sachgrund gehört inline.
 - **Git-Author** ist `Tim Rudorf <tim.rudorf@einsatzleitsoftware.de>` aus der Repo-Config; nie
-  `-c user.name`/`-c user.email` am Commit ([[tim/feedback/git-author-arbeit-repos]]).
+  `-c user.name`/`-c user.email` am Commit.
 
 ## Zusatz zu Core-Schritt 1 (Erfassen)
 
@@ -1695,7 +1691,7 @@ eigentlichen Merge dem Team/Reviewer überlassen — **nicht selbst mergen**.
 > als einzige eine *Ausstattung* braucht, die fehlen kann. Ein Fix an der benannten Stelle hätte den
 > Auslöser beseitigt und die Ursache stehen lassen — Go und Frontend prüften weiter still den falschen
 > Baum. Prüffrage: *ist die benannte Stelle die einzige Betroffene, oder nur die lauteste?* Wenn ein
-> Mechanismus geteilt ist, gehört der Fix an die Wurzel ([[tim/feedback/generisch-ueber-oekosysteme]]).
+> Mechanismus geteilt ist, gehört der Fix an die Wurzel.
 
 > 🔴 **Und vor jeder Messung durchspielen, wie ein echter TREFFER aussehen würde.** Die Regeln oben
 > schützen gegen *zu wenig* Messung. Dieser Fall ist die Umkehrung: eine Messung kann org-weit
@@ -1721,12 +1717,12 @@ eigentlichen Merge dem Team/Reviewer überlassen — **nicht selbst mergen**.
 > - **Der Issue-Text hatte den Fehlschluss vorgegeben** und die Frage deshalb als „beides vertretbar"
 >   eingestuft. Eine übernommene Beweisführung wird nicht dadurch belastbar, dass sie im Vorgang steht
 >   — die Wirkungsbehauptung des Melders gehört genauso an der Quelle gemessen wie seine Fundstellen
->   ([[tim/feedback/korrektur-erreicht-alle-traeger]]).
+>.
 >
 > Und der Grund, warum die Testsuite hier nicht hilft: die vier Fälle waren mutationsfest und haben
 > trotzdem die falsche Entscheidung festgenagelt. **Ein scharfer Test über einer falschen Prämisse
 > zementiert sie** — gefangen hat es erst der lokale Review-Agent (Core-Schritt 8c).
-> Volltext: [[tim/feedback/urteil-braucht-vollstaendige-messung]].
+> 
 
 ## Zusatz zu Core-Schritt 8b (CI beobachten)
 
@@ -1752,7 +1748,7 @@ eigentlichen Merge dem Team/Reviewer überlassen — **nicht selbst mergen**.
 > dasselbe Produkt** (`web`) an derselben Zeile — der vierte Lauf war grün, es war durchgehend ein
 > Aussetzer. Wer der Faustregel folgt, sucht ab dem zweiten Mal einen Defekt an `web`, den es nicht
 > gibt. Entschieden hat erst eine **anders konstruierte** Messung am Gegenstand statt am Symptom
-> ([[tim/feedback/urteil-braucht-vollstaendige-messung]]): Zustand der Assets über die API
+>: Zustand der Assets über die API
 > (`state`/`size`), denselben Download mit denselben Argumenten **lokal** nachstellen, und die
 > Anforderungslisten vergleichen — das grüne `server` forderte eine echte **Obermenge** dessen, woran
 > `web` scheiterte.
@@ -1852,7 +1848,7 @@ Normalfall, sobald der PR Markdown oder YAML berührt hat.
 > `protected`; `public` beginnt erst `:569`. Der Nachfahre war nötig.
 >
 > Die Gegenprobe muss deshalb **anders konstruiert** sein als das Zitat
-> ([[tim/feedback/urteil-braucht-vollstaendige-messung]]): nicht dieselbe Zeile noch einmal lesen,
+>: nicht dieselbe Zeile noch einmal lesen,
 > sondern die **Grenzen** bestimmen und prüfen, welche die fragliche Zeile einschliesst.
 >
 > ```bash
@@ -1922,7 +1918,7 @@ Normalfall, sobald der PR Markdown oder YAML berührt hat.
 > `${{ inputs.binaries }} ${{ inputs.release-notes }}` —, und weil die neue Stufe per Default an ist
 > und in 127 von 136 Repos strukturell grün meldet, konnte der Guard **nie wieder feuern**. Ein Repo
 > mit `binaries: false` hätte ein grünes Aggregat ohne eine einzige wirksame Prüfung bekommen. Das
-> ist die Umkehrung von [[tim/feedback/programmier-grundsaetze]] („ein Schalter, der nichts mehr
+> ist die Umkehrung von  („ein Schalter, der nichts mehr
 > steuert, ist ein Defekt"): hier steuert der Schalter noch, nur der **Wächter** nicht mehr.
 >
 > Prüffrage vor jeder Ergänzung an einem Wächter, einer Schwelle, einer `needs`- oder
@@ -1997,7 +1993,7 @@ Normalfall, sobald der PR Markdown oder YAML berührt hat.
 > Die Regel dahinter: **ein Push gilt erst als erfolgt, wenn der serverseitige SHA gegengelesen
 > ist** (`git ls-remote` oder `gh pr view <nr> --json headRefOid`). Und ein grüner CI-Lauf belegt
 > nicht, dass er den eigenen Stand gemessen hat — erst der SHA-Abgleich macht ihn zu einem Beleg
-> ([[tim/feedback/urteil-braucht-vollstaendige-messung]]). Wer den Worktree wieder einfängt:
+>. Wer den Worktree wieder einfängt:
 > `git checkout -B <branch> <commit>` nach einer Fast-Forward-Probe
 > (`git merge-base --is-ancestor <alt> <neu>`).
 
@@ -2005,7 +2001,7 @@ Normalfall, sobald der PR Markdown oder YAML berührt hat.
 > überholten Aussage.** Ein Ausgabe-Block, ein Log-Auszug, eine Mutationstabelle im PR-Body war eine
 > Messung am Stand von vorhin — nach einem Fix-Push stimmt sie womöglich nicht mehr, und niemand sieht
 > es ihr an. Nach jeder Review-Runde deshalb prüfen, welche zitierten Belege der Fix ungültig gemacht
-> hat, und sie **neu messen** statt sie stehen zu lassen ([[tim/feedback/korrektur-erreicht-alle-traeger]]).
+> hat, und sie **neu messen** statt sie stehen zu lassen.
 > Das gilt ausdrücklich auch für die **Live-Messung** und die **Mutationsprobe**: beide hängen am
 > Code, nicht am Vorgang. Gemessen 2026-08-26 (`schn_ivena#138`): eine Review-Runde tauschte den
 > Vergleichsmechanismus aus — damit galt die 5-Minuten-Live-Messung nur noch für die Vorfassung,
@@ -2021,7 +2017,7 @@ Normalfall, sobald der PR Markdown oder YAML berührt hat.
 >
 > Sie benennt dabei den **Prüfstand, nicht den Prüfer**: „skeptisch gegen den serverseitigen Head
 > `<sha>` geprüft, Schwerpunkte: …". Eine Einleitung über den Apparat ist ein Verweis auf die
-> Arbeitsweise und gehört nicht in Repo-sichtbaren Text ([[tim/feedback/keine-jarvis-referenzen-extern]]);
+> Arbeitsweise und gehört nicht in Repo-sichtbaren Text;
 > der Prüfstand trägt dieselbe Information und ist zudem nachprüfbar. Fällt so eine Formulierung
 > nachträglich auf, **alle** Träger gegenprüfen — PR-Body, Issue-Kommentare, abgeleitete Vorgänge.
 
@@ -2030,7 +2026,7 @@ Normalfall, sobald der PR Markdown oder YAML berührt hat.
 > dem Abschnitt `## New Contributors`, in dem der angeblich ausgeschlossene Cascade-Pull-Request noch
 > stand. Die widerlegende Zeile war in der eigenen Messung enthalten, nur nicht im Zitat. Also: entweder
 > vollständig zitieren oder `[…]` setzen — und vor dem Einfügen einmal fragen, *was ich gerade
-> weglasse* ([[tim/feedback/urteil-braucht-vollstaendige-messung]]).
+> weglasse*.
 
 > 🔴 **Wer einem Review-Fund widerspricht, muss die Gegenprobe ANDERS konstruieren als die
 > ursprüngliche Messung.** Der Core verlangt, Funde selbst zu verifizieren statt sie blind zu
@@ -2047,12 +2043,12 @@ Normalfall, sobald der PR Markdown oder YAML berührt hat.
 >
 > Prüffrage vor jedem „das stimmt nicht": *Nutze ich gerade dieselbe Quelle, dasselbe Werkzeug und
 > denselben Aufruf wie beim ersten Mal?* Wenn ja, ist es keine Gegenprobe, sondern eine Wiederholung
-> ([[tim/feedback/urteil-braucht-vollstaendige-messung]]).
+>.
 >
 > Ein zurückgezogener Fehlbefund wird **sichtbar** korrigiert, nicht stillschweigend: Kommentar am
 > betroffenen Vorgang mit der Ursache, Vorgang schliessen (`--reason "not planned"`), und **jeden**
 > weiteren Träger der falschen Angabe nachziehen — Dokument, PR-Body, alle abgeleiteten Issues
-> ([[tim/feedback/korrektur-erreicht-alle-traeger]]).
+>.
 
 > **Keine Momentaufnahme in ein Standard-/Vorlagen-Dokument schreiben.** Ein Zählstand („N von M Repos
 > führen X") ist beim Lesen schon veraltet und wird als Bestandsaufnahme missverstanden — „die anderen
@@ -2080,8 +2076,7 @@ Gemessen 2026-08-21: Ein ausführlicher Kommentar an `edp-runtime-redist#5` legt
 hatte — nur x64, schlichter Dateiname. Der Kommentar brauchte einen Nachtrag, der ihn zu zwei Dritteln
 zurücknahm. Ein `gh pr list` vorher hätte das gespart.
 
-Ebenso: **fremde PRs nicht anfassen und nicht auf sie warten**
-([[tim/feedback/fremde-prs-sind-kein-blocker]]) — aber prüfen, ob sich der eigene Vorgang durch sie
+Ebenso: **fremde PRs nicht anfassen und nicht auf sie warten** — aber prüfen, ob sich der eigene Vorgang durch sie
 **erledigt** hat. Läuft parallel eine Session am selben Strang, kurz abstimmen, wer welches Repo hält;
 das verhindert doppelte Arbeit an derselben Datei.
 
@@ -2094,7 +2089,7 @@ das verhindert doppelte Arbeit an derselben Datei.
 ## Zusatz: zwei Sessions am selben Vorgang
 
 Der Skill läuft autonom und im Hintergrund — es kann eine **zweite Session denselben Vorgang halten**.
-Bisher stand dazu nur die Dev-VM-Regel ([[tim/feedback/dev-vm-exklusiv-belegen]]); die deckt eine
+Bisher stand dazu nur die Dev-VM-Regel; die deckt eine
 geteilte *Maschine* ab, nicht einen geteilten *Vorgang*. Gemessen 2026-08-23 an `schn_ivena#113`, wo
 zwei Sessions parallel liefen:
 
@@ -2116,12 +2111,11 @@ zwei Sessions parallel liefen:
   weitgehend deckungsgleiche Notizen an denselben PR. Das ist für den menschlichen Reviewer Rauschen und
   hebt die Ersparnis auf, die die Notiz bringen soll. Die vollständigere stehen lassen, die eigene auf
   die **Delta-Funde** einkürzen (`gh api -X PATCH repos/<org>/<repo>/issues/comments/<id>`).
-- **Randfunde nicht doppelt erfassen.** Vor jedem `gh issue create` gilt ohnehin die Bestandsprüfung
-  ([[tim/feedback/issue-bestand-pruefen-vor-neuanlage]]); bei paralleler Arbeit kommt hinzu, dass der
+- **Randfunde nicht doppelt erfassen.** Vor jedem `gh issue create` gilt ohnehin die Bestandsprüfung; bei paralleler Arbeit kommt hinzu, dass der
   Bestand **während des Laufs wächst**. Hier hatte die andere Session zwei der drei Randfunde bereits
   angelegt — abstimmen, wer welchen nimmt, statt Dubletten zu erzeugen.
 - **Widerspricht die andere Session einem eigenen Befund, gilt dieselbe Regel wie beim Review-Agenten:**
-  die Gegenprobe **anders konstruieren** ([[tim/feedback/urteil-braucht-vollstaendige-messung]]). In
+  die Gegenprobe **anders konstruieren**. In
   diesem Lauf hatte sie in beiden Richtungen recht — einmal lag ihre Detailliste falsch (Regex zog
   Anführungszeichen mit, die Kopfzahl stimmte trotzdem), einmal meine Wirkungsbehauptung.
 

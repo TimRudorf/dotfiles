@@ -197,7 +197,7 @@ Wert ins Briefing eintragen (Sektion „Kosten dieses Runs").
 
 ## Schritt 9: Telegram-Notification
 
-Kurzfazit (3-5 Bullets) via `mcp__bridge__notify_user`:
+Kurzfazit (3-5 Bullets) via `SendMessage` an die Sitzung `jarvis`:
 
 ```
 📍 Frankfurt-Trends Briefing YYYY-MM-DD ist da

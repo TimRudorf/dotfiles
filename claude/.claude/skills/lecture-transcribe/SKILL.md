@@ -7,10 +7,10 @@ argument-hint: <modul-slug> [all|<cmid>] [--seg=300]
 
 # Lecture-Transcribe — Panopto-Aufzeichnungen ins Vault transkribieren
 
-Holt TU-Panopto-Aufzeichnungen (eingebunden per Moodle-LTI), extrahiert Audio und transkribiert mit **gpt-4o-transcribe** zu timestamped Markdown im Vault. Konzept + Architektur: [[projekte/lernplan/vorlesungs-transkription/konzept]].
+Holt TU-Panopto-Aufzeichnungen (eingebunden per Moodle-LTI), extrahiert Audio und transkribiert mit **gpt-4o-transcribe** zu timestamped Markdown im Vault. Konzept + Architektur: .
 
 ## Voraussetzungen
-- Env: `OPENAI_API_KEY_PRIVATE` (Uni = **privater** Kontext; EDP-Kontext nutzt `_WORK`, siehe [[referenz/credentials]])
+- Env: `OPENAI_API_KEY_PRIVATE` (Uni = **privater** Kontext; EDP-Kontext nutzt `_WORK`, siehe )
 - Tools: `yt-dlp`, `ffmpeg`, `python3`, `playwright-cli`, `curl`
 - Datei: `transcribe.py` (chunk-weise ASR, `--lang`, Retry/Backoff, Prompt-Echo-Stripper) · für Bulk: `transcribe_bulk.py` + `build_indexes.py` (alle in diesem Skill-Verzeichnis) · `~/Documents/uni/lecture-tools/cookies.txt` (SSO-Session) · pro Modul `<modul>-terms.txt`
 - Projekt: `~/Documents/uni/moodle-mirror/<modul>/` (Mirror) + Course-ID aus `projekte/lernplan/<modul>/moodle-snapshot.json`
@@ -29,7 +29,7 @@ yt-dlp --cookies ~/Documents/uni/lecture-tools/cookies.txt --skip-download --no-
 - **Gültig** (Titel kommt) → weiter, alles headless.
 - **Abgelaufen** (Auth-Fehler / leer) → Cookie erneuern. **Nur hier** ist ein sichtbares Fenster erlaubt:
   - **Am Mac:** Tim benachrichtigen, dann headed SSO öffnen, Tim loggt sich ein, danach State + cookies.txt neu schreiben (siehe `reference.md` → „Cookie-Refresh").
-  - **Im Container/Headless-Kontext:** **kein** Browser möglich → `mcp__bridge__notify_user` („Panopto-Login abgelaufen, bitte am Mac neu einloggen"), Aufgabe in `pending`-Queue, abbrechen. Re-Auth passiert ausschließlich am Mac.
+  - **Im Container/Headless-Kontext:** **kein** Browser möglich → `SendMessage` an die Sitzung `jarvis` („Panopto-Login abgelaufen, bitte am Mac neu einloggen"), Aufgabe in `pending`-Queue, abbrechen. Re-Auth passiert ausschließlich am Mac.
 - **Niemals** prophylaktisch headed öffnen — nur auf echten Auth-Fehler.
 
 > [!warning] Direkt-Downloads (moodleload) brauchen CAS — SEPARAT prüfen!
@@ -110,7 +110,7 @@ quelle: "Moodle LTI cmid <CMID> → Panopto"
 
 ## Schritt 6: LE-Verknüpfung
 
-In der Modul-`strategie.md` (Goldquellen) `transkripte/` als Quelle nennen. Bei LE-Erstellung gilt: Transkript ist **Primärquelle neben Folien + KF-PDF** — Anker-Format `Transkript <slug> @ [MM:SS]` (siehe [[tim/feedback/plan-quellen-tiefenanalyse]]).
+In der Modul-`strategie.md` (Goldquellen) `transkripte/` als Quelle nennen. Bei LE-Erstellung gilt: Transkript ist **Primärquelle neben Folien + KF-PDF** — Anker-Format `Transkript <slug> @ [MM:SS]`.
 
 ## Bulk (ganze Module / alle Module)
 
@@ -126,6 +126,6 @@ python3 build_indexes.py                         # transkripte/INDEX.md + Goldqu
 - Liest `full_manifest.json` (Harvest: `{modul:{lti,media}}`) + `guids.json` (cmid→GUID). `LANG`-Map im Script (en-Module!).
 - **Self-verify** → `bulk_status.json` (OK/SUSPECT/FAIL nach chars/min + `[FEHLER]`-Marker). FAILs werden beim erneuten Lauf automatisch retried.
 - **Cookie-Ablauf mitten im Lauf** = häufigster Fehler (alle Direkt-Downloads → `curl-DL (4346b)`): Re-Auth (Schritt 1) + Bulk erneut starten. Erste Welle live-QC + Sprache prüfen, dann laufen lassen.
-- Verlauf/Pickup einer langen Session: `[[projekte/lernplan/vorlesungs-transkription/bulk-status-pickup]]`.
+- Verlauf/Pickup einer langen Session: ``.
 
 Abschließend `skill-optimize` mit `lecture-transcribe` aufrufen.

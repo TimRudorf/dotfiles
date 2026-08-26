@@ -9,9 +9,9 @@ argument-hint: <modul-slug> <einheit-slug> [--session-min=N]
 
 LEs (Lerneinheiten) sind **datumslose, deadline-getriebene logische Einheiten** mit 4 Sektionen (🎯 Lernziele / 📖 Stoffaufnahme / 🔄 Aktiver Abruf / 🩺 Self-Test). Pro Modul leben sie unter `projekte/lernplan/<modul>/lerneinheiten/<einheit-slug>.md`. Eine LE kann über mehrere Tage gehen — der Skill startet eine neue Session in einer existierenden LE oder legt eine neue LE als Skelett an.
 
-**Wichtig:** Es gibt **keine Todoist-Integration** mehr (Routinen-Verschlankung 2026-07-23, [[tim/feedback/lernblock-4h-keine-lernsteuerung]]) — Tim steuert seine Lerninhalte selbst und hakt direkt in den LEs ab. Dieser Skill ist für **Session-Vorbereitung** zuständig: reMarkable-Material, Lernziele-Recap, Session-Tagebuch-Eintrag.
+**Wichtig:** Es gibt **keine Todoist-Integration** mehr (Routinen-Verschlankung 2026-07-23, ) — Tim steuert seine Lerninhalte selbst und hakt direkt in den LEs ab. Dieser Skill ist für **Session-Vorbereitung** zuständig: reMarkable-Material, Lernziele-Recap, Session-Tagebuch-Eintrag.
 
-Konzept-Kontext: [[projekte/lernplan/lerneinheit-konzept]], [[projekte/lernplan/methodik]], [[projekte/lernplan/anki-konzept]].
+Konzept-Kontext: , , .
 
 ## Voraussetzungen
 
@@ -133,8 +133,8 @@ Wenn ja: `status: aktiv` ins Frontmatter, `updated: <today>` setzen.
 
 ## Verlinkt mit Konzept
 
-- [[projekte/lernplan/lerneinheit-konzept]] — Konzept-Doku (Single Source of Truth)
-- [[projekte/lernplan/methodik]] — Lernmethodik-Foundation
-- [[projekte/lernplan/anki-konzept]] — Anki-Workflow
-- [[tim/feedback/lerneinheit-self-test-zweck]] — Self-Test als Diagnose
-- [[tim/feedback/lerneinheit-kontrollfragen-zentriert]] — KF-Modul-Spezialfall (Sensortechnik)
+-  — Konzept-Doku (Single Source of Truth)
+-  — Lernmethodik-Foundation
+-  — Anki-Workflow
+-  — Self-Test als Diagnose
+-  — KF-Modul-Spezialfall (Sensortechnik)

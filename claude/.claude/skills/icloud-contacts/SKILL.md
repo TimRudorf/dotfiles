@@ -22,7 +22,7 @@ ic count                   Anzahl Kontakte
 ic --refresh <subcmd>      5-min-Cache umgehen
 ```
 
-Vor jedem Aufruf: `set -a; source /opt/stacks/jarvis/.env; set +a` (für `APPLE_ID`/`APPLE_PASS`).
+Vor jedem Aufruf: `set -a; source /opt/stacks/jarvis-next/.env; set +a` (für `APPLE_ID`/`APPLE_PASS`).
 
 ## Wann nutzen
 
@@ -49,7 +49,7 @@ Dieser Skill ist **read-only**. iCloud-CardDAV unterstützt zwar PUT/DELETE für
 - Tim pflegt sein Adressbuch primär am iPhone — automatische Edits durch Jarvis sind risikoreich (Duplikate, kaputte Encoding-Kanten)
 - Es gibt aktuell keinen erkennbaren Use Case dafür
 
-Falls Tim mal sagt "trag XY in meine Kontakte ein" → vorher `request_approval` und manuell PUT bauen, oder Tim macht's selbst.
+Falls Tim mal sagt "trag XY in meine Kontakte ein" → vorher eine Rückfrage an Tim und manuell PUT bauen, oder Tim macht's selbst.
 
 ## iCloud-Eigenheiten
 

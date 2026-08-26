@@ -114,7 +114,7 @@ Nach dem Schreiben prüfen, ob `~/.claude/skills/{name}/SKILL.md` über bestehen
 ```
 
 - **Auf dem Mac**: `~/.claude` ist ein ganz-Symlink auf `~/dotfiles/claude/.claude/`, und `~/dotfiles/claude/.claude/skills` ist ein interner Compat-Symlink auf `../skills`. Damit ist der frisch geschriebene Skill sofort über `~/.claude/skills/{name}/` sichtbar — **kein zusätzlicher Symlink nötig**.
-- **Im jarvis-workspace Container** (laufende Session, vor Container-Restart): `~/.claude/skills/` enthält nur einzelne Symlinks aus dem entrypoint-Pass. Den neuen Skill manuell verlinken, damit er ohne Restart sichtbar ist:
+- **Im jarvis Container** (laufende Session, vor Container-Restart): `~/.claude/skills/` enthält nur einzelne Symlinks aus dem entrypoint-Pass. Den neuen Skill manuell verlinken, damit er ohne Restart sichtbar ist:
   ```bash
   ln -sfn ~/dotfiles/claude/skills/{name} ~/.claude/skills/{name}
   ```
@@ -131,7 +131,7 @@ Nur wenn der Skill im Dotfiles-Repo gelandet ist (Schritt 2). Sonst: User darauf
    ```
 2. Branch-Status prüfen — wenn auf `main`, neuen Feature-Branch `feat/skill-{name}` anlegen, sonst auf aktuellem Branch bleiben.
 3. Commit erstellen mit Subject `feat(skill): {name}` und einer kurzen Body-Zeile aus der Description.
-4. **Push erfordert Approval**: Der Push schreibt in den remote `TimRudorf/dotfiles` und ist damit dauerhaft sichtbar. Vor dem `git push` mit `mcp__bridge__request_approval` (Bridge-Kontext) bzw. einer expliziten User-Rückfrage (Mac-CLI-Kontext) den Push freigeben lassen.
+4. **Push erfordert Approval**: Der Push schreibt in den remote `TimRudorf/dotfiles` und ist damit dauerhaft sichtbar. Vor dem `git push` mit eine Rückfrage an Tim (Bridge-Kontext) bzw. einer expliziten User-Rückfrage (Mac-CLI-Kontext) den Push freigeben lassen.
 5. Nach dem Push den Branch und PR-URL melden, falls ein PR-Workflow Sinn macht (User-Skill ist meist ein simpler Push auf Feature-Branch — der User entscheidet, ob er direkt mergen will).
 
 ## Schritt 8: Ergebnis anzeigen

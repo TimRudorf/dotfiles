@@ -40,7 +40,7 @@ Wenn ein Task in keine passt → Inbox. Areas (`Work`/`Uni`/`Privat`) sind Conta
 
 ## CLI
 
-`/workspace/jarvis-tasks/jt`:
+`/jarvis/tasks/jt`:
 
 ```
 jt list [--list NAME] [--include-done] [--json]
@@ -61,7 +61,7 @@ jt lists                               alle Project-Pfade ausgeben
 `--prio`: `low|med|high` → Todoist 1/3/4 (Todoist nennt p1 „high", interner Wert ist 4).
 `--label`: Komma-Liste, automatisch wird `from-jarvis` ergänzt.
 
-Vor jedem Aufruf: `set -a; source /opt/stacks/jarvis/.env; set +a` — `$TODOIST_API_TOKEN` muss gesetzt sein.
+Vor jedem Aufruf: `set -a; source /opt/stacks/jarvis-next/.env; set +a` — `$TODOIST_API_TOKEN` muss gesetzt sein.
 
 ## Wann nutzen
 
@@ -90,7 +90,7 @@ Heißt: Tim muss Jarvis NICHT sagen "ich hab X erledigt" — er hakt einfach in 
 
 Erledigte Tasks landen NICHT automatisch im Vault. Wenn ein erledigter Task substantiell für ein Projekt ist (z.B. "PR gemerged", "Vogt-Mail raus"), aktualisiere die zuständige Projekt-Note (`projekte/...`) als Logbuch-Eintrag.
 
-**Lerneinheiten-Pipeline** ist Spezialfall: `vorlauf.py` → Todoist (Modul-Sub-Project), Tim hakt ab → `sync_back.py` setzt `[ ]` → `[x]` in `einheiten.md` → `pace.py` rechnet drift neu. Siehe [[referenz/todoist]] für Details.
+**Lerneinheiten-Pipeline** ist Spezialfall: `vorlauf.py` → Todoist (Modul-Sub-Project), Tim hakt ab → `sync_back.py` setzt `[ ]` → `[x]` in `einheiten.md` → `pace.py` rechnet drift neu. Siehe  für Details.
 
 ## Output-Format für Telegram
 

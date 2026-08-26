@@ -35,7 +35,7 @@ das **Profil** dazu: er füllt die Hooks des Cores. Nichts aus dem Core hier wie
 - `gh -R TimRudorf/<repo>` mit **`GH_HOST=github.com`** vorweg. `gh` ist auf diesem Setup primär für die
   GHE-Instanz konfiguriert; ohne die Variable landen Aufrufe je nach Kontext auf dem falschen Host.
 - Zicken `gh` beim Schreiben (`pr create`/`merge`) trotzdem herum: REST-API mit `$GH_PRIVATE_TOKEN` als
-  verifizierter Fallback — Befehle in [[tim/feedback/private-repos-auto-roundtrip]]. Nicht lange mit
+  verifizierter Fallback — Befehle in . Nicht lange mit
   `gh`-Auth kämpfen.
 - Issue-Referenz aus `$ARGUMENTS`: volle URL, `<repo>#<nr>` oder blanke Nummer + Repo aus dem cwd.
 
@@ -82,19 +82,18 @@ Issue — sonst rätselt der nächste, warum der PR woanders hinzeigt.
 
 Feature-Branch `fix/<slug>` bzw. `feat/<slug>` **von `origin/<default>`** ableiten. Keine Branch-Cascade —
 ein Ziel-Branch, ein PR. Hängt das Repo gerade auf einem fremden Branch: eigene Änderung stashen, frisch von
-`origin/<default>` branchen, stash poppen — nie auf Tims halbfertigem Topic huckepack
-([[tim/feedback/private-repos-auto-roundtrip]]).
+`origin/<default>` branchen, stash poppen — nie auf Tims halbfertigem Topic huckepack.
 
 ### `«ENCODING»` — UTF-8
 
-Durchgängig UTF-8, echte Umlaute ([[tim/feedback/umlauts]]). Kein Win-1252-Sonderfall in diesen Repos.
+Durchgängig UTF-8, echte Umlaute. Kein Win-1252-Sonderfall in diesen Repos.
 
 ### `«TESTS»` — repo-eigener Standard, erst lesen
 
 Testkommando **aus dem Repo ableiten**, nicht raten: `package.json`-Scripts, `.github/workflows/*`,
 `Makefile`, `*.csproj`, `pyproject.toml`. Typisch: TypeScript/Next.js → `npm test`, `npm run lint`,
 `npm run typecheck`; C# → `dotnet test`; Python → `pytest`. Gibt es noch keine Suite, die erste mit dem
-Fix anlegen — nicht überspringen ([[tim/feedback/tests-dynamisch-erweitern]]).
+Fix anlegen — nicht überspringen.
 
 **Beim Anlegen der ersten Suite in einem TS-Repo vier Fallen:**
 
@@ -104,8 +103,7 @@ Fix anlegen — nicht überspringen ([[tim/feedback/tests-dynamisch-erweitern]])
 - `node --test <verzeichnis>` scheitert (wird als Datei interpretiert) — es braucht ein **gequotetes
   Glob-Muster**: `node --test "dist-test/**/*.test.js"`.
 - **Leerer Glob = Exit-Code 0.** Ein `npm test`, das keine Testdatei findet, ist grün. Ohne CI merkt das
-  niemand → eine Wache davorschalten, die abbricht und sagt, was fehlt und wie man es behebt
-  ([[tim/feedback/pruefungen-muessen-sich-selbst-erklaeren]]).
+  niemand → eine Wache davorschalten, die abbricht und sagt, was fehlt und wie man es behebt.
 - **Eine zählende Wache ist zu wenig.** Sie muss **jede** Testquelle im Workspace mit dem tatsächlich
   Gebauten abgleichen und die fehlende Datei benennen. „Mindestens eine `.test.js` da" geht schief,
   sobald die `tsconfig.test.json` eine explizite `files`-Liste führt: die nächste Testdatei wird nie
@@ -113,7 +111,7 @@ Fix anlegen — nicht überspringen ([[tim/feedback/tests-dynamisch-erweitern]])
 
 ### `«VERIFY»` — gegen einen real laufenden Stand
 
-Grüne Unit-Tests sind **kein** E2E-Beleg ([[tim/feedback/code-self-check-vor-review]]). Zwei Fälle:
+Grüne Unit-Tests sind **kein** E2E-Beleg. Zwei Fälle:
 
 1. **Repo hat ein dokumentiertes Deploy-Ziel im Vault** → dorthin ausrollen und live prüfen.
    Eintracht: Stack `eintracht` auf der Debian-VM, Web-UI `http://172.16.0.3:3010`, Build lokal aus
@@ -135,15 +133,12 @@ ausgerollt wird. Das ist der belastbarste Beleg überhaupt: echter Code, echte D
 Nur wenn das nicht geht, über `git worktree add <pfad> origin/<default> --detach` — **nie** über eine Kopie der Quellen in
 ein Verzeichnis außerhalb des Repos. Außerhalb fehlen `package.json` und `node_modules`; der Build kippt
 dann still in ein anderes Modulsystem oder findet seine Abhängigkeiten nicht, und der Prozess stirbt aus
-einem ganz anderen Grund als dem erwarteten. Das sieht wie eine bestätigte Baseline aus und ist keine
-([[tim/feedback/urteil-braucht-vollstaendige-messung]]). Worktree danach wieder entfernen.
+einem ganz anderen Grund als dem erwarteten. Das sieht wie eine bestätigte Baseline aus und ist keine. Worktree danach wieder entfernen.
 
 ### `«WISSEN»` — Vault, bestehende Note zuerst
 
-Neu gewonnenes Wissen in die **bestehende** SSoT ergänzen statt eine zweite anzulegen
-([[tim/feedback/dry-vault-no-duplication]]): Betrieb/Deploy → `$VAULT/referenz/<thema>.md` (Eintracht:
-`referenz/eintracht-ticketapp.md`), Architektur → `$VAULT/projekte/<repo>/architektur.md`
-([[tim/feedback/coding-projekt-snapshots]]). Vault-Writes werden per Hook autocommittet.
+Neu gewonnenes Wissen in die **bestehende** SSoT ergänzen statt eine zweite anzulegen: Betrieb/Deploy → `$VAULT/referenz/<thema>.md` (Eintracht:
+`referenz/eintracht-ticketapp.md`), Architektur → `$VAULT/projekte/<repo>/architektur.md`. Vault-Writes werden per Hook autocommittet.
 
 ### `«PR»` — schlicht, Standard-Labels
 
@@ -159,18 +154,17 @@ Label nur aus dem **vorhandenen** Standard-Satz (`bug`, `enhancement`, `document
 
 ### `«ABSCHLUSS»` — selbst mergen und aufräumen
 
-Merge-ready reicht **nicht** — der Vorgang ist erst fertig, wenn gemergt und alles sauber ist
-([[tim/feedback/private-repos-auto-roundtrip]]). Ohne Rückfrage:
+Merge-ready reicht **nicht** — der Vorgang ist erst fertig, wenn gemergt und alles sauber ist. Ohne Rückfrage:
 
 ```bash
 GH_HOST=github.com gh pr merge <nr> -R TimRudorf/<repo> --squash --delete-branch
 git checkout <default> && git pull --ff-only && git branch -D <feature> && git fetch --prune
 ```
 
-Danach verifizieren ([[tim/feedback/schreib-verify]]):
+Danach verifizieren:
 - Issue wirklich geschlossen? `Closes` greift nur beim Merge in den Default-Branch — sonst manuell
-  schließen mit Abschluss-Kommentar ([[tim/feedback/pr-issues-auto-schliessen]]).
-- Working Tree sauber, kein verwaister Branch, kein untracked Rest ([[tim/feedback/repos-immer-clean]]).
+  schließen mit Abschluss-Kommentar.
+- Working Tree sauber, kein verwaister Branch, kein untracked Rest.
 - Lief das Repo vorher auf einem fremden Branch: dorthin zurückwechseln.
 
 Erst dann der Report (Core 8e).
@@ -186,7 +180,7 @@ Erst dann der Report (Core 8e).
   draußen; im Text nur der Variablenname.
 - **Kein Force-Push**, kein Direkt-Commit auf den Default-Branch.
 - **Git-Identity nie überschreiben** — global gilt `Tim Rudorf <tim@rudorf.me>`; kein
-  `-c user.name`/`-c user.email` am Commit ([[tim/feedback/git-author-arbeit-repos]]).
+  `-c user.name`/`-c user.email` am Commit.
 - Ist das Ziel-Repo **public** (`dotfiles`, `arch-setup`): keine internen Pfade oder Vault-Verweise in
   Issue-/PR-Text tragen, Sachgrund inline formulieren.
 

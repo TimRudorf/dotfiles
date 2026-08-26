@@ -21,7 +21,7 @@ Voraussetzungen gemäß `requirement-checker` Skill validieren. Bei Fehlschlag a
 - **Proxmox-Host:** `ssh -i ~/.ssh/id_ed25519 root@100.97.134.101`, die VM ist **VM 103** (debian)
 - **Mac-Klon:** `~/dev/docker-compose` (Repo `TimRudorf/docker-compose`)
 - **Vault-Note (Gotchas + deployte Versionen):** `$VAULT/referenz/nextcloud-container.md` — VOR Beginn lesen, am Ende updaten
-- **NIE anfassen:** `tailscale:stable` (Security-Layer, soll tracken), Eigen-Builds (`jarvis-workspace`, `jarvis-bridge`, `data-api-server` — Git/CI-versioniert), `dockge` (nicht im Repo)
+- **NIE anfassen:** `tailscale:stable` (Security-Layer, soll tracken), Eigen-Builds (`jarvis`, `jarvis-bridge`, `data-api-server` — Git/CI-versioniert), `dockge` (nicht im Repo)
 
 ## Phase 0 — Inventory & Snapshot (Pflicht-Gate)
 
