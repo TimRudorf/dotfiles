@@ -1376,6 +1376,20 @@ Raten (gemessen 2026-08-21, `edp-ctrl#47`). Reihenfolge: PR anlegen, Nummer lese
 >   ohne ihn ist „nichts gefunden" nicht von „nicht gesucht" zu unterscheiden
 >   ([[referenz/stille-messfallen-shell-git]] § 18).
 
+> 🔴 **Jedes neu angelegte Issue bekommt einen Type** — `gh issue create … --type "<Type>"`, auch bei
+> Randfunden, Auskopplungen und Notizen ([[tim/feedback/issue-type-immer-setzen]]). „Kein Type passt"
+> gibt es nicht, dafür ist `Sonstiges` da; nicht reflexhaft `Task` nehmen, die spezifischen Types
+> (`Refactoring`, `Tests`, `CI/Workflows`, `Documentation`, `Security-Issue`, …) tragen die eigentliche
+> Information. Types **live abfragen** statt raten:
+>
+>   ```bash
+>   gh api graphql --hostname einsatzleitsoftware.ghe.com \
+>     -f query='query { organization(login:"edp") { issueTypes(first:30){ nodes { name description } } } }'
+>   ```
+>
+> Vergessen → `gh issue edit <nr> -R edp/<repo> --type "<Type>"` nachziehen. Type ≠ Label: beides setzen,
+> wo beides passt (z. B. `--type "Security-Issue"` **und** `--label "merge:security-issue"`).
+
 ⚠️ **Secrets sind von „Randfund mitfixen" ausgenommen:** erfassen als Issue, sonst nichts — keine Löschung,
 kein `.gitignore`-Eintrag, keine Rotation, kein PR ([[tim/feedback/edp-secrets-nur-als-issue]]).
 

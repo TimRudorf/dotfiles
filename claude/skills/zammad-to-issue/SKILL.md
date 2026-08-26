@@ -118,7 +118,9 @@ Falls der User einen Type als Argument mitgegeben hat → diesen Schritt übersp
 User-Rückfrage mit verfügbaren Types:
 1. Vorschlag `(Empfohlen)` basierend auf Ticket-Analyse (Bug/Feature/Verbesserung)
 2. Weitere Types
-3. `Kein Wert setzen`
+
+🔴 **Der Type ist Pflicht — kein `Kein Wert setzen`.** Jedes Issue bekommt einen Type; passt keiner der
+spezifischen, ist `Sonstiges` die Antwort. Nicht reflexhaft `Task` wählen.
 
 Bei "Abbruch" (via "Other"): Skill bricht sofort ab mit Meldung "Skill abgebrochen."
 
