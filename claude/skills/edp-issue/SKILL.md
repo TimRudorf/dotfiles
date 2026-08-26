@@ -330,6 +330,14 @@ Delphi = DUnitX (`$VAULT/referenz/dunitx-patterns.md`,
 > wird rot, statt unbemerkt durchzurutschen). Rezept und Messung:
 > `$VAULT/projekte/installer/pester-verifikation.md` § 2.
 >
+> 🔑 **Ist der Defekt selbst ein FEHLENDER AUFRUF in einer nicht linkbaren Unit** (`core_form`,
+> `main_form`, `mdlEinsatz`), ist eine Quellprüfung der einzige Test, der ihn fassen kann — und sie
+> läuft auch im CI, weil `delphi-devsetup > lib/TestRun.ps1` die Test-exe rekursiv **im Checkout**
+> sucht und von dort startet. Drei Fallen machen so eine Probe still grün: der Ausschnitt am
+> namentlich genannten Nachbarn statt am **nächsten** Prozedurkopf, eine Zusicherung auf **Vorkommen**
+> statt auf **Reihenfolge**, und ein Kommentar-Automat, der `(* … *)` nicht kennt. Rezept mit allen
+> Selbstproben: `$VAULT/referenz/dunitx-patterns.md`.
+>
 > 🔴 **Die frische Kopie selbst kann die Baseline rot machen — und dann meldet JEDE Mutation
 > „bestanden".** Die Vorrichtung soll je Fall aus einer unberührten Kopie starten; genau dabei geht
 > Umgebung verloren, an der die Suite hängt: Git-Remote, `.git` überhaupt, Umgebungsvariablen,
@@ -963,7 +971,25 @@ Delphi = DUnitX (`$VAULT/referenz/dunitx-patterns.md`,
 > bei „BELEGT" warten statt weiterzumachen. Der Lock kann auch **mitten im Lauf** den Halter wechseln;
 > vor einer späteren Messrunde neu holen, nicht auf den Stand von vorhin vertrauen.
 
-> 🔴 **Ein gescheiterter `dev compile` heisst nicht „auf der Dev-VM ist nichts messbar".** Zwei Schritte,
+> 🔴 **Erst prüfen, ob `dev compile` überhaupt beim BAUEN war — es kann vorher am Git-Sync sterben.**
+> Steht im VM-Checkout eine abgelaufene Zugangsberechtigung fest in der `origin`-URL, bricht der Sync
+> mit `fatal: could not read Password for 'https://…@einsatzleitsoftware.ghe.com'` und
+> `bash: line 1: /dev/tty: No such device or address` ab — Git wollte interaktiv nachfragen. Das
+> Fehlerbild sieht nach kaputtem Werkzeug oder toter VM aus und ist ein Konfigurationsfehler im
+> Checkout. Prüfung und Behebung sind je ein Kommando:
+>
+> ```bash
+> ssh "$(edp-ctrl config get vm-host)" 'cd C:\EDP\<repo> && git remote get-url origin'   # gegen ein funktionierendes Repo halten
+> ssh "$(edp-ctrl config get vm-host)" 'cd C:\EDP\<repo> && git remote set-url origin https://einsatzleitsoftware.ghe.com/edp/<repo>.git'
+> ```
+>
+> Die VM führt `store` und `manager` als Credential-Helper; eine **saubere** URL ohne eingebaute
+> Berechtigung ist deshalb die richtige Form (so hat es `C:\EDP\edpweb` auch). Gemessen 2026-08-26
+> (`edpdesk#84`). ⚠️ Den Wert der alten Berechtigung **nirgends** hinschreiben — und wenn sie auf der
+> Instanz noch gültig ist, gehört sie zurückgezogen: das ist Tims Entscheidung, nicht die des Laufs
+> ([[tim/feedback/edp-secrets-nur-als-issue]]).
+
+> 🔴 **Ein gescheiterter `dev compile` heisst nicht „auf der Dev-VM ist nichts messbar".** Drei Schritte,
 > bevor daraus ein Blocker im Bericht wird:
 >
 > 1. **Gegen die Baseline gegenprüfen** — denselben Bau auf unverändertem `origin/dev` fahren
@@ -977,6 +1003,19 @@ Delphi = DUnitX (`$VAULT/referenz/dunitx-patterns.md`,
 >    dagegen durch, weil das Testprojekt `ufrmmain` nicht linkt. Die geänderten Units waren damit
 >    übersetzt **und** gemessen; nur für die restlichen trug `delphi / build` des Pull Requests den
 >    Nachweis.
+>
+>
+> 3. 🔴 **Die Ursache DIREKT messen, nicht aus zwei Fehlermeldungen erschliessen.** Baseline und
+>    eigener Zweig können an **verschiedenen** Stellen scheitern — dann ist „zeilengleicher Fehler"
+>    aus Schritt 1 gar nicht anwendbar und der Vergleich sagt nichts. Gemessen 2026-08-26
+>    (`edpdesk#84`): der Zweig brach an `main_form.pas(22): F2613 Unit 'PngImageList' nicht gefunden`
+>    ab, die unveränderte Baseline dagegen eine Stufe früher an
+>    `ELP.vrc(67,22): unable to open file '…\edp_darkmode.vsf'` — welcher der beiden Fehler erscheint,
+>    hängt davon ab, ob `ELP.res` aus einem früheren Lauf noch aktuell ist. Belastbar wurde es erst
+>    durch zwei Existenzprüfungen auf der VM: das Paketverzeichnis gibt es nicht, die Style-Datei gibt
+>    es nicht. **Zwei fehlende Bereitstellungen, beide unabhängig vom Zweig** — eine Aussage, die die
+>    Fehlermeldungen allein nicht hergaben. Also: Fundstelle aus dem Log ziehen, dann per `dir`/`if
+>    exist` nachsehen, ob das Genannte auf der Maschine überhaupt liegt.
 >
 > Ein Testprojekt braucht **kein** vorheriges `compile`, solange es seine Produktivquellen selbst
 > übersetzt (eigener `DCC_DcuOutput`). Die Regel „erst `compile`, dann `test`" gilt dort, wo die Suite
@@ -1166,6 +1205,10 @@ ihn **nicht** — dann auf einen fremd gehaltenen Lock **nicht warten**, aber ih
 - UI-Reproduktion/Verifikation: `/edp-design-loop` bzw. direkt `/playwright-cli` (Login/Cache-Fallen:
   [[tim/feedback/code-self-check-vor-review]]).
 - DB-Read-Back: `/edp-database` + `$VAULT/referenz/edpweb-testing/db-kerntabellen.md`.
+- FireDAC-Eigenheiten, bevor eine Zusicherung darauf gebaut wird: `$VAULT/referenz/firedac-mysql-verhalten.md`
+  — allen voran, dass `RowsAffected` **getroffene** und nicht geänderte Zeilen zählt (FireDAC verbindet
+  unbedingt mit `CLIENT_FOUND_ROWS`). Damit ist `IF RS.RowsAffected > 0` nach einem `UPDATE` das
+  Prädikat „das `WHERE` hat getroffen" — ohne das Zeitfenster, das ein eigener `SELECT` davor hätte.
 - Reproduktion auf Release-/Kundenstand zur Abgrenzung: `$VAULT/referenz/edpweb-demo-instanzen.md`;
   Testdaten/Lage: `$VAULT/referenz/edpweb-demo-lage-reset.md`.
 - Repo-spezifische Notes unter `$VAULT/projekte/<repo>/` und `$VAULT/referenz/` (z.B. `delphi-live-debug-vm.md`).
@@ -1320,6 +1363,16 @@ ihn **nicht** — dann auf einen fremd gehaltenen Lock **nicht warten**, aber ih
 > prüfen + jede `<branch>-latest`-Leiche mit `gh release delete <tag> --cleanup-tag --yes` entfernen. Volltext:
 > [[tim/feedback/keine-workflow-dispatch-waisen-releases]], `$VAULT/referenz/edpweb-delivery-pipeline.md`.
 > (Ein PR triggert `delivery.yml` **nicht**.)
+>
+> ⚠️ **Ob ein Push auf den eigenen Zweig überhaupt veröffentlicht, steht im Repo — das gehört gelesen,
+> nicht angenommen.** Die Warnung oben gilt dem **Dispatch**; ein gewöhnlicher Push auf `feature/**`,
+> `bugfix/**`, `hotfix/**`, `project/**` löst `delivery.yml` zwar aus, veröffentlicht aber nur, wenn der
+> `publish:`-Ausdruck es zulässt. In `edp/edpdesk` lautet er
+> `publish: ${{ contains(fromJSON('["dev","beta","release"]'), github.ref_name) }}` — dort entsteht auf
+> einem Arbeits-Zweig **kein** Release, das Artefakt hängt am Lauf. Ein Blick in die repo-eigene
+> `delivery.yml` beantwortet das in zehn Sekunden und erspart die Sorge; die Nachkontrolle per
+> `gh release list` bleibt trotzdem billig und richtig. Gemessen 2026-08-26 (`edpdesk#84`, PR #87): vor
+> und nach dem Push unverändert nur die drei Kanal-Releases.
 
 **Zusätzlich bei Cascade-Bug (Fall C):** prüfen, ob der Fix in **beiden** betroffenen Codebasen greift, falls
 das Repo pro Branch getrennte Renderer/Module hat (siehe `$VAULT/projekte/edpweb/architektur.md`).
