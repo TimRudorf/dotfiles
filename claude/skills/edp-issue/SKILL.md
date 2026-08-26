@@ -220,6 +220,25 @@ Datei-Encoding strikt beachten ([[tim/feedback/datei-encoding]], `$VAULT/referen
 > Einfügung als `bytes` mit `\r\n` ersetzen, mit `'wb'` schreiben. Ein Textmodus-Schreiben ist hier
 > immer falsch — auch dann, wenn es „funktioniert hat".
 
+### Versionsnummer — Bump gehört in denselben Commit
+
+Jede Änderung an **ausgeliefertem** Code in einem `schn_*`-Repo braucht einen SemVer-Bump im
+selben Commit ([[tim/feedback/versionsnummer-bei-code-aenderung]]; Schema und Bump-Tabelle:
+`$VAULT/referenz/edp-schnittstellen-versionierung.md`). Bugfix = Patch. Numerische
+`<VerInfo_Release>`-Felder **und** der `FileVersion=`-String müssen in **allen** Release-Configs
+denselben Wert tragen — nur den String zu bumpen ist wirkungslos, der Build zieht die
+numerischen Felder. Kein Bump bei reiner Doku-/Test-/CI-/Kommentar-Änderung.
+
+> 🔴 **`git add -A && git commit` in EINEM Bash-Aufruf hebelt den Guard-Hook aus.** Er prüft die
+> **gestagten** Dateien; in dieser Form ist zur PreToolUse-Zeit noch nichts gestaged, er sieht
+> keine Änderung und schweigt. Gemessen 2026-08-26 (`schn_ivena#138`): der Fix-Commit ging ohne
+> Bump durch und fiel erst beim Nachlesen der Regel auf, lange nach dem Push. Also `git add` als
+> **eigenen** Aufruf ausführen — dann greift der Hook, und der Bump landet im selben Commit
+> statt als nachgelagerter `chore(version)`-PR.
+>
+> Gegenprobe nach dem Deploy: das Startup-Log des Dienstes nennt die `FileVersion` — dort steht,
+> ob der Bump wirklich im Binary angekommen ist.
+
 ### `«TESTS»` — DUnitX / go test / Repo-Standard
 
 Delphi = DUnitX (`$VAULT/referenz/dunitx-patterns.md`,
@@ -1248,6 +1267,21 @@ ihn **nicht** — dann auf einen fremd gehaltenen Lock **nicht warten**, aber ih
 >    deployten Branch gegenlesen. Reine CSS-/Farbfragen brauchen die VM ohnehin nicht — dafür
 >    `$VAULT/referenz/edpweb-testing/frontend-ui-harness.md`.
 
+> 🔴 **`edp-ctrl dev test` startet den Dienst NICHT neu — das tut nur `dev compile`.** Ein
+> Testlauf lässt den zuletzt kompilierten Stand auf der VM weiterlaufen. Wer danach das Live-Log
+> oder die Datenbank misst, misst den **Vorgänger** und hält dessen Verhalten für das eigene.
+> Gemessen 2026-08-26 (`schn_ivena#138`): nach mehreren `dev test`-Läufen lief auf der VM noch
+> der Build von Mitternacht. Vor jeder Live-Messung also `dev compile` fahren und im Kopf des
+> Dienstlogs **Startzeitpunkt und Version** gegenlesen.
+
+> ⚠️ **Ein Zählfenster von genau N Minuten schneidet an seiner Grenze ab.** Wer „die letzten
+> 5 Minuten" auswertet, verliert das Ereignis, das drei Sekunden davor lag — und die 0 liest sich
+> wie ein Befund. Gemessen 2026-08-26 (`schn_ivena#138`): die Gegenprobe „eine echte Änderung
+> löst weiterhin genau ein Telegramm aus" meldete zunächst **0**, weil das Telegramm knapp
+> ausserhalb des Fensters lag; der Fix sah damit kurzzeitig nach einer Regression aus. Fenster
+> grosszügig wählen — und bevor aus einer 0 ein Befund wird, die **Rohzeilen** des fraglichen
+> Zeitraums ansehen statt nur die Aggregatzahl.
+
 > **Ist das Repo unter Prüfung `edp-ctrl` selbst, dreht sich `/edp-develop` um.** Das Werkzeug *steuert*
 > die Dev-VM, es läuft nicht auf ihr — „auf die VM deployen" gibt es hier nicht. Verifikation stattdessen:
 > Binary lokal bauen (`go build -o <tmp>/edp-ctrl-fix .`) und **gegen die echte VM** fahren. Der stärkste
@@ -1951,6 +1985,12 @@ Normalfall, sobald der PR Markdown oder YAML berührt hat.
 > Messung am Stand von vorhin — nach einem Fix-Push stimmt sie womöglich nicht mehr, und niemand sieht
 > es ihr an. Nach jeder Review-Runde deshalb prüfen, welche zitierten Belege der Fix ungültig gemacht
 > hat, und sie **neu messen** statt sie stehen zu lassen ([[tim/feedback/korrektur-erreicht-alle-traeger]]).
+> Das gilt ausdrücklich auch für die **Live-Messung** und die **Mutationsprobe**: beide hängen am
+> Code, nicht am Vorgang. Gemessen 2026-08-26 (`schn_ivena#138`): eine Review-Runde tauschte den
+> Vergleichsmechanismus aus — damit galt die 5-Minuten-Live-Messung nur noch für die Vorfassung,
+> und die 15-teilige Mutationsprobe traf teils Anker, die es nicht mehr gab. Beides musste
+> vollständig wiederholt werden (17 Fälle). Prüffrage nach jedem Review-Push: *welche meiner
+> Belege beschreiben noch den Stand, der gemergt wird?*
 > Gemessen 2026-08-21 (`edp-ctrl#47`): das Review änderte den Meldungstext, der PR-Body zitierte weiter
 > die alte Zeile aus dem VM-Lauf — der Nachweis wurde auf der Dev-VM wiederholt und ersetzt.
 >
