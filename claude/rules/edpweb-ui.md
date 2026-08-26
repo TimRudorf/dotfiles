@@ -20,5 +20,3 @@ Verbindliche Prinzipien bei jeder UI-Arbeit an edpweb:
 
 Das ELW-Modul ist die Referenz. Für Gestaltungsfragen darüber hinaus gilt der
 Skill `edp-frontend-design` (Fluent 2 als Vorbild).
-
-Ausführliche Begründung im Archiv: `~/VAULT_BACKUP/jarvis-wiki-2026-08-26/tim/feedback/edpweb-ui-design-prinzipien.md`

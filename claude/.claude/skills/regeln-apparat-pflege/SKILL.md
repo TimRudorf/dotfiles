@@ -15,9 +15,7 @@ bestehende Routinen prüfen vor neuer Routine
 
 ---
 
-Was hier steht, ist die **geltende Fassung**. Die ausführlichen Begründungen
-von früher liegen im Archiv unter `~/VAULT_BACKUP/jarvis-wiki-2026-08-26/tim/feedback/` — dort nachlesen,
-wenn ein Grenzfall unklar bleibt, aber im Zweifel gilt dieser Text.
+Was hier steht, ist die **geltende Fassung**.
 
 ---
 
@@ -29,7 +27,7 @@ Nach nicht-trivialen Aufgaben (mehrstufig, ad-hoc, unerwartet verlaufen — *nic
 
 Wenn Tim eine Verhaltensregel/Korrektur/Präferenz formuliert (auch implizit — "mach nicht X", "wenn dann lieber Y"), die in zukünftigen Sessions greifen soll:
 
-1. **Volltext-Note** unter `~/VAULT_BACKUP/jarvis-wiki-2026-08-26/tim/feedback/<kebab-slug>.md` mit Frontmatter (`type: feedback`) und Why/How-Callouts. Begründung explizit machen — die hilft mir später bei Edge Cases.
+1. **Volltext-Note** unter `<kebab-slug>.md` mit Frontmatter (`type: feedback`) und Why/How-Callouts. Begründung explizit machen — die hilft mir später bei Edge Cases.
 
 2. **Klassifizieren:**
    - **Universell** (greift in jeder Session — Stil, Arbeitsphilosophie, Bridge-Hygiene, Approval-Verhalten): One-Liner in CLAUDE.md Block "Universelle Verhaltensregeln" + Eintrag in `$VAULT/INDEX.md` unter "Universelle Regeln". CLAUDE.md-Edit per `request_approval`.

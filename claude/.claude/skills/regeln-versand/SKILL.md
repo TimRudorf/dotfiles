@@ -11,10 +11,8 @@ kosten nichts, solange der Zusammenhang nicht vorliegt.
 
 ## externer-versand-empfaenger-verifizieren
 
-vor jedem externen Versand (Zammad-Mail, SMTP, fremde Repos) den Empfänger/das Ziel aus einem **frischen, ticket-eigenen** Fetch verifizieren (gegen `.customer` UND letzten Customer-Artikel-`from`); geteilten/wiederverwendeten Temp-Dateien der Skills (`/tmp/z_*.json`) NICHT trauen — die werden cross-ticket überschrieben (Beinahe-Fehlversand an fremde Org, EDP#7619889). Ziel-Verify *vor* Versand, ergänzt `~/VAULT_BACKUP/jarvis-wiki-2026-08-26/tim/feedback/schreib-verify.md` (Archiv) (Read-back *nach* Mutation). Volltext: `~/VAULT_BACKUP/jarvis-wiki-2026-08-26/tim/feedback/externer-versand-empfaenger-verifizieren.md` (Archiv)
+vor jedem externen Versand (Zammad-Mail, SMTP, fremde Repos) den Empfänger/das Ziel aus einem **frischen, ticket-eigenen** Fetch verifizieren (gegen `.customer` UND letzten Customer-Artikel-`from`); geteilten/wiederverwendeten Temp-Dateien der Skills (`/tmp/z_*.json`) NICHT trauen — die werden cross-ticket überschrieben (Beinahe-Fehlversand an fremde Org, EDP#7619889). Ziel-Verify *vor* Versand, ergänzt  (Read-back *nach* Mutation). Volltext:
 
 ---
 
-Was hier steht, ist die **geltende Fassung**. Die ausführlichen Begründungen
-von früher liegen im Archiv unter `~/VAULT_BACKUP/jarvis-wiki-2026-08-26/tim/feedback/` — dort nachlesen,
-wenn ein Grenzfall unklar bleibt, aber im Zweifel gilt dieser Text.
+Was hier steht, ist die **geltende Fassung**.

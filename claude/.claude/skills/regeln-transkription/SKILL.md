@@ -15,6 +15,4 @@ Tims Eigennamen still richtig schreiben, kein Hinweis
 
 ---
 
-Was hier steht, ist die **geltende Fassung**. Die ausführlichen Begründungen
-von früher liegen im Archiv unter `~/VAULT_BACKUP/jarvis-wiki-2026-08-26/tim/feedback/` — dort nachlesen,
-wenn ein Grenzfall unklar bleibt, aber im Zweifel gilt dieser Text.
+Was hier steht, ist die **geltende Fassung**.

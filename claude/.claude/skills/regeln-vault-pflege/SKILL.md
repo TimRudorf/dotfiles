@@ -11,7 +11,7 @@ kosten nichts, solange der Zusammenhang nicht vorliegt.
 
 ## dry-vault-no-duplication
 
-pro Information eine SSoT, andere Stellen via Wikilink, niemals Inhalt kopieren. Volltext: `~/VAULT_BACKUP/jarvis-wiki-2026-08-26/tim/feedback/dry-vault-no-duplication.md` (Archiv)
+pro Information eine SSoT, andere Stellen via Wikilink, niemals Inhalt kopieren. Volltext:
 
 ## recherche-ins-vault
 
@@ -23,6 +23,4 @@ Architektur-Wissen pro Repo ins Vault unter `projekte/<repo>/architektur.md`, ni
 
 ---
 
-Was hier steht, ist die **geltende Fassung**. Die ausführlichen Begründungen
-von früher liegen im Archiv unter `~/VAULT_BACKUP/jarvis-wiki-2026-08-26/tim/feedback/` — dort nachlesen,
-wenn ein Grenzfall unklar bleibt, aber im Zweifel gilt dieser Text.
+Was hier steht, ist die **geltende Fassung**.
