@@ -19,7 +19,7 @@ Sichere Wege: auf der VM editieren · byte-genauer `git checkout`-Restore ·
 oder nach dem Edit `iconv -f UTF-8 -t WINDOWS-1252 <datei> -o <datei>` und
 anschließend auf U+FFFD prüfen.
 
-Volltext: [[tim/feedback/datei-encoding]]
+Ausführliche Begründung im Archiv: `~/VAULT_BACKUP/jarvis-wiki-2026-08-26/tim/feedback/datei-encoding.md`
 
 ## Tests wachsen mit
 
@@ -27,4 +27,4 @@ Jede Delphi-Änderung ergänzt oder passt DUnitX-Tests an, und **vor jedem
 Commit läuft die gesamte Suite** — nur grün wird committet. So wächst die
 Abdeckung inkrementell statt als einmaliger Kraftakt.
 
-Volltext: [[tim/feedback/delphi-tests-immer]]
+Ausführliche Begründung im Archiv: `~/VAULT_BACKUP/jarvis-wiki-2026-08-26/tim/feedback/delphi-tests-immer.md`
