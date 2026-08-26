@@ -7,8 +7,25 @@ local.conf
 *.lock.json
 *-generated.conf
 
-# Auto-generated nested Claude Code working-dir artifacts (post-flatten leftover)
-claude/.claude/
+# claude/.claude/ ist das stow-Paket UND das Arbeitsverzeichnis, das Claude Code
+# anlegt, wenn jemand in ~/dotfiles/claude/ arbeitet. Deshalb gezielt nur die
+# Laufzeitdaten ignorieren — eine Regel auf das ganze Verzeichnis wuerde neue
+# Konfigurationsdateien stillschweigend verschlucken.
+claude/.claude/agent-memory/
+claude/.claude/downloads/
+claude/.claude/file-history/
+claude/.claude/image-cache/
+claude/.claude/paste-cache/
+claude/.claude/plans/
+claude/.claude/projects/
+claude/.claude/shell-snapshots/
+claude/.claude/statsig/
+claude/.claude/tasks/
+claude/.claude/telemetry/
+claude/.claude/todos/
+claude/.claude/settings.local.json
+claude/.claude/stats-cache.json
+claude/.claude/*.jsonl
 
 # Secrets — never commit decrypted values
 .env

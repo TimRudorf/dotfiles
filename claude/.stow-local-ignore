@@ -1,0 +1,27 @@
+# Was stow in diesem Paket NICHT verlinken darf.
+#
+# claude/.claude/ ist zugleich das Arbeitsverzeichnis, das Claude Code anlegt,
+# wenn jemand in ~/dotfiles/claude/ arbeitet. Die Konfigurationsdateien darin
+# gehören ins Repo, die Laufzeitdaten daneben nicht — und schon gar nicht
+# zurück nach ~/.claude/, wo sie herkommen.
+#
+# stow prüft diese Muster gegen den Pfad relativ zum Paketverzeichnis.
+
+^/hosts
+^/scripts
+^/rules
+
+\.claude/agent-memory
+\.claude/downloads
+\.claude/file-history
+\.claude/image-cache
+\.claude/paste-cache
+\.claude/plans
+\.claude/tasks
+\.claude/telemetry
+\.claude/todos
+\.claude/statsig
+\.claude/settings\.local\.json
+\.claude/stats-cache\.json
+\.claude/projects
+\.claude/shell-snapshots
