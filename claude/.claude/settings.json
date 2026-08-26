@@ -89,5 +89,6 @@
   "theme": "auto",
   "agentPushNotifEnabled": true,
   "autoMemoryEnabled": true,
-  "autoMemoryDirectory": "~/jarvis-wiki/memory"
+  "autoMemoryDirectory": "~/jarvis-wiki/memory",
+  "crossSessionInbound": "accept"
 }
