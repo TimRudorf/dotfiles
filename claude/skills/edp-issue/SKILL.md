@@ -257,6 +257,14 @@ Delphi = DUnitX (`$VAULT/referenz/dunitx-patterns.md`,
 > `E2004 Bezeichner redeklariert` ab, weil eine Unit doppelt in `interface`- und
 > `implementation`-`uses` stand — der Lauf trug keine einzige Testzahl und hätte als „rot" gezählt
 > werden können.
+>
+> ⚠️ **Zweite Bauart derselben Falle: `E2169 Felddefinition nicht erlaubt nach Methoden oder
+> Eigenschaften`.** Kommt zur API-Fläche eine **private Hilfsmethode** in eine bestehende
+> Klassensektion, gehört sie **ans Ende der Sektion** — in Delphi stehen erst alle Felder, dann die
+> Methoden. Eingefügt neben dem thematisch passenden Feld (der naheliegende Ort) bricht der Bau,
+> und wieder trägt der Lauf keine Testzahl. Gemessen 2026-08-26 (`schn_ivena#135`): kostete einen
+> vollen Durchgang. Der Anker für das Einfügen ist also **nicht** das verwandte Feld, sondern die
+> letzte Zeile vor `public`/`protected`.
 
 > 🔴 **Und dieser rote Lauf muss WURFSICHER sein, sonst ist er rot und trotzdem keine Messung.**
 > Commit 1 ruft naturgemäss Funktionen auf, die es im Prüfling noch gar nicht gibt — oder übergibt
@@ -598,6 +606,21 @@ Delphi = DUnitX (`$VAULT/referenz/dunitx-patterns.md`,
 > **vollständigen** Testnamen. Ein Vergleich gegen `ErkenntDenEinzeiler` statt
 > `Selbstprobe_ErkenntDenEinzeiler` meldet „nicht erfüllt", obwohl die Detailliste stimmt; im Zweifel
 > gewinnt die Detailliste ([[tim/feedback/kopfzahlen-aus-detailliste-nachrechnen]]).
+>
+> 🔴 **Vor dem Vergleich `tr -d '\r'` — sonst ist die Namensliste LEER und der Fall liest sich als
+> erfüllt.** Die Ausgabe von `edp-ctrl dev test` entsteht auf einer Windows-Maschine und trägt
+> **CRLF**. Ein naheliegender Parser mit Zeilenende-Anker (`grep -oP '^\s+\K[\w.]+$'`) findet damit
+> **nichts**: das `$` steht hinter dem `\r`. Die Trefferzahl stimmt derweil, weil sie aus der
+> Kopfzeile kommt — der Fall meldet also „rot=2 (soll 2)" mit einer leeren Namensspalte, und
+> niemand sieht, dass die Namen nie geprüft wurden. Genau die Prüfung, die gegen „die falschen
+> Tests sind rot geworden" schützen soll, fällt still aus.
+>
+> Gemessen 2026-08-26 (`schn_ivena#135`): die halbe Reihe lief so durch, bevor es an der leeren
+> Spalte auffiel. Also `| tr -d '\r'` unmittelbar hinter den Aufruf — und die Rohausgabe je Fall
+> **wegschreiben** (`> mut-<fall>.txt`), sonst lässt sich ein Parser-Fehler hinterher nicht mehr
+> nachbessern, ohne die ganze Reihe zu wiederholen. Die Regel „den Parser einmal gegen einen
+> bekannten roten Lauf prüfen" steht schon oben; sie greift hier nur, wenn der Probelauf **aus
+> derselben Quelle** stammt wie die Reihe (eine von Hand getippte Beispielzeile hat kein `\r`).
 >
 > ⚠️ **Diese Liste altert mit den Meldungstexten — und zwar genau dann, wenn das Review sie
 > umformuliert.** Zwei Fallen, beide am 2026-08-24 (`edp-runtime-redist#28`) zugeschlagen: eine
