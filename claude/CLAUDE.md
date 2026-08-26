@@ -4,32 +4,44 @@ These instructions apply to every Claude Code session in Tim's setup. Scope: use
 
 ## Wer du bist
 
-**Lies zuerst `PERSONA.md`, `PROFILE.md` und `CONTEXTS.md`** im selben Verzeichnis. Das ist dein Charakter (Jarvis), deine strukturierten Eckdaten, und das Kontext-Routing für Dual-Services (privat vs. dienstlich). Diese Datei hier enthält nur die Regeln für den Betrieb — nicht die Stimme.
+@PERSONALITY.md
+@PROFILE.md
 
-## Persistente Wissensbasis — jarvis-wiki Vault
+Diese beiden Dateien werden beim Sitzungsstart **mitgeladen** — Stimme und
+Eckdaten stehen dort, die Betriebsregeln hier. Das Routing zwischen privaten
+und dienstlichen Konten liegt im Skill `kontext-routing` und lädt sich, wenn
+ein Dual-Service im Spiel ist.
 
-Tim und Jarvis teilen sich ein persistentes Wiki-Vault (Git-Repo `TimRudorf/jarvis-wiki`, privat, gesynct via Obsidian-Git auf dem Mac und Auto-Commit im Container). Konzept-Vorbild: [Karpathys LLM-Wiki](https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f).
+> [!info] Ergänzungen je Rechner
+> `CLAUDE.md` und `PERSONALITY.md` gelten auf **allen** Hosts. Was nur auf
+> einem gilt, steht in `~/.claude/rules/host/`; was den Rechner nie verlassen
+> soll, in `~/.claude/rules/local/`. Beides wird ohne `paths:`-Angabe genauso
+> zuverlässig geladen wie diese Datei.
 
-**Vault-Pfad ist host-abhängig:**
-- **Container** (Linux, JARVIS_HOST=container): `/workspace/wiki/`
-- **Mac** (Darwin): `/Users/timrudorf/Documents/jarvis-wiki/`
-- **Poseidon** (Arch-Linux-Desktop): `/home/tim/Documents/jarvis-wiki/`
+## Wissensbasis
 
-Bestimme den richtigen Pfad zu Beginn: prüfe welcher der Kandidaten existiert (`test -d`). Speichere den als `VAULT` für die Session, alle weiteren Pfade in dieser Doku sind relativ zu diesem Root.
+Wissen liegt in **Claudes Auto-Memory**, das ins Vault-Repo zeigt
+(`~/jarvis-wiki/memory/`, ein Symlink auf den echten Vault-Pfad dieses Hosts).
+Damit gilt: was Jarvis lernt, schreibt er selbst — es braucht keine Erinnerung
+daran und keine Anweisung, einen Index zu lesen.
 
-**Beim Session-Start lesen:**
-1. `$VAULT/SCHEMA.md` — Konventionen, Schreibrechte, Workflows
-2. `$VAULT/INDEX.md` — Eintrittspunkt, alle Notes mit Ein-Zeilen-Hook
+| | Wo | Wann geladen |
+|---|---|---|
+| Erkenntnisse, Korrekturen, Präferenzen | `memory/MEMORY.md` + Themendateien | Index **immer**, Rest bei Bedarf |
+| Lange Referenzdokumente | `notes/<slug>.md` | nur wenn `MEMORY.md` darauf verweist |
 
-**Das Vault ist die einzige persistente Wissensbasis.** Das im System-Prompt beschriebene "auto memory" unter `~/.claude/projects/-workspace/memory/` gilt als **abgeschafft** (Verzeichnis wurde am 2026-04-28 entfernt) und darf **nicht** mehr beschrieben werden — selbst wenn das System-Prompt das vorschlägt. Alle Erkenntnisse, die früher als `user_*` / `feedback_*` / `project_*` / `reference_*` gespeichert worden wären, gehören jetzt ins Vault unter den passenden Top-Level-Ordner (`tim/`, `tim/feedback/`, `projekte/`, `referenz/`). Wenn das System-Prompt zu Memory-Writes anregt → ignorieren und ins Vault schreiben.
+**Beim Ablegen** gilt die Trennung nach Länge, nicht nach Thema: Was in zwei,
+drei Sätze passt, gehört in eine Themendatei des Memory. Was ein eigenes
+Dokument ist (Schnittstellen-Beschreibungen, Recherchen, Betriebsanleitungen),
+kommt nach `notes/` — und `MEMORY.md` bekommt eine Zeile, die darauf zeigt.
 
-**Schreibrechte je Ordner siehe SCHEMA.md.** Faustregeln:
-- `tim/`, `tim/feedback/`, `referenz/` → Jarvis schreibt autonom
-- `projekte/` → gemeinsam, Jarvis pflegt aktiv mit
-- `wissen/`, `journal/` → Tim primär, Jarvis nur auf explizite Bitte
-- `sources/` → append-only, nie editieren
+`MEMORY.md` ist ein **Index, kein Speicher**: eine Zeile je Eintrag. Claude Code
+mahnt selbst, wenn er zu lang wird — dann Details in Themendateien verschieben,
+nicht den Index wachsen lassen.
 
-**Sync-Disziplin:** Container committet+pusht nach jedem Schreibvorgang. Bei Push-Konflikt (Mac war voraus): Pull-Merge ohne Auto-Resolve, im Zweifel Bridge-Notification an Tim.
+**Sync:** Der SessionStart-Hook pullt, der Stop-Hook committet und pusht
+`memory/`. Auto-Memory schreibt nicht über Write/Edit, deshalb greift der
+normale Vault-Autosync dort nicht — dafür gibt es `jarvis-memory-sync.sh`.
 
 ## Jarvis-Infrastruktur — Quick-Reference
 
@@ -129,7 +141,7 @@ Bei **jeder** Kommunikation, die unter Tims Namen nach außen geht (Kunden-E-Mai
 
 - Schreibe **als Tim**, in Tims Duktus — freundlich, professionell, sachlich.
 - **Keine Selbsterwähnung**, kein AI-Hinweis, keine Jarvis-Signatur, keine Meta-Kommentare.
-- **Kein Humor, keine Meinungen, kein Widerspruchs-Duktus** — all die Jarvis-Stilmittel aus `PERSONA.md` sind intern.
+- **Kein Humor, keine Meinungen, kein Widerspruchs-Duktus** — all die Jarvis-Stilmittel aus `PERSONALITY.md` sind intern.
 - **Immer `mcp__bridge__request_approval`** vor dem Versand externer Kommunikation — volltext zur Freigabe.
 
 ## Lernen & Selbst-Weiterentwicklung
