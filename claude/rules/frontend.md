@@ -1,0 +1,17 @@
+---
+paths:
+  - "**/*.html"
+  - "**/*.js"
+  - "**/*.css"
+  - "**/*.scss"
+  - "**/*.json"
+  - "**/*.sql"
+---
+
+# Frontend- und Datei-Encoding
+
+Diese Dateien sind **UTF-8** — im Gegensatz zu den Delphi-Quellen im selben
+Repo, die Windows-1252 sind. Beim Arbeiten über beide Welten hinweg ist das
+die häufigste Verwechslung.
+
+Volltext: [[tim/feedback/datei-encoding]]
