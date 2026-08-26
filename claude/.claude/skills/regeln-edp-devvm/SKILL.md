@@ -11,9 +11,10 @@ kosten nichts, solange der Zusammenhang nicht vorliegt.
 
 ## dev-vm-exklusiv-belegen
 
-die **Dev-VM ist die einzige harte geteilte Ressource** zwischen parallelen Sessions. `edp-ctrl dev compile` setzt sie per `reset --hard` auf den Branch der **aufrufenden** Session → zwei gleichzeitige Läufe erzeugen eine **stille Fehlmessung** (Session A prüft gegen den Code von B, nichts wird rot). Vor dem ersten verändernden Kommando `C:\vm.lock` per **check-and-set in einem** SSH-Aufruf setzen, danach **immer** freigeben — auch im Abbruchpfad; belegt → **warten, nie überschreiben**; nach `compile` den Branch im Ausgabekopf gegenprüfen. Lock brauchen `compile`, `test` (trotz des Namens destruktiv) und `service start|stop`; `log`/`compilelog` **dürfen ihn nicht halten** (blockieren bis Ctrl-C). Robuster als jeder Lock: vorab genau **eine** Session als VM-Session benennen, alle anderen arbeiten VM-frei. Das Werkzeug erzwingt nichts — die Disziplin trägt die Regel. Volltext: [[tim/feedback/dev-vm-exklusiv-belegen]]
+die **Dev-VM ist die einzige harte geteilte Ressource** zwischen parallelen Sessions. `edp-ctrl dev compile` setzt sie per `reset --hard` auf den Branch der **aufrufenden** Session → zwei gleichzeitige Läufe erzeugen eine **stille Fehlmessung** (Session A prüft gegen den Code von B, nichts wird rot). Vor dem ersten verändernden Kommando `C:\vm.lock` per **check-and-set in einem** SSH-Aufruf setzen, danach **immer** freigeben — auch im Abbruchpfad; belegt → **warten, nie überschreiben**; nach `compile` den Branch im Ausgabekopf gegenprüfen. Lock brauchen `compile`, `test` (trotz des Namens destruktiv) und `service start|stop`; `log`/`compilelog` **dürfen ihn nicht halten** (blockieren bis Ctrl-C). Robuster als jeder Lock: vorab genau **eine** Session als VM-Session benennen, alle anderen arbeiten VM-frei. Das Werkzeug erzwingt nichts — die Disziplin trägt die Regel. Volltext: `~/VAULT_BACKUP/jarvis-wiki-2026-08-26/tim/feedback/dev-vm-exklusiv-belegen.md` (Archiv)
 
 ---
 
-Volltexte mit Warum und Wie liegen im Vault unter `tim/feedback/<slug>.md`.
-Bei Grenzfällen dort nachlesen statt raten.
+Was hier steht, ist die **geltende Fassung**. Die ausführlichen Begründungen
+von früher liegen im Archiv unter `~/VAULT_BACKUP/jarvis-wiki-2026-08-26/tim/feedback/` — dort nachlesen,
+wenn ein Grenzfall unklar bleibt, aber im Zweifel gilt dieser Text.
