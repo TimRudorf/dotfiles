@@ -94,8 +94,14 @@ Vor dem Anlegen nachsehen, ob das Thema schon irgendwo liegt:
 
 ```bash
 ls ~/.claude/rules/shared/ ~/.claude/rules/host/ ~/.claude/rules/local/
-grep -ril "<stichwort>" ~/.claude/rules/ ~/.claude/CLAUDE.md
+grep -Ril "<stichwort>" ~/.claude/rules/ ~/.claude/CLAUDE.md
 ```
+
+`grep` braucht hier das **große `-R`**: `shared` und `host` sind Symlinks, und
+mit kleinem `-r` steigt grep beim Rekursieren nicht in sie hinein. Die Prüfung
+meldet dann stumm »nichts gefunden« — und die Dublette, die dieser Schritt
+verhindern soll, entsteht genau daraus. Dieselbe Falle wie `find` ohne `-L`
+in Schritt 6.
 
 Gibt es bereits eine Regel zum Thema, wird sie **ergänzt statt dupliziert** —
 zwei Regeln zur selben Sache widersprechen sich früher oder später, und dann
@@ -158,8 +164,15 @@ Kein Treffer → Glob korrigieren, nicht die Regel abhaken.
 
 ```bash
 git -C ~/dotfiles add claude/rules/<thema>.md
-git -C ~/dotfiles commit -m "rules: <thema>"
+git -C ~/dotfiles commit -F - <<'MSG'
+rules: <thema>
+
+<eine Zeile zum Zweck>
+MSG
 ```
+
+Die **Leerzeile** nach dem Subject ist Pflicht: ohne sie liest Git die ganze
+Botschaft als eine Subject-Zeile, und `git log --oneline` wird unlesbar.
 
 Der **Push braucht Tims Freigabe** — das Repo hängt auf `main` und die Regel
 gilt danach auf allen Rechnern. Nie ungefragt pushen.
