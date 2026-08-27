@@ -127,10 +127,16 @@ Eine Regel gilt zeitlos oder gar nicht — die Historie steht in Git.
 Vier Prüfungen, jede mit Kriterium:
 
 ```bash
-find ~/.claude/rules/ -name '<thema>.md'          # taucht sie auf?
-head -8 "$(find ~/.claude/rules/ -name '<thema>.md')"   # Frontmatter ab Zeile 1, Globs in ""
-grep -c $'\\ufffd' <datei>                        # muss 0 sein (keine kaputten Umlaute)
+find -L ~/.claude/rules/ -name '<thema>.md'          # taucht sie auf?
+head -8 "$(find -L ~/.claude/rules/ -name '<thema>.md')"   # Frontmatter ab Zeile 1, Globs in ""
+grep -c $'\ufffd' <datei>                             # muss 0 sein (kaputte Umlaute)
 ```
+
+Zwei Fallen stecken in diesen drei Zeilen: `find` **braucht `-L`**, weil
+`shared` und `host` Symlinks sind und `find` sonst stumm nichts meldet — Claude
+Code selbst löst sie auf. Und `$'\ufffd'` hat **einen** Backslash; mit zweien
+sucht `grep` nach dem Text statt nach dem Zeichen und meldet immer 0.
+Ein leeres Ergebnis ist hier also erst ein Befund, wenn der Befehl stimmt.
 
 Die vierte ist die wichtigste und wird gern vergessen: **greift der Glob
 überhaupt?** Ein Muster, auf das keine reale Datei passt, ergibt eine Regel,
@@ -171,7 +177,12 @@ den in Frage kommenden Optionen als Auswahl:
 - Die Reichweite geht aus ihr nicht hervor und es gibt einen Grund gegen
   „geteilt" — etwa ein Pfad oder Werkzeug, das nicht überall existiert.
 - Die Globs müssten geraten werden: Welche Sprachen, welche Repos?
-- Eine bestehende Regel überschneidet sich oder widerspricht.
+- Eine bestehende Regel **widerspricht** der neuen.
+- Eine bestehende Regel überschneidet sich und es gibt keinen sauberen Schnitt.
+  Den gibt es oft: ein `CLAUDE.md`-Bullet trägt den **Grundsatz** und gilt auch
+  dort, wo keine Datei im Spiel ist (Issues, PR-Bodies, Berichte); die
+  `paths`-Regel trägt das **Handwerk** für die Dateien. Das ist keine
+  Dopplung — dann nicht fragen, sondern die Aufteilung benennen und bauen.
 - Die Regel hätte spürbare Reichweite ohne `paths:` — dann vorher zeigen, was
   sie in jedem Turn kosten würde, und nach einer engeren Bindung fragen.
 
