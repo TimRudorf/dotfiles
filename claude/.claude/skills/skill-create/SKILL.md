@@ -28,28 +28,26 @@ Es gibt zwei Scopes:
 
 **User-Scope: Pfad-Resolution**
 
-User-Skills werden bei Tim grundsätzlich im Dotfiles-Repo gepflegt — Single Source of Truth, persistent über Container-Rebuilds, versioniert. Der Skill-Tree liegt bewusst **außerhalb** von `.claude/`, weil Pfade mit `.claude/`-Verzeichnis-Komponente vom Claude-Code-Harness als sensitive eingestuft werden und Schreiboperationen dort selbst mit `--dangerously-skip-permissions` blockiert werden (gilt auch für Bash-Tool-Argumente, nicht nur Write/Edit).
+User-Skills werden bei Tim im Dotfiles-Repo gepflegt — Single Source of Truth, persistent über Container-Rebuilds, versioniert. Sie liegen dort unter `claude/.claude/skills/`, und `~/.claude/skills` ist ein Symlink dorthin. Ein Verzeichnis `~/dotfiles/claude/skills/` gibt es **nicht**.
 
-Daher: **kanonischer User-Scope-Pfad ist `~/dotfiles/claude/skills/<name>/`** (ohne `.claude/`!). Falls das Dotfiles-Setup nicht vorhanden ist, Fallback auf `~/.claude/skills/<name>/` (das ist *literal* mit `$HOME/.claude/` und damit exempt).
+Geschrieben wird deshalb **immer über `~/.claude/skills/<name>/`**: Pfade mit einer `.claude/`-Komponente in der Mitte (`~/dotfiles/claude/.claude/...`) stuft der Harness als sensitive ein und blockiert Schreiboperationen selbst mit `--dangerously-skip-permissions` (auch bei Bash-Argumenten, nicht nur Write/Edit). Literal `$HOME/.claude/...` ist davon ausgenommen — und landet über den Symlink trotzdem im Repo.
 
 Resolved Pfade:
 
 ```
-USER_SCOPE_TARGET:
-  if  [ -d ~/dotfiles/claude/skills ] && [ -w ~/dotfiles/claude/skills ]
-  then ~/dotfiles/claude/skills/{name}/SKILL.md
-  else ~/.claude/skills/{name}/SKILL.md
+USER_SCOPE_TARGET:     ~/.claude/skills/{name}/SKILL.md
+                       → im Repo: claude/.claude/skills/{name}/SKILL.md
 
 PROJECT_SCOPE_TARGET:  .claude/skills/{name}/SKILL.md   (im aktuellen Projekt)
 ```
 
-Wähle den Scope (User default) und merke dir Ziel-Pfad und ob das Dotfiles-Setup aktiv ist (für Schritte 6/7).
+Wähle den Scope (User default). Ob das Dotfiles-Setup auf diesem Host aktiv ist, sagt `readlink -f ~/.claude/skills` (für Schritte 6/7).
 
 ## Schritt 3: Kollision prüfen
 
 Prüfen ob der Ziel-Pfad bereits existiert. Falls ja: User informieren und abbrechen oder Überschreiben bestätigen lassen.
 
-Bei aktivem Dotfiles-Setup zusätzlich prüfen, ob `~/.claude/skills/{name}` als nicht-passender Symlink oder echtes Verzeichnis existiert — das wäre eine Inkonsistenz und sollte vor dem Weitermachen geklärt werden.
+Ein bereits vorhandenes `~/.claude/skills/{name}` ist der Kollisionsfall — dasselbe Verzeichnis, in das geschrieben würde.
 
 ## Schritt 4: SKILL.md generieren
 
@@ -103,22 +101,18 @@ Abschließend `skill-optimize` mit `skill-name` aufrufen.
 1. Verzeichnis am Ziel-Pfad anlegen (`mkdir -p`)
 2. `SKILL.md` schreiben
 
-Da der Ziel-Pfad bei aktivem Dotfiles-Setup `~/dotfiles/claude/skills/...` ist (kein `.claude/`-Component), greift der Sensitive-Path-Schutz nicht — Bash-`mkdir` und Write-Tool laufen ohne Permission-Hürde durch.
+Der Ziel-Pfad ist literal `$HOME/.claude/skills/...` und damit vom Sensitive-Path-Schutz ausgenommen — Bash-`mkdir` und Write-Tool laufen ohne Permission-Hürde durch. **Nicht** über den aufgelösten Repo-Pfad schreiben, der wäre blockiert.
 
-## Schritt 6: Sichtbarkeit prüfen / Symlink (nur wenn nötig)
+## Schritt 6: Sichtbarkeit und Ankunft im Repo prüfen
 
-Nach dem Schreiben prüfen, ob `~/.claude/skills/{name}/SKILL.md` über bestehende Symlinks bereits erreichbar ist:
+Weil direkt nach `~/.claude/skills/{name}/` geschrieben wurde, ist der Skill sofort sichtbar. Zu prüfen ist, ob er auch **im Repo** angekommen ist — sonst lebt er nur auf dieser Maschine und überlebt keinen Rebuild:
 
 ```bash
-[ -f ~/.claude/skills/{name}/SKILL.md ] && echo "sichtbar" || echo "muss verlinkt werden"
+readlink -f ~/.claude/skills/{name}/SKILL.md      # muss unter ~/dotfiles/ liegen
+git -C ~/dotfiles status --short | grep {name}    # muss die neue Datei zeigen
 ```
 
-- **Auf dem Mac**: `~/.claude` ist ein ganz-Symlink auf `~/dotfiles/claude/.claude/`, und `~/dotfiles/claude/.claude/skills` ist ein interner Compat-Symlink auf `../skills`. Damit ist der frisch geschriebene Skill sofort über `~/.claude/skills/{name}/` sichtbar — **kein zusätzlicher Symlink nötig**.
-- **Im jarvis Container** (laufende Session, vor Container-Restart): `~/.claude/skills/` enthält nur einzelne Symlinks aus dem entrypoint-Pass. Den neuen Skill manuell verlinken, damit er ohne Restart sichtbar ist:
-  ```bash
-  ln -sfn ~/dotfiles/claude/skills/{name} ~/.claude/skills/{name}
-  ```
-  (Das ist ein literal `$HOME/.claude/skills/...` und damit exempt — ohne Permission-Hürde.)
+Zeigt `readlink` **nicht** ins Dotfiles-Repo, ist das Setup auf diesem Host nicht aktiv. Das Tim melden statt es zu übergehen — ein Skill, der nur lokal liegt, ist beim nächsten Rebuild weg.
 
 ## Schritt 7: In Dotfiles-Repo committen + pushen (nur Dotfiles-Setup)
 
@@ -127,7 +121,7 @@ Nur wenn der Skill im Dotfiles-Repo gelandet ist (Schritt 2). Sonst: User darauf
 1. Im Dotfiles-Repo (`~/dotfiles`) den neuen Pfad stagen:
    ```bash
    cd ~/dotfiles
-   git add claude/skills/{name}/
+   git add claude/.claude/skills/{name}/
    ```
 2. Branch-Status prüfen — wenn auf `main`, neuen Feature-Branch `feat/skill-{name}` anlegen, sonst auf aktuellem Branch bleiben.
 3. Commit erstellen mit Subject `feat(skill): {name}` und einer kurzen Body-Zeile aus der Description.
@@ -141,4 +135,4 @@ Die generierte SKILL.md dem User vollständig anzeigen mit Hinweis:
 - Skill ist sofort verfügbar unter `/{name}` (Schritt 6 hat das verifiziert)
 - SKILL.md kann jederzeit manuell angepasst werden
 - Bei komplexen Skills: Zusätzliche Dateien (reference.md, scripts/) können im Skill-Verzeichnis ergänzt werden
-- Bei Dotfiles-Setup: Skill liegt unter `~/dotfiles/claude/skills/{name}/` (nicht direkt unter `~/.claude/skills/`) — Bearbeitungen bitte am kanonischen Pfad vornehmen
+- Bei Dotfiles-Setup: Skill liegt im Repo unter `claude/.claude/skills/{name}/` und ist über `~/.claude/skills/{name}/` erreichbar — Bearbeitungen **immer** über den `~/.claude/`-Pfad, direktes Schreiben am Repo-Pfad blockiert der Harness

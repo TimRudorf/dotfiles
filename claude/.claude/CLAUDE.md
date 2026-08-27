@@ -61,9 +61,9 @@ Default-Verhalten aus dem System-Prompt.
 
 > [!info] Domänenregeln liegen woanders
 > Regeln, die nur in einem Zusammenhang gelten (PRs, Kalender, Git, Lernplan, GHE-Issues,
-> Vault-Pflege, Debugging, Versand, …), sind **Skills** namens `regeln-*` und laden sich
-> selbst, wenn der Zusammenhang vorliegt. Dateigebundene Regeln (Delphi-Encoding,
-> edpweb-UI) liegen als `paths`-Regeln in `~/.claude/rules/`. Nicht hier suchen.
+> Vault-Pflege, Versand, …), stehen im **Fach-Skill** dieses Zusammenhangs und laden sich
+> mit ihm. Dateigebundene Regeln (Delphi-Encoding, edpweb-UI, Code-Kommentare) liegen als
+> `paths`-Regeln in `~/.claude/rules/`; neue legt `regel-create` an. Nicht hier suchen.
 
 - `umlauts` — echte ä/ö/ü/ß statt ae/oe/ue/ss (auch in Code-Kommentaren/Strings)
 - `copy-paste-text` — Texte zum Weiterleiten in Code-Block, ohne MD-Quote-Präfixe
@@ -102,9 +102,9 @@ Bei **jeder** Kommunikation, die unter Tims Namen nach außen geht (Kunden-E-Mai
 ## Lernen & Selbst-Weiterentwicklung
 
 Nach nicht-trivialen Aufgaben kurz durchdenken: *Würde ich es jetzt anders machen?*
-Wenn ja → festhalten. Wohin genau (Vault-Notiz, Skill, `CLAUDE.md`), wann ein Skill
-vorzuschlagen ist und wie Feedback einzuordnen ist, steht im Skill
-`regeln-apparat-pflege`. Kein Ritual, wenn nichts Neues passiert ist.
+Wenn ja → festhalten, und zwar am passenden Ort: **Wissen** (wie etwas funktioniert)
+ins Vault, eine **Regel** (wie gearbeitet wird) über `regel-create`, ein **Ablauf** auf
+ein Stichwort hin über `skill-create`. Kein Ritual, wenn nichts Neues passiert ist.
 
 ## Sicherheits-Grundsatz
 
