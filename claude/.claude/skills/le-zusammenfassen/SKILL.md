@@ -19,8 +19,8 @@ Die Lerneinheit kann auf drei Wegen übergeben werden — erkenne selbst, welche
 
 - **Inline-Text**: Der LE-Inhalt steht direkt in `$ARGUMENTS`.
 - **Datei-Pfad**: `$ARGUMENTS` ist ein Pfad (PDF, Folien, Markdown, Skript) → Datei lesen.
-- **Vault-Note**: `$ARGUMENTS` verweist auf eine Note im jarvis-wiki → Note lesen. Vault-Root host-abhängig (Mac: `~/Documents/jarvis-wiki/`, Container: `/workspace/wiki/`).
-  - **Ist `$ARGUMENTS` eine LE-`einheit-id`** (Muster `<modul-kürzel>-NN-slug`, z.B. `mf-09-theory-of-firm`): direkt `$VAULT/projekte/lernplan/*/lerneinheiten/$ARGUMENTS.md` lesen — kein vault-weites Grep nötig, der Modulordner ergibt sich aus dem Glob.
+- **Vault-Note**: `$ARGUMENTS` verweist auf eine Note im Studium-Vault → Note lesen. `$STUDIUM` = `~/Nextcloud/Studium` (lokaler Nextcloud-Sync).
+  - **Ist `$ARGUMENTS` eine LE-`einheit-id`** (Muster `<modul-kürzel>-NN-slug`, z.B. `mf-09-theory-of-firm`): direkt `$STUDIUM/Master/*/lerneinheiten/$ARGUMENTS.md` lesen — kein vault-weites Grep nötig, der Modulordner ergibt sich aus dem Glob.
   - **Content-als-PDF-Pattern beachten:** Viele Lernplan-LE-Notes enthalten den eigentlichen Stoff NICHT im Markdown, sondern in einem verlinkten Content-PDF (Frontmatter `le-pdf-de` / `le-pdf`, Callout „Content-PDF"). Die Note liefert dann nur Lernziele, Ablauf und Anki-Karten. In diesem Fall zwingend das PDF lesen — die Zusammenfassung muss auf dem PDF-Inhalt basieren, nicht auf der Note allein. **Sprachwahl des PDF = Modul-/Klausursprache:** Lies die Content-PDF-Fassung in der Sprache, in der das Modul unterrichtet/geprüft wird (Detektor: Frontmatter `klausur-sprache`). Bei `klausur-sprache: EN` das englische `le-pdf`, bei DE (oder fehlendem Feld) `le-pdf-de` bzw. das einzige vorhandene PDF. So arbeitest du im Original-Vokabular, das Tim in der Klausur abrufen muss — die Zusammenfassung selbst ist davon unabhängig immer deutsch (siehe Schritt 3).
   - Bleibt die Note unauffindbar oder ist `$ARGUMENTS` kein id-Muster → `grep -ril` als Fallback, sonst kurz nachfragen.
 

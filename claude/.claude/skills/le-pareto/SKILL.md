@@ -14,8 +14,8 @@ Die Lerneinheit kann auf mehreren Wegen übergeben werden — erkenne selbst, we
 
 - **Inline-Text**: Der LE-Inhalt steht direkt in `$ARGUMENTS`.
 - **Datei-Pfad**: `$ARGUMENTS` ist ein Pfad (PDF, Folien, Markdown, Skript) → Datei lesen.
-- **Vault-Note**: `$ARGUMENTS` verweist auf eine Note im jarvis-wiki → Note lesen. Vault-Root host-abhängig (Mac: `~/Documents/jarvis-wiki/`, Container: `/workspace/wiki/`).
-  - **Ist `$ARGUMENTS` eine LE-`einheit-id`** (Muster `<modul-kürzel>-NN-slug`, z.B. `iti-04-market-entry-margins`): direkt `$VAULT/projekte/lernplan/*/lerneinheiten/$ARGUMENTS.md` lesen — kein vault-weites Grep nötig, der Modulordner ergibt sich aus dem Glob.
+- **Vault-Note**: `$ARGUMENTS` verweist auf eine Note im Studium-Vault → Note lesen. `$STUDIUM` = `~/Nextcloud/Studium` (lokaler Nextcloud-Sync).
+  - **Ist `$ARGUMENTS` eine LE-`einheit-id`** (Muster `<modul-kürzel>-NN-slug`, z.B. `iti-04-market-entry-margins`): direkt `$STUDIUM/Master/*/lerneinheiten/$ARGUMENTS.md` lesen — kein vault-weites Grep nötig, der Modulordner ergibt sich aus dem Glob.
   - **Content-als-PDF-Pattern beachten:** Viele Lernplan-LE-Notes enthalten den eigentlichen Stoff NICHT im Markdown, sondern in einem verlinkten Content-PDF (Frontmatter `le-pdf-de` / `le-pdf`, Callout „Content-PDF"). Die Note liefert dann nur Lernziele, Ablauf und Anki-Karten. In diesem Fall zwingend das PDF lesen — das Klausur-Minimum muss auf dem PDF-Inhalt basieren, nicht auf der Note allein. **Sprachwahl des PDF = Modul-/Klausursprache:** Lies die Content-PDF-Fassung in der Sprache, in der das Modul geprüft wird (Detektor: Frontmatter `klausur-sprache`). Bei `klausur-sprache: EN` das englische `le-pdf`, bei DE (oder fehlendem Feld) `le-pdf-de` bzw. das einzige vorhandene PDF. So arbeitest du im Original-Vokabular, das Tim in der Klausur abrufen muss.
   - Bleibt die Note unauffindbar oder ist `$ARGUMENTS` kein id-Muster → `grep -ril` als Fallback, sonst kurz nachfragen.
 

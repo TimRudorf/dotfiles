@@ -1,13 +1,13 @@
 ---
 name: lerneinheit
-description: User invokes /lerneinheit to start a new study session for an existing LE (Lerneinheit) OR to create a new LE skeleton. LE files live datumslos under projekte/lernplan/<modul>/lerneinheiten/<einheit-slug>.md with 4 sections (🎯 Lernziele / 📖 Stoffaufnahme / 🔄 Aktiver Abruf / 🩺 Self-Test). Skill prepares reMarkable material if applicable, appends a session entry to the LE, and returns the obsidian:// URL. Keine Todoist-Integration — Lernsteuerung ist Tims Sache (tim/feedback/lernblock-4h-keine-lernsteuerung). Konzept-Doku - /workspace/wiki/projekte/lernplan/lerneinheit-konzept.md. Trigger keywords - lerneinheit, /lerneinheit, "ich fang an mit", "lass mich auf X vorbereiten", "session starten für".
+description: User invokes /lerneinheit to start a new study session for an existing LE (Lerneinheit) OR to create a new LE skeleton. LE files live datumslos under $STUDIUM/Master/<modul>/lerneinheiten/<einheit-slug>.md with 4 sections (🎯 Lernziele / 📖 Stoffaufnahme / 🔄 Aktiver Abruf / 🩺 Self-Test). Skill prepares reMarkable material if applicable, appends a session entry to the LE, and returns the obsidian:// URL. Keine Todoist-Integration — Lernsteuerung ist Tims Sache. Konzept-Doku - $STUDIUM/Methodik/lerneinheit-konzept.md. Trigger keywords - lerneinheit, /lerneinheit, "ich fang an mit", "lass mich auf X vorbereiten", "session starten für".
 disable-model-invocation: true
 argument-hint: <modul-slug> <einheit-slug> [--session-min=N]
 ---
 
 # Lerneinheit — Session-Start für eine LE
 
-LEs (Lerneinheiten) sind **datumslose, deadline-getriebene logische Einheiten** mit 4 Sektionen (🎯 Lernziele / 📖 Stoffaufnahme / 🔄 Aktiver Abruf / 🩺 Self-Test). Pro Modul leben sie unter `projekte/lernplan/<modul>/lerneinheiten/<einheit-slug>.md`. Eine LE kann über mehrere Tage gehen — der Skill startet eine neue Session in einer existierenden LE oder legt eine neue LE als Skelett an.
+LEs (Lerneinheiten) sind **datumslose, deadline-getriebene logische Einheiten** mit 4 Sektionen (🎯 Lernziele / 📖 Stoffaufnahme / 🔄 Aktiver Abruf / 🩺 Self-Test). Pro Modul leben sie unter `$STUDIUM/Master/<modul>/lerneinheiten/<einheit-slug>.md`. Eine LE kann über mehrere Tage gehen — der Skill startet eine neue Session in einer existierenden LE oder legt eine neue LE als Skelett an.
 
 **Wichtig:** Es gibt **keine Todoist-Integration** mehr (Routinen-Verschlankung 2026-07-23, ) — Tim steuert seine Lerninhalte selbst und hakt direkt in den LEs ab. Dieser Skill ist für **Session-Vorbereitung** zuständig: reMarkable-Material, Lernziele-Recap, Session-Tagebuch-Eintrag.
 
@@ -16,7 +16,7 @@ Konzept-Kontext: , , .
 ## Voraussetzungen
 
 - Tools: `python3`, optional `rmapi` für reMarkable-Upload
-- Datei: `~/Documents/jarvis-wiki/projekte/lernplan/lerneinheit-konzept.md`
+- Datei: `$STUDIUM/Methodik/lerneinheit-konzept.md`
 
 Voraussetzungen gemäß `requirement-checker` Skill validieren.
 
@@ -30,7 +30,7 @@ Erwartet: `<modul-slug> <einheit-slug> [--session-min=N]`
 
 ## Schritt 2: LE-Datei laden ODER Skelett anlegen
 
-Pfad: `~/Documents/jarvis-wiki/projekte/lernplan/<modul-slug>/lerneinheiten/<einheit-slug>.md`
+Pfad: `$STUDIUM/Master/<modul-slug>/lerneinheiten/<einheit-slug>.md`
 
 **Falls Datei existiert:**
 - Frontmatter lesen (`status`, `deadline`, `modul-phase`, `karten-ziel`, `geplante-minuten`)
@@ -44,14 +44,14 @@ Pfad: `~/Documents/jarvis-wiki/projekte/lernplan/<modul-slug>/lerneinheiten/<ein
 
 ## Schritt 3: Modul-Kontext laden
 
-Aus `~/Documents/jarvis-wiki/projekte/lernplan/<modul-slug>/modul.md`:
+Aus `$STUDIUM/Master/<modul-slug>/modul.md`:
 - `klausur.sprache` → Brief in dieser Sprache
 - `anki_rolle` → Anki-Empfehlung im Brief
 - `modul_typ` → Lernmethoden-Mix (siehe Konzept-Doku)
 - `phasen:`-Block → aktive Modul-Phase (Phase 4 = Warnung)
 - `le-profil.block-defaults` → falls Skelett angelegt werden muss
 
-Aus `~/Documents/jarvis-wiki/projekte/lernplan/<modul-slug>/tracker.md`:
+Aus `$STUDIUM/Master/<modul-slug>/tracker.md`:
 - Modul-Cockpit-Status (welche LEs sind in welcher Phase 🔴🟡🟢)
 
 ## Schritt 4: reMarkable-Material vorbereiten (optional)
@@ -83,8 +83,8 @@ Output:
 
 ```
 ✅ LE-Session vorbereitet
-   Vault: projekte/lernplan/<modul>/lerneinheiten/<einheit-slug>.md
-   Obsidian: obsidian://open?vault=jarvis-wiki&file=<url-encoded-path>
+   Vault: Master/<modul>/lerneinheiten/<einheit-slug>.md
+   Obsidian: obsidian://open?vault=Studium&file=<url-encoded-path>
    Status: <status> · Deadline: <YYYY-MM-DD> · Phase: <id>
    reMarkable: <N> Files in /Studium/<Modul>/ (oder: keine vorbereitet)
    Nächste offene Checkbox: <block> — "<text>" (<Xmin>)
