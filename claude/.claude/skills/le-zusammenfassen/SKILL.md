@@ -1,7 +1,12 @@
 ---
 name: le-zusammenfassen
-description: Fasst eine übergebene Lerneinheit (LE) leicht verständlich und ohne vorausgesetztes Vorwissen zusammen — in drei Teilen: Worum geht es?, Kerninhalte leicht erklärt, Einordnung ins Modul. Use when Tim eine Lerneinheit, ein Skript, ein Kapitel oder einen Foliensatz zusammengefasst haben will. Trigger keywords - "fass die LE zusammen", "erklär mir die Lerneinheit", "worum geht es in dieser LE", "LE zusammenfassen", "leicht verständlich zusammenfassen", "/le-zusammenfassen".
-argument-hint: [LE-Text | Datei-Pfad | Vault-Note]
+description: >-
+  Fasst eine übergebene Lerneinheit (LE) leicht verständlich und ohne vorausgesetztes Vorwissen zusammen — in
+  drei Teilen: Worum geht es?, Kerninhalte leicht erklärt, Einordnung ins Modul. Use when Tim eine
+  Lerneinheit, ein Skript, ein Kapitel oder einen Foliensatz zusammengefasst haben will. Trigger keywords -
+  "fass die LE zusammen", "erklär mir die Lerneinheit", "worum geht es in dieser LE", "LE zusammenfassen",
+  "leicht verständlich zusammenfassen", "/le-zusammenfassen".
+argument-hint: "[LE-Text | Datei-Pfad | Vault-Note]"
 ---
 
 # Lerneinheit zusammenfassen

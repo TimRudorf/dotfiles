@@ -1,7 +1,7 @@
 ---
 name: regel-create
 description: Legt aus einer formlosen Beschreibung eine neue Verhaltens- oder Arbeitsregel an — am richtigen Ort, mit der richtigen Reichweite (alle Hosts, ein Host, oder nur diese Maschine) und so gebunden, dass sie nur dort auftaucht, wo sie gilt. Nutzen, wenn Tim eine Regel formuliert, festhalten oder ändern will. Trigger - "merk dir als Regel", "ab jetzt soll immer", "das soll generell gelten", "leg dafür eine Regel an", "neue Regel", "Regel ändern", "/regel-create".
-argument-hint: [beschreibung der regel]
+argument-hint: "[beschreibung der regel]"
 ---
 
 # Regel anlegen

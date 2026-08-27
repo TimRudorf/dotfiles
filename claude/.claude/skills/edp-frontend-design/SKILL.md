@@ -17,15 +17,12 @@ Die Design-Sprache für EDP-Web-Oberflächen. **Vorbild ist Fluent 2**, nicht de
 nicht der jeweils modische Default.
 
 > **Dieser Skill hält den Kanon, nicht die Fakten.** Die belegten Fluent-2-Werte (Tokens,
-> Komponenten-Anatomie, Bootstrap-Reibungspunkte) stehen in `$VAULT/referenz/fluent2-design.md` und
-> werden hier **nur verlinkt**, nie kopiert. Beim Umsetzen die Referenz lesen und ihr folgen — nicht
-> aus dem Gedächtnis raten. `$VAULT` = host-abhängiger Vault-Root (siehe CLAUDE.md).
+> Komponenten-Anatomie) stehen im Paket `@fluentui/tokens` und werden hier **nicht** kopiert. Beim
+> Umsetzen dort nachsehen statt aus dem Gedächtnis zu raten.
 
 ## Voraussetzungen
 
 - Projekt: ein EDP-Web-Projekt unter `$EDP_PROJECT_ROOT` (meist `edpweb`)
-- Datei: `$VAULT/referenz/fluent2-design.md` — die Faktenbasis
-- Datei: `$VAULT/tim/feedback/edpweb-ui-design-prinzipien.md` — Tims Bestandsregeln
 
 Voraussetzungen gemäß `requirement-checker` Skill validieren. Bei Fehlschlag abbrechen.
 
@@ -43,8 +40,8 @@ dichte und Bedienlogik, nicht in Palette und Formensprache.
 
 ## Schritt 2: Fakten holen statt raten
 
-`$VAULT/referenz/fluent2-design.md` lesen — mindestens die Abschnitte, die den aktuellen Bereich
-betreffen. Dort stehen echte Werte aus `@fluentui/tokens`, keine Prosa.
+Werte aus `@fluentui/tokens` holen — mindestens für den Bereich, der gerade angefasst wird.
+Das Paket ist die Quelle, nicht die Website.
 
 > ⚠️ **`fluent2.microsoft.design` veröffentlicht keine einzige CSS-Zahl.** Wer Zahlen von dort
 > zitiert, hat sie erfunden. Site = Haltung und Usage, Code (`@fluentui/tokens`) = Werte.
@@ -123,8 +120,6 @@ EDP ist Einsatzleitsoftware: viel Information, Bedienung unter Stress, oft auf T
 - **Anzeigeoptionen-Panel** mit Sections per `data-relevant-views`.
 - **ELW-Modul ist die Referenzimplementierung** — im Zweifel dort nachsehen, wie es gelöst ist.
 
-Volltext und Begründungen: `$VAULT/tim/feedback/edpweb-ui-design-prinzipien.md`.
-
 ## Schritt 4: Umsetzen
 
 - **Erst Grundraster, dann Details.** Radius, Höhen, Textgrößen und Fokus wirken auf jeden Pixel
@@ -164,7 +159,7 @@ Dieser Skill ist **absichtlich unfertig**. Jedes Mal, wenn Tim eine Designentsch
 korrigiert, gehört sie hier hinein — sonst wird dieselbe Diskussion in drei Wochen erneut geführt.
 
 - **Regel mit Begründung** → Abschnitt 3, in die passende Untersektion, als knappe Anweisung.
-- **Belegter Fluent-Fakt** → `$VAULT/referenz/fluent2-design.md`, nicht hierher.
+- **Belegter Fluent-Fakt** → gehoert nicht hierher; er steht in `@fluentui/tokens`.
 - **Wiederkehrendes Umsetzungsmuster** → eigener Abschnitt oder `reference.md` im Skill-Verzeichnis.
 
 Nach jeder Erweiterung den Dotfiles-Roundtrip fahren, damit die Regel auf allen Hosts gilt.

@@ -1,7 +1,7 @@
 ---
 name: skill-optimize
 description: Analysiert den letzten Skill-Lauf und optimiert die SKILL.md. Wird nach Skill-Ausführungen aufgerufen um Fehler, Workarounds und Verbesserungspotenzial zu erkennen.
-argument-hint: [skill-name]
+argument-hint: "[skill-name]"
 ---
 
 # Skill-Optimierung

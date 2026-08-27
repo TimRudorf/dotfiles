@@ -1,6 +1,12 @@
 ---
 name: container-update
-description: Kontrollierter, gestaffelter Update-Durchlauf für Tims Docker-Container-Flotte auf der Debian-VM (jarvis-vm, Stacks im Repo TimRudorf/docker-compose, Mac-Klon ~/dev/docker-compose). Nutzen, wenn Tim Container oder Images aktualisieren will — Trigger: "update mal alle container", "container updaten", "bring die container auf latest", "/container-update". Läuft Inventory → Proxmox-Snapshot → Abhängigkeits-Recherche → gestaffeltes Ausrollen (Low-Risk zuerst, Nextcloud zuletzt) → Verify pro Dienst → Git-Roundtrip + Vault-Update. Pinnt jedes Image digest-genau (repo:version@sha256). Domain-Gotchas stehen in der Vault-Note referenz/nextcloud-container.
+description: >-
+  Kontrollierter, gestaffelter Update-Durchlauf für Tims Docker-Container-Flotte auf der Debian-VM (jarvis-vm,
+  Stacks im Repo TimRudorf/docker-compose, Mac-Klon ~/dev/docker-compose). Nutzen, wenn Tim Container oder
+  Images aktualisieren will — Trigger: "update mal alle container", "container updaten", "bring die container
+  auf latest", "/container-update". Läuft Inventory → Proxmox-Snapshot → Abhängigkeits-Recherche →
+  gestaffeltes Ausrollen (Low-Risk zuerst, Nextcloud zuletzt) → Verify pro Dienst → Git-Roundtrip + Vault-
+  Update. Pinnt jedes Image digest-genau (repo:version@sha256).
 ---
 
 # Container-Update (Fleet-Update)
@@ -20,12 +26,12 @@ Voraussetzungen gemäß `requirement-checker` Skill validieren. Bei Fehlschlag a
 - **VM:** `ssh jarvis-vm` (Debian, 172.16.0.3), Stacks unter `/opt/stacks/<stack>/compose.yaml`
 - **Proxmox-Host:** `ssh -i ~/.ssh/id_ed25519 root@100.97.134.101`, die VM ist **VM 103** (debian)
 - **Mac-Klon:** `~/dev/docker-compose` (Repo `TimRudorf/docker-compose`)
-- **Vault-Note (Gotchas + deployte Versionen):** `$VAULT/referenz/nextcloud-container.md` — VOR Beginn lesen, am Ende updaten
+- **Gotchas + deployte Versionen:** stehen im Auto-Memory bzw. unter `notes/`. VOR Beginn suchen und lesen, am Ende mit dem neuen Stand ergaenzen.
 - **NIE anfassen:** `tailscale:stable` (Security-Layer, soll tracken), Eigen-Builds (`jarvis`, `jarvis-bridge`, `data-api-server` — Git/CI-versioniert), `dockge` (nicht im Repo)
 
 ## Phase 0 — Inventory & Snapshot (Pflicht-Gate)
 
-1. **Vault-Note lesen** (`referenz/nextcloud-container`) für Gotchas, kritische Stacks, letzte Versionen.
+1. **Bekannte Gotchas nachschlagen** (Auto-Memory / `notes/`) — kritische Stacks, letzte Versionen.
 2. **Vollständiges Inventory** aller laufenden Container mit Image-Ref + echter Version. Pro Container eine Abhak-Liste anlegen (TaskCreate bei ≥3 offenen) — **kein Container darf durchrutschen** (im letzten Lauf wurden homepage+vaultwarden zunächst übersehen). Version-Label holen:
    ```bash
    ssh jarvis-vm 'for c in $(docker ps --format "{{.Names}}"|sort); do printf "%-18s %s\n" "$c" "$(docker inspect --format "{{.Config.Image}}" "$c")"; done'
@@ -94,7 +100,7 @@ Kein Stack gilt als fertig, bevor er grün ist. Restart-Loops immer prüfen: `do
    ssh jarvis-vm 'cd /opt/stacks && git checkout -- . && git pull --ff-only'
    ```
    `git status --short` muss leer sein (VM-Compose == git == laufende Container).
-3. **Vault-Note updaten** (`referenz/nextcloud-container`): deployte Versionen + neu entdeckte Gotchas. Keine Inhalte duplizieren, nur die Faktenschicht pflegen.
+3. **Wissen sichern**: deployte Versionen + neu entdeckte Gotchas ins Auto-Memory bzw. nach `notes/`. Nur die Faktenschicht, keine Duplikate.
 4. **Snapshot** dem User melden (nach ein paar Tagen stabilem Betrieb löschbar: `qm delsnapshot 103 <name>`). Bei Problemen ist Rollback per Snapshot oder alten Digest sofort möglich.
 
 Abschließend `skill-optimize` mit `container-update` aufrufen.

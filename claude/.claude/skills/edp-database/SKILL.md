@@ -1,7 +1,7 @@
 ---
 name: edp-database
 description: "This skill should be used when the user asks to query the EDP database, check table structures, verify column values, look up EDP data, or when any task requires current information from the EDP MariaDB database on the dev VM. Trigger keywords: Datenbank, database, DB, Tabelle, SQL, query, abfragen, nachschauen, verifizieren, Spalte, column."
-argument-hint: [SQL-Query oder Tabellenname]
+argument-hint: "[SQL-Query oder Tabellenname]"
 allowed-tools: Bash, Read
 ---
 
