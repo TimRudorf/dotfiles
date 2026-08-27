@@ -1,7 +1,7 @@
 ---
 name: le-pareto-eoe
 description: Erzeugt aus einer eoe-Lerneinheit (Modul Modern Firm, Part B / Rode — Entrepreneurship) eine kurze, leicht verständliche Paper-Übersicht fürs Klausur-Minimum. Pro Paper ein knapper Block in Alltagssprache (Frage · Antwort · ggf. Der Trick · Haken · ggf. Falle), deutsch formuliert mit den englischen Fachbegriffen in Klammern, weil die Klausur EN ist. Nach Klausur-Relevanz sortiert. Bewusst knapper und einfacher als das generische le-pareto oder eine 4-Achsen-Karte. Use when Tim das Klausur-Minimum, die Kernpunkte oder „was muss ich zum Bestehen können" einer eoe-Einheit (Modern Firm Part B) übersichtlich und schnell haben will. Trigger keywords - "Pareto für die eoe-LE", "Klausur-Minimum eoe", "was muss ich für Modern Firm Part B können", "le-pareto-eoe", "/le-pareto-eoe".
-argument-hint: [eoe-einheit-id | LE-Text | Datei-Pfad]
+argument-hint: "[eoe-einheit-id | LE-Text | Datei-Pfad]"
 ---
 
 # eoe-Lerneinheit — kurze Paper-Übersicht (Klausur-Minimum)

@@ -1,7 +1,7 @@
 ---
 name: edp-share
 description: This skill should be used when the user asks to "share files with a customer", "upload to Sharecloud", "Dateien bereitstellen", "send files to customer", "Nextcloud upload", or uses /edp-share. It uploads files to the Nextcloud Sharecloud and notifies the customer via Zammad.
-argument-hint: [ticket-number | customer-name] [file-path...] [context]
+argument-hint: "[ticket-number | customer-name] [file-path...] [context]"
 ---
 
 # EDP Sharecloud — Dateien für Kunden bereitstellen

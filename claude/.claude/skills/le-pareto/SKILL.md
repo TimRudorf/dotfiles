@@ -1,7 +1,7 @@
 ---
 name: le-pareto
 description: Erzeugt aus einer übergebenen Lerneinheit (LE) das klausur-priorisierte Muss-Minimum nach dem Pareto-Prinzip (20/80) — die ~20 % Stoff, die ~80 % der Punkte bringen, geordnet nach Punkte-Ertrag, mit Eselsbrücken und Self-Test. Anders als le-zusammenfassen (verständliche Volltext-Zusammenfassung) beantwortet dieser Skill nur „Was muss ich für die Klausur unbedingt können, um zu bestehen?". Use when Tim das Klausur-Minimum, die wichtigsten Punkte, den Pareto-Kern oder „was muss ich zum Bestehen können" einer LE haben will. Trigger keywords - "was muss ich für die Klausur können", "Pareto für die LE", "20/80 der LE", "Klausur-Minimum", "das Wichtigste zum Bestehen", "le-pareto", "/le-pareto".
-argument-hint: [LE-Text | Datei-Pfad | Vault-Note | einheit-id]
+argument-hint: "[LE-Text | Datei-Pfad | Vault-Note | einheit-id]"
 ---
 
 # Lerneinheit — Pareto-Klausurminimum

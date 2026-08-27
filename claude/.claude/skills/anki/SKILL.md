@@ -1,6 +1,17 @@
 ---
 name: anki
-description: User invokes /anki for spaced-repetition card workflow with Anki Desktop. Four sub-commands - `build <le-slug>` (STANDARD since 2026-07-01) builds the pre-written, klausur-kalibrierten Gold-Standard card plan from a Lerneinheit's '🎴 Anki-Karten-Plan' section into Anki — plans live IN the LE, Tim triggers the build AFTER working through that LE (never pre-build; see ); `cards <modul>` for ad-hoc/legacy interactive card creation (Tim sends source material like screenshot/text/PDF excerpt, Jarvis proposes Cloze/Basic cards atomically with MathJax, Tim approves/edits/rejects, accepted cards go via AnkiConnect into Uni::<Module> deck with source+phase tags); `status [--modul=<slug>]` for snapshot of due/retention per module deck written to vault; `setup` for one-time deck initialization. Big-Bang: no FB18-imports, no inbox-decks, direct write after approval. Phase 4 blocks new cards (klausur-hygiene). Trigger keywords - anki, karte, karteikarte, /anki, "erstelle die karten für LE", anki build, anki status, "neue anki karten", "wieviel due", spaced repetition, cloze.
+description: >-
+  User invokes /anki for spaced-repetition card workflow with Anki Desktop. Four sub-commands - `build <le-
+  slug>` (STANDARD since 2026-07-01) builds the pre-written, klausur-kalibrierten Gold-Standard card plan from
+  a Lerneinheit's '🎴 Anki-Karten-Plan' section into Anki — plans live IN the LE, Tim triggers the build AFTER
+  working through that LE (never pre-build; see ); `cards <modul>` for ad-hoc/legacy interactive card creation
+  (Tim sends source material like screenshot/text/PDF excerpt, Jarvis proposes Cloze/Basic cards atomically
+  with MathJax, Tim approves/edits/rejects, accepted cards go via AnkiConnect into Uni::<Module> deck with
+  source+phase tags); `status [--modul=<slug>]` for snapshot of due/retention per module deck written to
+  vault; `setup` for one-time deck initialization. Big-Bang: no FB18-imports, no inbox-decks, direct write
+  after approval. Phase 4 blocks new cards (klausur-hygiene). Trigger keywords - anki, karte, karteikarte,
+  /anki, "erstelle die karten für LE", anki build, anki status, "neue anki karten", "wieviel due", spaced
+  repetition, cloze.
 disable-model-invocation: true
 argument-hint: <build|cards|status|setup> [le-slug|modul-slug]
 ---

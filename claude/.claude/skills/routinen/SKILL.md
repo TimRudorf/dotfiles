@@ -1,6 +1,10 @@
 ---
 name: routinen
-description: Umgang mit Jarvis' zeitgesteuerten Routinen — welche es gibt, anlegen, ändern, Zeit verschieben, an- und abschalten, löschen, einzeln testen, ausrollen und nachsehen warum eine nicht lief. Nutzen bei allem, was mit wiederkehrenden Läufen zu tun hat: "bau mir eine Routine", "jeden Morgen soll Jarvis …", "schalt das ab", "verschieb das auf 7 Uhr", "warum kam heute kein Briefing", "welche Routinen laufen eigentlich".
+description: >-
+  Umgang mit Jarvis' zeitgesteuerten Routinen — welche es gibt, anlegen, ändern, Zeit verschieben, an- und
+  abschalten, löschen, einzeln testen, ausrollen und nachsehen warum eine nicht lief. Nutzen bei allem, was
+  mit wiederkehrenden Läufen zu tun hat: "bau mir eine Routine", "jeden Morgen soll Jarvis …", "schalt das
+  ab", "verschieb das auf 7 Uhr", "warum kam heute kein Briefing", "welche Routinen laufen eigentlich".
 ---
 
 # Routinen

@@ -22,7 +22,7 @@ set -a; source ~/.env 2>/dev/null || source /opt/stacks/jarvis-next/.env 2>/dev/
 
 Nach dem Source-Versuch erneut `test -n "$VAR"`. Wenn die Variable danach immer noch leer ist → echte Nicht-Erfüllung (Token rotiert/widerrufen oder gar nicht im SOPS-Vault). Dann erst abbrechen.
 
-Das ist ein einmaliger Source pro Skill-Aufruf, harmlos wenn die Vars schon gesetzt sind, und löst den häufigsten Cause für `Env: X — nicht gesetzt`-Fehlschläge ohne dass jeder Skill das selbst tun muss. Hintergrund: Volltext in `~/Documents/jarvis-wiki/tim/feedback/bash-tool-env.md`.
+Das ist ein einmaliger Source pro Skill-Aufruf, harmlos wenn die Vars schon gesetzt sind, und löst den häufigsten Cause für `Env: X — nicht gesetzt`-Fehlschläge ohne dass jeder Skill das selbst tun muss (`bash-env-sourcen`).
 
 ### Tools: Kommandozeilen-Tools
 Prüfe ob jedes Tool im PATH verfügbar ist (`command -v tool`).

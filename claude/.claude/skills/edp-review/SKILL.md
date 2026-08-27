@@ -1,13 +1,13 @@
 ---
 name: edp-review
 description: "Skeptisches lokales Code-Review eines Pull Requests oder eines Diffs durch einen Sub-Agent — Ersatz für den früheren Copilot-Review. Nutzen, wenn ein PR vor dem Merge geprüft werden soll oder der User „review den PR\", „schau dir den Diff kritisch an\", „/edp-review\" sagt. Findet Fehler, verifiziert sie und behebt die berechtigten."
-argument-hint: [pr-nummer oder branch]
+argument-hint: "[pr-nummer oder branch]"
 allowed-tools: Bash, Read, Edit, Write, Agent
 ---
 
 # PR skeptisch lokal reviewen
 
-Ersetzt den früheren Copilot-Review vollständig. Volltext der Regel: `$VAULT/tim/feedback/pr-review-lokaler-agent.md`.
+Ersetzt den früheren Copilot-Review vollständig.
 
 > **Copilot wird nicht mehr angefordert.** Kein `--add-reviewer copilot-pull-request-reviewer` (stiller No-op), keine GraphQL-`requestReviews`-Anforderung, kein Warten auf Bot-Threads. Der Bot ist auf der GHE-Instanz inaktiv.
 
