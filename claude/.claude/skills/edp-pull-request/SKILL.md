@@ -76,20 +76,43 @@ Aus den Commits und dem Branch-Namen einen prägnanten Titel ableiten. Format: `
 
 #### Body
 
+Der Body wird von einem **Menschen** gelesen, der entscheiden muss. Er will
+wissen, was sich ändert, warum, wo er hinschauen soll und was er prüfen muss —
+sonst nichts. Regelgrundlage: `texte.md` → *Was in einen Vorgang gehört*.
+
 ```markdown
-## Zusammenfassung
-<Bullet Points: Was wurde geändert und warum — aus den Commits und dem Diff ableiten>
+<2–4 Zeilen ohne Überschrift: was sich ändert und warum. Closes #<nummer>.>
 
-## Änderungen
-<Auflistung der geänderten Dateien/Bereiche>
+## Worauf ich beim Review schauen würde
 
-## Testplan
-- [ ] <Konkrete Testschritte basierend auf den Änderungen>
+| Wo | Warum |
+|---|---|
+| <Datei/Bereich> | <was daran heikel ist, oder welche Entscheidung darin steckt, der man widersprechen können soll> |
 
-Closes #<nummer>
+## Was geprüft ist
+
+<Was grün ist, mit Zahlen. Danach als Checkliste, was noch offen ist:>
+
+- [ ] <konkreter Prüfschritt für den Reviewer>
 ```
 
 Die `Closes #<nummer>`-Zeile **nur** einfügen, wenn eine Ticket-Nummer aus dem Branch-Namen extrahiert wurde.
+
+**Nicht in den Body** — das steht in Git, im Issue oder im Ticket:
+
+- der Werdegang („erst hatte ich X, dann Y"), verworfene Ansätze, lokale
+  Review-Runden, Rebase- und Formatier-Hinweise
+- vollständige Messprotokolle und Fundstellenlisten → wenn sie wirklich
+  hierher gehören, in einen `<details>`-Block
+- Begründungen für Dinge, die *nicht* getan wurden — außer die Entscheidung
+  soll bestätigt oder gekippt werden
+
+**Obergrenze: ein Bildschirm.** Wer scrollen muss, um zu sehen, was er prüfen
+soll, prüft es nicht. Wird der Entwurf länger, ist das ein Zeichen, dass
+Werdegang mitgeschrieben wurde — nicht, dass der PR groß ist.
+
+**Korrekturen später gehören in den Body**, nicht als Kommentar darunter. Wer
+den PR öffnet, liest den Body und hält ihn für gültig.
 
 ### Schritt 5: Entwurf präsentieren
 
