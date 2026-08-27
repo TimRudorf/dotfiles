@@ -93,6 +93,12 @@ keiner: er ist eine Falschaussage mit Vertrauensvorschuss. Wer eine Funktion
 anfasst, zieht ihren Doc-Kommentar mit — und prüft, ob dieselbe Aussage noch
 anderswo steht (README, Interface-Deklaration, aufrufende Stelle).
 
+Dabei wird der bestehende Kommentar **bearbeitet, nicht ergänzt**. Ein zweiter
+Satz neben den alten gestellt, eine neue Zeile unter den überholten Hinweis:
+so wächst der Kommentar, während seine Aussage unschärfer wird — und am Ende
+steht dort beides, richtig und falsch nebeneinander. Die alte Fassung hält
+Git.
+
 ## Altlasten werden korrigiert, nicht abgestempelt
 
 Ein Kommentar, der gegen diese Regel verstößt, ist ein Defekt — unabhängig
