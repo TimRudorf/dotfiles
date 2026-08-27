@@ -164,7 +164,7 @@ Nach `/workspace/data/frankfurt-trends/runs/${RUN_DATE}.md` (siehe Baseline `202
 8. **Delta zur Vorwoche** (falls vorhanden) — NEU / WACHSEND / GEFADET / NEUE SPOTS
 9. **Kosten dieses Runs** — Apify-Usage abfragen, Werte einfügen
 
-**Stil:** Deutsch, knapp, Tabellen wo möglich. Tims Persona berücksichtigen (siehe `~/.claude/PERSONA.md`).
+**Stil:** Deutsch, knapp, Tabellen wo möglich. Tims Persona berücksichtigen (siehe `~/.claude/PERSONALITY.md`).
 
 **Wichtig:** Nur Frankfurt-Stadt aufnehmen, kein Umland (kein Steinau, Bad Homburg, Neu-Isenburg, Großostheim etc.). Bei TikTok-Posts mit klar Umland-Spots (Text/Caption nennt Ortsnamen außerhalb Frankfurt) im Briefing weglassen.
 

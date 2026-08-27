@@ -22,7 +22,9 @@ Voraussetzungen gemäß `requirement-checker` Skill validieren. Bei Fehlschlag a
 
 ### Schritt 1+2: Kontext und Metadaten ermitteln (Subagent-Delegation)
 
-Einen **Subagent** (`git-expert`) starten, der alle benötigten Informationen beschafft.
+In einen **Subagent** auslagern: alle benötigten Informationen per `git`/`gh` beschaffen.
+
+**Reines Abrufen, kein Urteil** — ein schnelles, günstiges Modell genügt.
 
 **Was wird gebraucht:**
 
@@ -183,7 +185,7 @@ gh pr edit <nummer> -R einsatzleitsoftware.ghe.com/edp/<repo> --title "<titel>" 
 gh pr edit <nummer> -R einsatzleitsoftware.ghe.com/edp/<repo> --add-assignee tim-rudorf
 ```
 
-Copilot-Review wie im Create-Modus (6c) per GraphQL `requestReviews` anfordern, falls noch nicht gesetzt. `patrick-vogel` nur auf ausdrueckliche Ansage.
+Kein Reviewer wird automatisch gesetzt (siehe Create-Modus: Copilot ist auf der GHE-Instanz inaktiv). Zum Prüfen `/edp-review` nutzen. `patrick-vogel` nur auf ausdrueckliche Ansage.
 
 **6c: Project zuordnen (optional)**
 
@@ -230,7 +232,7 @@ Die Bestätigung aus dem /zammad-write Skill **überspringen** — der User hat 
 - **Keine Labels** zuweisen
 - Base-Branch ist immer `dev`
 - Assignee ist immer `tim-rudorf`
-- Reviewer ist standardmaessig **nur** `copilot-pull-request-reviewer` (per GraphQL `requestReviews`, siehe 6c — `gh --add-reviewer` no-op't den Copilot-Handle). `patrick-vogel` NICHT automatisch — nur wenn der User es ausdruecklich verlangt.
+- **Kein Reviewer** wird automatisch gesetzt — Copilot ist auf der GHE-Instanz inaktiv (Begründung im Create-Modus). Geprüft wird per `/edp-review`. `patrick-vogel` NICHT automatisch — nur wenn der User es ausdruecklich verlangt.
 - Alle `gh`-Aufrufe mit vollem GHE-Host: `-R einsatzleitsoftware.ghe.com/edp/<repo>` bzw. `--hostname einsatzleitsoftware.ghe.com` (sonst loest `gh` gegen github.com auf → "Could not resolve to a Repository")
 - **Fehlertoleranz**: Fehlende GitHub-Scopes oder API-Fehler bei optionalen Schritten (Projects) überspringen statt abbrechen
 - Bei Unsicherheiten den User fragen
