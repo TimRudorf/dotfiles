@@ -5,7 +5,7 @@ description: >-
   (customer documentation). Trigger keywords: Dokuwiki, Wiki nachschauen, Wiki lesen, "schau mal im Wiki",
   "was steht im Wiki zu", Dokumentation nachschlagen, DokuWiki anschauen, "lies mal nach zu".
 allowed-tools: Bash(curl *), Read
-argument-hint: [Suchbegriff oder Thema]
+argument-hint: "[Suchbegriff oder Thema]"
 ---
 
 # EDP DokuWiki lesen

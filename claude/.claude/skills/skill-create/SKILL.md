@@ -1,7 +1,7 @@
 ---
 name: skill-create
 description: Creates a new Claude Code skill with optimal structure. Use when asked to create a skill, generate a slash command, or set up a new SKILL.md.
-argument-hint: [skill-name] [description of what the skill should do]
+argument-hint: "[skill-name] [description of what the skill should do]"
 ---
 
 # Skill erstellen

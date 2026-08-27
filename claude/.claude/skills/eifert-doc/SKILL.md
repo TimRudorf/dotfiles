@@ -2,7 +2,7 @@
 name: eifert-doc
 description: "Generates professional PDF documents using LaTeX with the Eifert Systems GmbH corporate template. Use when the user asks to create documents, reports, documentation, PDFs, or written deliverables in the context of Eifert Systems GmbH, Einsatzleitsoftware, edp:, or internal company documentation. Trigger keywords: Dokument, document, PDF, Report, Bericht, Dokumentation, LaTeX, erstellen, zusammenstellen."
 disable-model-invocation: true
-argument-hint: [Titel oder Beschreibung des Dokuments]
+argument-hint: "[Titel oder Beschreibung des Dokuments]"
 allowed-tools: Bash, Read, Write, Edit, Glob, Grep, WebFetch
 ---
 

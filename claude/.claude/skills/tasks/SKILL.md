@@ -1,6 +1,11 @@
 ---
 name: tasks
-description: Tims ToDo-System auf Todoist Pro. Use this skill when Tim wants to view, add, complete, or check tasks across his Areas (Inbox, Work, Uni, Privat) und Sub-Projects. Trigger keywords: "task", "todo", "aufgabe", "erledigt", "was muss ich noch", "trag ein", "merk dir", "neue aufgabe", "hak ab", "einkaufen", "rewe", "dm", "/tasks". Todoist iOS-/Mac-App ist Tims primäre UI; dieser Skill ist Jarvis' CRUD-Zugang via REST + Sync API.
+description: >-
+  Tims ToDo-System auf Todoist Pro. Use this skill when Tim wants to view, add, complete, or check tasks
+  across his Areas (Inbox, Work, Uni, Privat) und Sub-Projects. Trigger keywords: "task", "todo", "aufgabe",
+  "erledigt", "was muss ich noch", "trag ein", "merk dir", "neue aufgabe", "hak ab", "einkaufen", "rewe",
+  "dm", "/tasks". Todoist iOS-/Mac-App ist Tims primäre UI; dieser Skill ist Jarvis' CRUD-Zugang via REST +
+  Sync API.
 ---
 
 # tasks — Todoist Bridge

@@ -1,7 +1,7 @@
 ---
 name: zammad-send
 description: This skill should be used when the user asks to "reply to a customer", "answer a Zammad ticket", "send a response", "create a new ticket", "neues Ticket erstellen", "E-Mail an Kunden senden", or uses /zammad-send. It replies to existing tickets or creates new ones with auto-detected channel.
-argument-hint: [ticket-number | customer-name] [options]
+argument-hint: "[ticket-number | customer-name] [options]"
 ---
 
 # Zammad Kundenantwort senden / Neues Ticket erstellen

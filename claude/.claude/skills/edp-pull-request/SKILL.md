@@ -1,7 +1,7 @@
 ---
 name: edp-pull-request
 description: This skill should be used when the user asks to "create a PR", "edit a PR", "open a pull request", or uses /pull-request. It creates or updates PRs on GHE with auto-generated title, body, and Zammad integration.
-argument-hint: [pr-number]
+argument-hint: "[pr-number]"
 ---
 
 # Pull Request erstellen oder bearbeiten
@@ -157,7 +157,7 @@ Assignee setzen:
 gh pr edit <pr-nummer> -R einsatzleitsoftware.ghe.com/edp/<repo> --add-assignee tim-rudorf
 ```
 
-> **Kein Copilot-Review mehr.** Seit 2026-08-06 wird Copilot **nicht** angefordert — der Bot ist auf der GHE-Instanz inaktiv (in den letzten 40 edpweb-PRs kein einziges Review), `gh pr edit --add-reviewer copilot-pull-request-reviewer` ist ein stiller No-op, und die GraphQL-Anforderung braucht eine Bot-Node-ID, die sich ohne vorhandenes Review nicht ermitteln lässt. Stattdessen den PR per **`/edp-review`** von einem skeptischen lokalen Agent prüfen lassen. Volltext: `$VAULT/tim/feedback/pr-review-lokaler-agent.md`.
+> **Kein Copilot-Review mehr.** Seit 2026-08-06 wird Copilot **nicht** angefordert — der Bot ist auf der GHE-Instanz inaktiv (in den letzten 40 edpweb-PRs kein einziges Review), `gh pr edit --add-reviewer copilot-pull-request-reviewer` ist ein stiller No-op, und die GraphQL-Anforderung braucht eine Bot-Node-ID, die sich ohne vorhandenes Review nicht ermitteln lässt. Stattdessen den PR per **`/edp-review`** von einem skeptischen lokalen Agent prüfen lassen.
 
 `patrick-vogel` wird **nicht** automatisch als Reviewer gesetzt — nur wenn der User es ausdruecklich sagt (dann `--add-reviewer patrick-vogel`).
 

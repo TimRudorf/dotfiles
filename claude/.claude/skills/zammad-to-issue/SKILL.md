@@ -1,7 +1,7 @@
 ---
 name: zammad-to-issue
 description: This skill should be used when the user asks to "create a GitHub issue from a Zammad ticket", "convert ticket to issue", or uses /zammad-to-issue. It creates structured GHE issues from Zammad tickets.
-argument-hint: [ticket-number]
+argument-hint: "[ticket-number]"
 ---
 
 # Zammad → GitHub Issue

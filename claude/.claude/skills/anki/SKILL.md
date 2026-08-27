@@ -1,6 +1,17 @@
 ---
 name: anki
-description: User invokes /anki for spaced-repetition card workflow with Anki Desktop. Four sub-commands - `build <le-slug>` (STANDARD since 2026-07-01) builds the pre-written, klausur-kalibrierten Gold-Standard card plan from a Lerneinheit's '🎴 Anki-Karten-Plan' section into Anki — plans live IN the LE, Tim triggers the build AFTER working through that LE (never pre-build; see ); `cards <modul>` for ad-hoc/legacy interactive card creation (Tim sends source material like screenshot/text/PDF excerpt, Jarvis proposes Cloze/Basic cards atomically with MathJax, Tim approves/edits/rejects, accepted cards go via AnkiConnect into Uni::<Module> deck with source+phase tags); `status [--modul=<slug>]` for snapshot of due/retention per module deck written to vault; `setup` for one-time deck initialization. Big-Bang: no FB18-imports, no inbox-decks, direct write after approval. Phase 4 blocks new cards (klausur-hygiene). Trigger keywords - anki, karte, karteikarte, /anki, "erstelle die karten für LE", anki build, anki status, "neue anki karten", "wieviel due", spaced repetition, cloze.
+description: >-
+  User invokes /anki for spaced-repetition card workflow with Anki Desktop. Four sub-commands - `build <le-
+  slug>` (STANDARD since 2026-07-01) builds the pre-written, klausur-kalibrierten Gold-Standard card plan from
+  a Lerneinheit's '🎴 Anki-Karten-Plan' section into Anki — plans live IN the LE, Tim triggers the build AFTER
+  working through that LE (never pre-build; see ); `cards <modul>` for ad-hoc/legacy interactive card creation
+  (Tim sends source material like screenshot/text/PDF excerpt, Jarvis proposes Cloze/Basic cards atomically
+  with MathJax, Tim approves/edits/rejects, accepted cards go via AnkiConnect into Uni::<Module> deck with
+  source+phase tags); `status [--modul=<slug>]` for snapshot of due/retention per module deck written to
+  vault; `setup` for one-time deck initialization. Big-Bang: no FB18-imports, no inbox-decks, direct write
+  after approval. Phase 4 blocks new cards (klausur-hygiene). Trigger keywords - anki, karte, karteikarte,
+  /anki, "erstelle die karten für LE", anki build, anki status, "neue anki karten", "wieviel due", spaced
+  repetition, cloze.
 disable-model-invocation: true
 argument-hint: <build|cards|status|setup> [le-slug|modul-slug]
 ---
@@ -9,12 +20,12 @@ argument-hint: <build|cards|status|setup> [le-slug|modul-slug]
 
 Spaced-Repetition-Workflow mit Anki Desktop am Mac. Karten werden interaktiv im Chat erstellt (Tim nimmt jede Karte ab, Generation Effect ist Teil des Lernens), Stats werden als Snapshot ins Vault geschrieben für die Druck-Score-Berechnung im Heartbeat.
 
-Vollkonzept: `$VAULT/projekte/lernplan/anki-konzept.md`. Recherche-Grundlage: `$VAULT/sources/2026-05-08-anki-integration.md`.
+Vollkonzept: `$STUDIUM/Methodik/anki-konzept.md`.
 
 ## Voraussetzungen
 
 - Tools: `curl`, `jq`
-- Datei: `~/Documents/jarvis-wiki/projekte/lernplan/anki-konzept.md`
+- Datei: `$STUDIUM/Methodik/anki-konzept.md`
 
 Voraussetzungen gemäß `requirement-checker` Skill validieren. Bei Fehlschlag abbrechen.
 
@@ -32,11 +43,11 @@ Argument 1 ist der Sub-Command (`cards`, `status`, `setup`). Bei unbekanntem ode
 
 Ablauf:
 
-1. **LE lokalisieren:** `<le-slug>` → `$VAULT/projekte/lernplan/<modul>/lerneinheiten/<le-slug>.md` (Modul aus Slug-Präfix, z.B. `iti-*`/`imf-*` → `international-economics`; sonst explizit).
+1. **LE lokalisieren:** `<le-slug>` → `$STUDIUM/Master/<modul>/lerneinheiten/<le-slug>.md` (Modul aus Slug-Präfix, z.B. `iti-*`/`imf-*` → `international-economics`; sonst explizit).
 2. **Plan parsen:** die nummerierten Karten im „🎴 Anki-Karten-Plan"-Block lesen:
    - **Cloze** / **Overlapping Cloze** → Notetype `Cloze`, Feld `Text` = Content inkl. `{{cN::…}}`. Overlapping = **ein** Note mit mehreren `cN` (Sibling-Burying zeigt pro Review ein Blank — nicht in Einzelnotes splitten).
    - **Basic** → Notetype `Basic`, `Front`/`Back`.
-   - **Image Occlusion 🖼️** → NICHT über `add_cards.sh`; via `python3 $VAULT/projekte/lernplan/anki-io-build.py` bauen (Skizze aus Content-PDF/Folie rendern → Masken → Pillow-Self-Check → `addNote` Modell „Image Occlusion"). Skizze-Quelle + Masken-Hinweis stehen in der Karte.
+   - **Image Occlusion 🖼️** → NICHT über `add_cards.sh`; via `python3 scripts/anki-io-build.py` bauen (Skizze aus Content-PDF/Folie rendern → Masken → Pillow-Self-Check → `addNote` Modell „Image Occlusion"). Skizze-Quelle + Masken-Hinweis stehen in der Karte.
 3. **Dedup-Guard:** existieren schon Karten mit `tag:source::<modul>::<le-slug>`? Wenn ja (Re-Build) → erst archivieren + löschen, dann neu bauen (idempotent). Bei leerem/neuem Stand einfach neu.
 4. **Bauen (aktiv):** Karten-JSON zusammenstellen, `bash scripts/add_cards.sh Uni::<Modul> <karten.json>`. Tags **`phase::<aktive-phase>` + `source::<modul>::<le-slug>`**. Karten gehen **aktiv** ins Deck (nicht suspendiert) — Tim kennt den Stoff jetzt. **Deck-Config/new-cards-Limit wird nicht angefasst** — Tim pflegt die Presets selbst.
 5. **IO-Karten** separat via `anki-io-build.py` (gleiche Tags + Deck).
@@ -58,12 +69,12 @@ Ablauf:
 
 > Es gibt seit der LE-Migration (Big-Bang 2026-05-13) **kein `plan.md`/`phasen:`** mehr — Module laufen datumslos über `modul.md` + `tracker.md` + `lerneinheiten/`.
 
-1. **Fokus-Modus:** Wenn `$VAULT/projekte/lernplan/fokus-business-klausuren-2026-07.md` (bzw. eine `fokus-*`-Note mit `status: aktiv` und `gilt_bis` in der Zukunft) existiert, dürfen nur die dort gelisteten Module bekartet werden. Anderes Modul → Warnung *"Modul X ist im Fokus-Modus pausiert (bis <gilt_bis>). Mit `--force` überschreibbar."*, stoppen außer `--force`.
+1. **Fokus-Modus:** Wenn `$STUDIUM/Master/fokus-business-klausuren-2026-07.md` (bzw. eine `fokus-*`-Note mit `status: aktiv` und `gilt_bis` in der Zukunft) existiert, dürfen nur die dort gelisteten Module bekartet werden. Anderes Modul → Warnung *"Modul X ist im Fokus-Modus pausiert (bis <gilt_bis>). Mit `--force` überschreibbar."*, stoppen außer `--force`.
 2. **Klausur-Hygiene:** `klausur`-Datum aus `<modul-slug>/modul.md` lesen. Wenn die Klausur **≤ 2 Tage** entfernt ist → Warnung *"Klausur in <n> Tagen — keine neuen Karten mehr (Hygiene). Mit `--force` überschreibbar."*, stoppen außer `--force`.
 
 ### 2.3 Modul-Kontext laden
 
-`$VAULT/projekte/lernplan/<modul-slug>/modul.md` lesen für Frontmatter — vor allem `klausur.sprache` (DE oder EN), `anki_rolle`, `modul_typ`. Karten-Vorschläge in der Modul-Sprache formulieren.
+`$STUDIUM/Master/<modul-slug>/modul.md` lesen für Frontmatter — vor allem `klausur.sprache` (DE oder EN), `anki_rolle`, `modul_typ`. Karten-Vorschläge in der Modul-Sprache formulieren.
 
 ### 2.4 Karten-Format-Regeln (aus anki-konzept.md)
 
@@ -123,7 +134,7 @@ Bei Erfolg: *"N Karten in `Uni::<Modul>` angelegt. iPhone-Sync passiert beim nä
 
 ## Sub-Command: `status [--modul=<slug>]`
 
-`bash scripts/snapshot.sh [<modul-slug>]` aufrufen. Das Skript zieht via AnkiConnect für jedes der 12 Modul-Decks (oder nur das angegebene): `total`, `due_today`, `due_week`, `mature_pct`, `young_count`, `new_count`, `lapses_total`. Schreibt Snapshot nach `$VAULT/projekte/lernplan/anki-stats.md` mit Frontmatter (`type: projekt`, `last_snapshot: <ISO-Timestamp>`).
+`bash scripts/snapshot.sh [<modul-slug>]` aufrufen. Das Skript zieht via AnkiConnect für jedes der 12 Modul-Decks (oder nur das angegebene): `total`, `due_today`, `due_week`, `mature_pct`, `young_count`, `new_count`, `lapses_total`. Schreibt Snapshot nach `$STUDIUM/Master/anki-stats.md` mit Frontmatter (`type: projekt`, `last_snapshot: <ISO-Timestamp>`).
 
 Auto-Commit-Hook im Vault pusht das automatisch.
 

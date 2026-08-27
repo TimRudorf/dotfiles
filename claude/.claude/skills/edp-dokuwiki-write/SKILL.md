@@ -7,7 +7,7 @@ description: >-
   DokuWiki bearbeiten, Wiki-Seite anlegen, Dokumentation ergänzen.
 disable-model-invocation: true
 allowed-tools: Bash(curl *), Read
-argument-hint: [page-id]
+argument-hint: "[page-id]"
 ---
 
 # EDP DokuWiki bearbeiten
