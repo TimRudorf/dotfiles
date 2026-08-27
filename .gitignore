@@ -18,7 +18,7 @@ local.conf
 claude/.claude/*
 !claude/.claude/CLAUDE.md
 !claude/.claude/PERSONALITY.md
-!claude/.claude/PROFILE.md
+!claude/.claude/RULES.md
 !claude/.claude/settings.json
 !claude/.claude/skills/
 
