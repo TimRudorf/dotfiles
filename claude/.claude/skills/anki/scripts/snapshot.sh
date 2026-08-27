@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# Zieht Anki-Stats pro Modul-Deck via AnkiConnect und schreibt Snapshot ins Vault.
+# Zieht Anki-Stats pro Modul-Deck via AnkiConnect und schreibt den Snapshot in den
+# Studium-Vault (Nextcloud-Sync uebernimmt die Verteilung).
 # Usage: snapshot.sh [modul-slug]   (ohne Arg → alle 12 Module)
 
 set -euo pipefail
@@ -7,10 +8,10 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "$SCRIPT_DIR/anki_call.sh"
 
-VAULT="${VAULT:-$HOME/Documents/jarvis-wiki}"
-[ -d "$VAULT" ] || { echo "ERROR: Vault unter $VAULT nicht gefunden." >&2; exit 1; }
+STUDIUM="${STUDIUM:-$HOME/Nextcloud/Studium}"
+[ -d "$STUDIUM" ] || { echo "ERROR: Studium-Vault unter $STUDIUM nicht gefunden — laeuft der Nextcloud-Sync auf diesem Rechner?" >&2; exit 1; }
 
-OUTFILE="$VAULT/projekte/lernplan/anki-stats.md"
+OUTFILE="$STUDIUM/Master/anki-stats.md"
 TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
 DATE_ONLY=$(date +"%Y-%m-%d")
 
@@ -80,7 +81,7 @@ tags:
   - uni
   - lernplan
   - anki
-description: Stats-Snapshot aller Modul-Decks via AnkiConnect — Quelle für Druck-Score-Erweiterung im Heartbeat (siehe [[projekte/lernplan/cross-modul#Anki-Penalty]]).
+description: Stats-Snapshot aller Modul-Decks via AnkiConnect — Quelle für Druck-Score-Erweiterung im Heartbeat (siehe [[Master/cross-modul#Anki-Penalty]]).
 created: $DATE_ONLY
 updated: $DATE_ONLY
 status: aktiv
@@ -88,7 +89,7 @@ last_snapshot: $TIMESTAMP
 ---
 
 > [!info] Snapshot-Mechanik
-> Diese Note wird vom \`/anki status\`-Skill geschrieben. Heartbeat liest sie für Druck-Score-Berechnung. Snapshot-Alter >36 h → Heartbeat triggert Notification an Tim. Konzept: [[projekte/lernplan/anki-konzept#Stats-Snapshot-Mechanik]].
+> Diese Note wird vom \`/anki status\`-Skill geschrieben. Heartbeat liest sie für Druck-Score-Berechnung. Snapshot-Alter >36 h → Heartbeat triggert Notification an Tim. Konzept: [[Methodik/anki-konzept#Stats-Snapshot-Mechanik]].
 
 ## Stand $TIMESTAMP
 
@@ -119,20 +120,6 @@ EOF
 } > "$OUTFILE"
 
 echo "Snapshot geschrieben: $OUTFILE"
-
-# Auto-commit ins Vault — der globale PostToolUse-Hook fängt nur Write/Edit-Tool-
-# Schreibungen, nicht Bash-Skripte. Hier explizit nachziehen, damit der
-# Heartbeat im Container den frischen Snapshot via git pull sieht.
-if [ -d "$VAULT/.git" ]; then
-  pushd "$VAULT" > /dev/null
-  git add projekte/lernplan/anki-stats.md 2>/dev/null
-  if ! git diff --cached --quiet -- projekte/lernplan/anki-stats.md 2>/dev/null; then
-    git commit -m "anki-stats: snapshot $(date -u +%Y-%m-%dT%H:%MZ)" --quiet 2>/dev/null || true
-    git pull --rebase --autostash --quiet 2>/dev/null || true
-    ( git push origin main --quiet 2>/dev/null & disown ) 2>/dev/null || true
-  fi
-  popd > /dev/null
-fi
 
 echo ""
 echo "Top-3 Module nach Due heute:"

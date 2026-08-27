@@ -1,6 +1,12 @@
 ---
 name: transcribe
-description: Arbeitet die Transkriptions-Queue ab — alle vom Container (moodle_sync.py) erkannten, noch nicht transkribierten Vorlesungs-/Übungsaufzeichnungen aus den <modul>/transkripte/_pending.json im Vault. Der Mac-Gegenpart zur Container-Detection: Container erkennt + meldet per Telegram, am Mac wird mit Tim (Login/Re-Auth möglich) transkribiert. Use when Tim "/transcribe" tippt oder "die neuen Aufzeichnungen transkribieren" / "Queue abarbeiten" sagt. Trigger keywords - /transcribe, transkribieren, neue Aufzeichnungen, Transkriptions-Queue, pending transkribieren.
+description: >-
+  Arbeitet die Transkriptions-Queue ab — alle vom Container (moodle_sync.py) erkannten, noch nicht
+  transkribierten Vorlesungs-/Übungsaufzeichnungen aus den <modul>/transkripte/_pending.json im Vault. Der
+  Mac-Gegenpart zur Container-Detection: Container erkennt + meldet per Telegram, am Mac wird mit Tim
+  (Login/Re-Auth möglich) transkribiert. Use when Tim "/transcribe" tippt oder "die neuen Aufzeichnungen
+  transkribieren" / "Queue abarbeiten" sagt. Trigger keywords - /transcribe, transkribieren, neue
+  Aufzeichnungen, Transkriptions-Queue, pending transkribieren.
 disable-model-invocation: true
 argument-hint: "[--dry] [--module <slug> …] [--limit N]"
 ---

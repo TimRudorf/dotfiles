@@ -1,161 +1,132 @@
 # Issue-Workflow — gemeinsamer Ablauf-Core
 
-Host-agnostischer Ablauf vom Issue bis zum abgeschlossenen PR. Wird von den Profil-Skills
-`edp-issue` (GHE/Arbeit) und `gh-issue` (github.com/Privat) gelesen — **nie direkt aufrufen**.
+Host-agnostischer Ablauf vom Issue bis zum mergebaren PR. Wird von `edp-issue`
+(GHE/Arbeit) und `gh-issue` (github.com/privat) gelesen — **nie direkt aufrufen**.
 
-> **Der Core hält den Ablauf, das Profil hält die Fakten.** Jede Stelle, an der sich die Welten
-> unterscheiden, ist unten als **Hook** `«NAME»` markiert. Der aufrufende Skill füllt in seiner
-> `## Profil`-Sektion **jeden** Hook. Fehlt einer, nicht raten — im Profil nachlesen oder abbrechen.
-> Fakten leben in ihrer SSoT (Vault-Note, repo-eigene Doku, anderer Skill) und werden nur verlinkt,
-> nie kopiert ([[tim/feedback/dry-vault-no-duplication]]).
-
-## Hook-Liste
+> **Der Core hält den Ablauf, das Profil hält die Fakten.** Jede Stelle, an der
+> sich die Welten unterscheiden, ist unten als Hook `«NAME»` markiert. Der
+> aufrufende Skill füllt in seiner `## Profil`-Sektion **jeden** Hook. Fehlt
+> einer: nicht raten, sondern abbrechen.
 
 | Hook | Was das Profil festlegt |
 |---|---|
-| `«HOST»` | Git-Host, `gh -R`-Muster, Host-Quirks |
+| `«HOST»` | Git-Host, `gh -R`-Muster, Host-Eigenheiten |
 | `«TICKET»` | vorgelagertes Ticket-System (oder „keins") |
 | `«CHECKOUT»` | wo das Repo lokal liegt / wie es beschafft wird |
 | `«STATUS-SIGNAL»` | wie „in Arbeit" am Issue signalisiert wird |
-| `«BRANCH»` | Branch-Modell, Basis-Branch, Cascade-Regeln |
+| `«BRANCH»` | Branch-Modell und Basis-Branch |
 | `«ENCODING»` | Datei-Encoding-Regime |
 | `«TESTS»` | Test-Framework + Kommando je Sprache |
 | `«VERIFY»` | wo und womit end-to-end verifiziert wird |
-| `«WISSEN»` | wohin neu gewonnenes Wissen gehört |
 | `«PR»` | PR-Erstellung, Labels, Body-Konventionen |
 | `«ABSCHLUSS»` | Merge-Policy + Definition of Done |
 | `«TABUS»` | harte profil-spezifische Verbote |
 
 ## Grundhaltung
 
-- **Qualität vor Tempo.** Erst melden, wenn alles verifiziert funktioniert — kein halbfertiges Produkt.
-- **Nichts annehmen, alles verifizieren.** Keine Mutmaßungen über Repro, Ursache oder Wirkung des Fixes.
-- **Expertenteam bilden.** Domänentiefe Teilaufgaben (Reproduktion, Root-Cause, Implementierung,
-  Verifikation) an spezialisierte Subagents geben, die selbst delegieren dürfen
-  ([[tim/feedback/experten-team-modell]]). Der Main-Agent koordiniert und hält die Übersicht.
-- **Big Bang, keine Altlast** ([[tim/feedback/big-bang-statt-altlasten]]) — aber pre-existing public
-  Surface (Endpoints, Telegramme, Routen) bleibt erhalten.
-- **`$VAULT`** = host-abhängiger Vault-Root (siehe CLAUDE.md). Vor nicht-trivialen Teilschritten die
-  passende `$VAULT/tim/feedback/`-Note (via `INDEX.md`) und `$VAULT/projekte/<repo>/` konsultieren.
+- **Autonom bis zum Abschluss.** Nur unterbrechen, wenn ein echter Blocker eine
+  Entscheidung braucht oder ein Repro-Schritt nur manuell geht.
+- **Qualität vor Tempo.** Erst melden, wenn verifiziert.
+- **Nichts annehmen, alles verifizieren** — Repro, Ursache und Wirkung des Fixes.
+- Es gelten zusätzlich die universellen Regeln aus `CLAUDE.md`, allen voran
+  `urteil-braucht-vollstaendige-messung`, `kopfzahlen-aus-detailliste-nachrechnen`,
+  `korrektur-erreicht-alle-traeger`, `tests-dynamisch-erweitern`, `schreib-verify`
+  und `programmier-grundsaetze`. Sie werden hier **nicht** wiederholt.
 
-## Schritt 1: Issue + gesamten Kontext erfassen
+## Schritt 1: Issue + Kontext erfassen
 
-Aus `$ARGUMENTS` Repo und Issue-Nummer ableiten (URL, `<repo>#<nr>` oder bloße Nummer + aktuelles Repo)
-gemäß `«HOST»`.
+Repo und Nummer aus `$ARGUMENTS` ableiten (URL, `<repo>#<nr>` oder Nummer +
+aktuelles Repo) gemäß `«HOST»`. Sobald beides feststeht: `«STATUS-SIGNAL»` setzen.
 
-**Sofort `«STATUS-SIGNAL»` setzen**, sobald Repo + Nummer feststehen und die Bearbeitung beginnt.
+Allen Verlinkungen folgen, bis der Sachverhalt vollständig ist: Sub-Issues,
+verlinkte PRs, externe URLs, Tickets gemäß `«TICKET»`.
 
-**Was gebraucht wird** (Datenbeschaffung — Beschaffungsweg frei wählbar):
+🔴 **Ein Issue-Body ist eine Messung von seinem Erstellungstag, kein Ist-Zustand.**
+Jede behauptete Fundstelle, jede Zahl, jede Ursache und jeden Referenzwert gegen
+den heutigen Stand nachmessen — auch die Vorgaben, die der Melder schon fertig
+mitgeliefert hat. Hat sich der Referenzwert bewegt, ist die **ganze** Erhebung zu
+wiederholen, nicht nur die Liste abzugleichen. Ergebnis als Kommentar ans Issue,
+Kriterium für Kriterium mit Beleg — das ist zugleich das Gerüst des PR-Bodys.
 
-```json
-{
-  "repo": "<name>",
-  "issue": {"nummer": 42, "titel": "...", "body": "...", "labels": ["bug"], "state": "open"},
-  "verlinkungen": {
-    "sub_issues": [], "verlinkte_prs": [], "referenzierte_issues": [],
-    "externe_tickets": [], "urls": []
-  }
-}
-```
+🔴 **Vor jeder Messung durchspielen, wie ein echter TREFFER aussähe.** Eine Sonde,
+die bei einem Treffer gar nicht anschlagen könnte, liefert kein „unbedenklich",
+sondern gar kein Ergebnis — in Form eines Satzes, der wie eines klingt.
 
-- **Allen Verlinkungen folgen**, bis der Sachverhalt vollständig verstanden ist: verlinkte/Sub-Issues,
-  PRs, externe URLs (bei Bedarf via `/defuddle`) und jedes externe Ticket gemäß `«TICKET»`.
-- **Nicht benötigt:** Kommentar-Rauschen ohne Sachbezug, geschlossene unverwandte Issues.
+## Schritt 2: Klassifizieren
 
-Ergebnis: präzises Verständnis von **was genau** passiert, **wo** (Branch/Umgebung/Stand) und **welcher
-exakte Trigger/Pfad** gemeldet wurde ([[tim/feedback/fehler-reproduktion-exakter-pfad]]).
-
-## Schritt 2: Klassifizieren — Bug oder Feature
-
-Bug → Schritt 3. Feature → Schritt 4. Im Zweifel wie einen Bug behandeln (erst Ist-Verhalten verstehen).
-Repo-Architektur zum Einordnen: `$VAULT/projekte/<repo>/architektur.md`, sonst repo-eigene Doku.
+Bug → Schritt 3. Feature → Schritt 4. Im Zweifel wie einen Bug behandeln.
 
 ## Schritt 3 (Bug): Reproduzieren, dann Ursache finden
 
-**Ziel: Erst beweisen, dass der Bug real ist — automatisch durch dich —, dann die Quelle finden.**
-
-**3a — Repro planen.** Reproduktion läuft in der Umgebung aus `«VERIFY»`. Vorhandenes Repro-/Test-Wissen
-zuerst nutzen statt neu erfinden (Quellen laut `«VERIFY»` und `«WISSEN»`).
-
-**3b — Exakten gemeldeten Pfad nachstellen**, nicht einen benachbarten
-([[tim/feedback/fehler-reproduktion-exakter-pfad]]). Jeden gemeldeten Pfad einzeln. Gelieferte
-Logs/Traces gegen den tatsächlich getesteten Pfad gegenchecken.
-
-**3c — Wenn du es nicht allein reproduzieren kannst:** kein Blindflug. Kurz an Tim eskalieren mit
-präziser Bitte, den Schritt zu testen (letzte Instanz). Ziel bleibt Automatisierung — das dabei
-gewonnene Wissen in Schritt 7 sichern, damit es beim nächsten Mal allein geht.
-
-**3d — Root-Cause.** Code-Pfad vom Trigger bis zum Fehlerpunkt verfolgen, Fehlerquelle eindeutig
-lokalisieren. Bei Concurrency-/Lock-Themen: [[tim/feedback/concurrency-fix-baseline-verify]]. Fix
-konzeptionell festlegen (saubere End-Lösung, kein Flicken).
+1. **Repro in der Umgebung aus `«VERIFY»`**, nicht daneben.
+2. **Den exakt gemeldeten Pfad** nachstellen, jeden einzeln. Gelieferte Logs
+   gegen den tatsächlich getesteten Pfad halten.
+3. Geht es nicht allein: kein Blindflug — kurz an Tim eskalieren mit präziser
+   Bitte. Das dabei gewonnene Wissen sichern, damit es beim nächsten Mal geht.
+4. **Root-Cause**: Code-Pfad vom Trigger bis zum Fehlerpunkt rückwärts verfolgen.
+   Die im Issue benannte Stelle ist oft die lauteste, nicht die ursächliche — ist
+   der Mechanismus geteilt, gehört der Fix an die Wurzel.
 
 ## Schritt 4 (Feature): Detailplanung
 
-Anforderung vollständig gegen die bestehende Architektur planen: Integrationspunkte, Datenmodell,
-Schnittstellen-/Rechte-Auswirkungen, Edge-Cases. Lösung so entwerfen, dass sie sich in bestehenden Code
-fügt — kein Parallelkonzept, keine Altlast. Berührt das Issue eine Oberfläche, gilt zusätzlich die im
-Profil benannte Design-Vorgabe.
+Anforderung gegen die bestehende Architektur planen: Integrationspunkte,
+Datenmodell, Schnittstellen, Rechte, Edge-Cases. Kein Parallelkonzept.
 
-## Schritt 5: Branch bestimmen, umsetzen, Tests
+## Schritt 5: Branch, Umsetzung, Tests
 
-**5a — Repo lokal + Branch.** Checkout gemäß `«CHECKOUT»`, Branch-Wahl gemäß `«BRANCH»`. Nie direkt auf
-dem Basis-/Default-Branch committen.
+- Checkout gemäß `«CHECKOUT»`, Branch gemäß `«BRANCH»`. Nie auf dem Basis-Branch
+  committen.
+- Encoding strikt nach `«ENCODING»`, echte Umlaute.
+- **Rot vor Grün in zwei Commits**: Commit 1 = Tests (hier rot, im Text als solche
+  benannt) **plus** die API-Fläche, die sie zum Übersetzen brauchen. Commit 2 =
+  das Verhalten. Der rote Lauf ist die Reproduktion und gehört in den PR-Body.
+- Ein Lauf ohne Tests ist **weder grün noch rot**: die gefundene Testanzahl je
+  Lauf mitlesen und gegen die Erwartung (Baseline + neue Fälle) rechnen.
 
-**5b — Umsetzen.** Datei-Encoding strikt nach `«ENCODING»`, echte Umlaute. Auffallende Regelverstöße im
-berührten Code mitkorrigieren ([[tim/feedback/regelverstoesse-immer-korrigieren]]).
+## Schritt 6: End-to-End verifizieren
 
-**5c — Tests mitwachsen lassen** ([[tim/feedback/tests-dynamisch-erweitern]]): bei Bugs **erst** ein
-reproduzierender Test (rot), **dann** der Fix (grün); Features → Happy-Path + Edge-Cases. Framework und
-Kommando laut `«TESTS»`. Vor jedem Commit/Deploy die **gesamte Suite grün**.
+Vor jeder Rückmeldung selbst beweisen, dass der Fix trägt — gegen einen real
+laufenden Stand gemäß `«VERIFY»`. **CI-grün genügt nicht.**
 
-## Schritt 6: End-to-End verifizieren (Self-Check)
-
-Vor jeder Rückmeldung selbst beweisen, dass der Fix die Problematik löst bzw. das Feature seine
-Gütekriterien erfüllt. **CI-grün genügt nicht** ([[tim/feedback/code-self-check-vor-review]]) — verifiziert
-wird gegen einen real laufenden Stand gemäß `«VERIFY»`.
-
-- Bug: den in Schritt 3 etablierten Repro erneut fahren → Fehler **weg**; Regressionsnachbarn stichprobenartig ok.
+- Bug: den Repro aus Schritt 3 erneut fahren, Fehler weg, Nachbarn stichprobenartig ok.
 - Feature: Akzeptanzkriterien real durchspielen.
-- Concurrency: unter echtem parallelem Szenario ([[tim/feedback/concurrency-fix-baseline-verify]]).
 
-Geht die Verifikation technisch nicht (Umgebung down, Deploy scheitert) → transparent melden, **nicht**
-mit einer schwächeren Ersatzprüfung kaschieren. Nicht bestanden → zurück zu Schritt 5 (bzw. 3d), iterieren.
+Geht die Verifikation technisch nicht: transparent melden, **nicht** mit einer
+schwächeren Ersatzprüfung kaschieren.
 
-## Schritt 7: Wissen sichern + Issue aktuell halten
+## Schritt 7: Wissen sichern, Issue aktuell halten
 
-- **Neu gewonnenes Repro-/Test-/Architektur-Wissen** in die passende **bestehende** SSoT einpflegen
-  (Ziel laut `«WISSEN»`), niemals dupliziert, im vorhandenen Frontmatter-/Stil-Kanon. Ziel: nächstes Mal
-  mehr allein schaffen.
-- **Issue aktuell halten:** fehlende relevante Erkenntnisse (Root-Cause, Branch-Entscheidung) am Issue
-  ergänzen.
+Neu gewonnenes Wissen gehört ins Auto-Memory (kurz) bzw. nach `notes/` (eigenes
+Dokument) — **nicht** in den Skill. Der Skill trägt nur, was er zum Arbeiten
+braucht. Fehlende Erkenntnisse (Root-Cause, Branch-Entscheidung) am Issue ergänzen.
 
-## Schritt 8: PR erstellen und bis zum Abschluss treiben
+**Randfunde auskoppeln statt mitfixen**: eigenes Issue mit Messung und
+Akzeptanzkriterien. Vorher den Bestand prüfen — offen **und** geschlossen, Titel
+**und** Body, und mit einem Kontrollbegriff, von dem feststeht, dass er treffen
+muss. Erst den Vorgang anlegen, dann seine Nummer irgendwo nennen; geratene
+Nummern sind auch dann falsch, wenn sie zufällig stimmen.
 
-**8a — PR** gemäß `«PR»` erstellen. Im Autonomie-Modus ohne Zwischenbestätigung.
-`Closes/Fixes #<nr>` je vollständig erledigtem Issue in den Body **und in die Commit-Botschaft** (eine Überarbeitung des Body-Textes entfernt das Schlüsselwort sonst still; nach jeder Body-Änderung `--json closingIssuesReferences` gegenlesen), nur teilweise Bezüge als `Ref #<nr>`
-([[tim/feedback/pr-issues-auto-schliessen]]).
+## Schritt 8: PR bis zum Abschluss treiben
 
-**8b — CI beobachten** ([[tim/feedback/ci-nach-push-beobachten]]): Run-Status abwarten; bei Fehlschlag Logs
-ziehen, Ursache fixen (zurück zu Schritt 5, Suite grün halten), pushen, erneut prüfen.
+1. **PR** gemäß `«PR»`, ohne Zwischenbestätigung. `Closes #<nr>` je vollständig
+   erledigtem Issue in Body **und** Commit-Botschaft; nach jeder Body-Änderung
+   `--json closingIssuesReferences` gegenlesen. Teilbezüge nur als `Ref #<nr>`.
+2. **CI beobachten.** Bei Rot erst die Fehlerstelle holen und belegen, dass der
+   Pfad nicht aus diesem Diff stammt — „ist bestimmt flaky" ist keine Messung.
+   Das Ergebnis gehört in den PR-Body, nicht weggeschwiegen.
+3. **Lokales Review** per `/edp-review` auf den serverseitigen Head-SHA ansetzen.
+   Funde selbst verifizieren, dabei die Gegenprobe **anders konstruieren** als die
+   Messung, die den Fund erzeugt hat. Auch der vorgeschlagene **Fix** ist eine
+   Behauptung und wird gemessen. Ändert die Runde das Verhalten, sind die im
+   PR-Body zitierten Belege überholt und neu zu messen — Live-Messung und
+   Mutationsprobe eingeschlossen.
+4. **Loop bis mergebar**: `mergeable MERGEABLE` und `mergeStateStatus CLEAN` als
+   Mindestzustand. Danach gilt `«ABSCHLUSS»`.
+5. **Report** an Tim: Issue, Ursache bzw. Lösung, Fix-Zusammenfassung,
+   Verifikations-Beleg, PR-URL + Status. Kompakt, deutsch, echte Umlaute.
 
-**8c — Lokales Review:** per `/edp-review` einen skeptischen Review-Agent auf den Diff ansetzen, dessen
-Funde selbst verifizieren und die berechtigten fixen ([[tim/feedback/pr-review-lokaler-agent]],
-[[tim/feedback/vor-merge-reviews-pruefen]]). Nach jedem Fix-Push CI erneut abwarten.
-
-**8d — Loop bis mergebar** ([[tim/feedback/pr-fertig-erst-wenn-mergebar]]): `mergeStateStatus CLEAN` /
-`mergeable MERGEABLE` als Mindestzustand. Blocker (BLOCKED/BEHIND/DIRTY/roter Check) je Ursache auflösen.
-Was danach passiert, regelt `«ABSCHLUSS»`.
-
-**8e — Report.** Erst jetzt an Tim: Issue, Root-Cause bzw. Feature-Lösung, Fix-Zusammenfassung,
-Verifikations-Beleg, PR-URL + Status. Kompakt, deutsch, echte Umlaute
-([[tim/feedback/doku-kurz-und-verstaendlich]]).
-
-## Regeln
-
-- **Autonom bis zum Abschluss.** Nur unterbrechen, wenn ein echter Blocker eine Entscheidung von Tim
-  braucht oder ein Repro-Schritt nur manuell geht (3c). Reine Reads/interne Systeme: einfach machen.
-- **Kein Hardcode, kein Duplikat.** Fakten aus der verlinkten SSoT ziehen und ihr folgen, nicht aus dem
-  Gedächtnis raten.
-- **Nach jeder externen Mutation Read-back** ([[tim/feedback/schreib-verify]]).
-- **Kein Hinweis auf AI** in Issue/PR/Reviews. Deutsch mit echten Umlauten.
-- Zusätzlich gilt alles unter `«TABUS»`.
+Die Review-Notiz am PR nennt auch die Funde **ohne** Befund („geprüft und in
+Ordnung") — das ist die halbe Ersparnis für den menschlichen Reviewer. Sie
+benennt den **Prüfstand** („gegen Head `<sha>` geprüft, Schwerpunkte: …"), nicht
+den Prüfer; ein Hinweis auf den eigenen Apparat gehört nicht in Repo-sichtbaren
+Text. Kein Hinweis auf AI in Issue-, PR- oder Review-Text.

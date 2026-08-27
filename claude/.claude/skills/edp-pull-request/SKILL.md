@@ -1,7 +1,7 @@
 ---
 name: edp-pull-request
 description: This skill should be used when the user asks to "create a PR", "edit a PR", "open a pull request", or uses /pull-request. It creates or updates PRs on GHE with auto-generated title, body, and Zammad integration.
-argument-hint: [pr-number]
+argument-hint: "[pr-number]"
 ---
 
 # Pull Request erstellen oder bearbeiten
@@ -22,7 +22,9 @@ Voraussetzungen gemäß `requirement-checker` Skill validieren. Bei Fehlschlag a
 
 ### Schritt 1+2: Kontext und Metadaten ermitteln (Subagent-Delegation)
 
-Einen **Subagent** (`git-expert`) starten, der alle benötigten Informationen beschafft.
+In einen **Subagent** auslagern: alle benötigten Informationen per `git`/`gh` beschaffen.
+
+**Reines Abrufen, kein Urteil** — ein schnelles, günstiges Modell genügt.
 
 **Was wird gebraucht:**
 
@@ -157,7 +159,7 @@ Assignee setzen:
 gh pr edit <pr-nummer> -R einsatzleitsoftware.ghe.com/edp/<repo> --add-assignee tim-rudorf
 ```
 
-> **Kein Copilot-Review mehr.** Seit 2026-08-06 wird Copilot **nicht** angefordert — der Bot ist auf der GHE-Instanz inaktiv (in den letzten 40 edpweb-PRs kein einziges Review), `gh pr edit --add-reviewer copilot-pull-request-reviewer` ist ein stiller No-op, und die GraphQL-Anforderung braucht eine Bot-Node-ID, die sich ohne vorhandenes Review nicht ermitteln lässt. Stattdessen den PR per **`/edp-review`** von einem skeptischen lokalen Agent prüfen lassen. Volltext: `$VAULT/tim/feedback/pr-review-lokaler-agent.md`.
+> **Kein Copilot-Review mehr.** Seit 2026-08-06 wird Copilot **nicht** angefordert — der Bot ist auf der GHE-Instanz inaktiv (in den letzten 40 edpweb-PRs kein einziges Review), `gh pr edit --add-reviewer copilot-pull-request-reviewer` ist ein stiller No-op, und die GraphQL-Anforderung braucht eine Bot-Node-ID, die sich ohne vorhandenes Review nicht ermitteln lässt. Stattdessen den PR per **`/edp-review`** von einem skeptischen lokalen Agent prüfen lassen.
 
 `patrick-vogel` wird **nicht** automatisch als Reviewer gesetzt — nur wenn der User es ausdruecklich sagt (dann `--add-reviewer patrick-vogel`).
 
@@ -183,7 +185,7 @@ gh pr edit <nummer> -R einsatzleitsoftware.ghe.com/edp/<repo> --title "<titel>" 
 gh pr edit <nummer> -R einsatzleitsoftware.ghe.com/edp/<repo> --add-assignee tim-rudorf
 ```
 
-Copilot-Review wie im Create-Modus (6c) per GraphQL `requestReviews` anfordern, falls noch nicht gesetzt. `patrick-vogel` nur auf ausdrueckliche Ansage.
+Kein Reviewer wird automatisch gesetzt (siehe Create-Modus: Copilot ist auf der GHE-Instanz inaktiv). Zum Prüfen `/edp-review` nutzen. `patrick-vogel` nur auf ausdrueckliche Ansage.
 
 **6c: Project zuordnen (optional)**
 
@@ -230,7 +232,7 @@ Die Bestätigung aus dem /zammad-write Skill **überspringen** — der User hat 
 - **Keine Labels** zuweisen
 - Base-Branch ist immer `dev`
 - Assignee ist immer `tim-rudorf`
-- Reviewer ist standardmaessig **nur** `copilot-pull-request-reviewer` (per GraphQL `requestReviews`, siehe 6c — `gh --add-reviewer` no-op't den Copilot-Handle). `patrick-vogel` NICHT automatisch — nur wenn der User es ausdruecklich verlangt.
+- **Kein Reviewer** wird automatisch gesetzt — Copilot ist auf der GHE-Instanz inaktiv (Begründung im Create-Modus). Geprüft wird per `/edp-review`. `patrick-vogel` NICHT automatisch — nur wenn der User es ausdruecklich verlangt.
 - Alle `gh`-Aufrufe mit vollem GHE-Host: `-R einsatzleitsoftware.ghe.com/edp/<repo>` bzw. `--hostname einsatzleitsoftware.ghe.com` (sonst loest `gh` gegen github.com auf → "Could not resolve to a Repository")
 - **Fehlertoleranz**: Fehlende GitHub-Scopes oder API-Fehler bei optionalen Schritten (Projects) überspringen statt abbrechen
 - Bei Unsicherheiten den User fragen

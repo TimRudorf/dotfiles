@@ -1,7 +1,7 @@
 ---
 name: zammad-to-issue
 description: This skill should be used when the user asks to "create a GitHub issue from a Zammad ticket", "convert ticket to issue", or uses /zammad-to-issue. It creates structured GHE issues from Zammad tickets.
-argument-hint: [ticket-number]
+argument-hint: "[ticket-number]"
 ---
 
 # Zammad → GitHub Issue
@@ -18,7 +18,10 @@ Voraussetzungen gemäß `requirement-checker` Skill validieren. Bei Fehlschlag a
 
 ### Schritt 1: Zammad-Ticket auslesen (Subagent-Delegation)
 
-Einen **Subagent** (`zammad-expert`) starten, der das Zammad-Ticket ausließt und fachlich aufbereitet.
+In einen **Subagent** auslagern: Ticket auslesen (Zugangsweg: Skill `zammad-read`) und fachlich
+aufbereiten. Roh-Artikel und HTML bleiben damit aus dem Hauptkontext.
+
+**Urteilsarbeit, kein Sparmodell** — die Zusammenfassung landet im Issue und wird von Kollegen gelesen.
 
 **Was wird gebraucht:**
 Ticket-Daten für Ticketnummer `$ARGUMENTS`, inklusive AI-aufbereiteter Zusammenfassung und Kategorisierung.
@@ -56,7 +59,9 @@ Prüfe das Feld `organisation` des Ergebnisses:
 
 ### Schritt 2a: GitHub-Metadaten ermitteln (Subagent-Delegation)
 
-Einen **Subagent** (`git-expert`) starten, der die GitHub-Metadaten beschafft.
+In einen **Subagent** auslagern: GitHub-Metadaten per `gh` CLI beschaffen.
+
+**Reines Abrufen und Formen, kein Urteil** — ein schnelles, günstiges Modell genügt.
 
 **Was wird gebraucht:**
 Repos, Issue-Types und Org-Mitglieder der GitHub-Org `edp`.

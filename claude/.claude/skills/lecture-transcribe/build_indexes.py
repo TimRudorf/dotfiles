@@ -3,7 +3,7 @@
 aus den Frontmattern + bulk_status.json, plus Goldquellen-Hinweis in der strategie.md (idempotent)."""
 import os, re, json, glob
 LT="/Users/timrudorf/Documents/uni/lecture-tools"
-VAULT="/Users/timrudorf/Documents/jarvis-wiki"
+VAULT=os.environ.get("STUDIUM", os.path.expanduser("~/Nextcloud/Studium"))
 status=json.load(open(f"{LT}/bulk_status.json")) if os.path.exists(f"{LT}/bulk_status.json") else {}
 
 def fm(path):
@@ -16,7 +16,7 @@ def fm(path):
     return d
 
 MARK={"OK":"✅","SUSPECT":"⚠️","FAIL":"❌"}
-for tdir in sorted(glob.glob(f"{VAULT}/projekte/lernplan/*/transkripte")):
+for tdir in sorted(glob.glob(f"{VAULT}/Master/*/transkripte")):
     modul=tdir.split("/")[-2]
     files=sorted(f for f in glob.glob(f"{tdir}/*.md") if os.path.basename(f)!="INDEX.md")
     if not files: continue
@@ -32,7 +32,7 @@ for tdir in sorted(glob.glob(f"{VAULT}/projekte/lernplan/*/transkripte")):
     open(f"{tdir}/INDEX.md","w",encoding="utf-8").write("\n".join(lines)+"\n")
     print(f"{modul}: INDEX.md ({len(files)} Einträge)")
     # Goldquellen-Hinweis in strategie.md (idempotent)
-    strat=f"{VAULT}/projekte/lernplan/{modul}/strategie.md"
+    strat=f"{VAULT}/Master/{modul}/strategie.md"
     if os.path.exists(strat):
         s=open(strat,encoding="utf-8").read()
         if "transkripte/INDEX" not in s and "transkripte/" not in s:

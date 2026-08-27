@@ -7,7 +7,7 @@ schreibt timestamped Markdown + YAML-Frontmatter ins Vault. Idempotent: existier
 import os, re, json, subprocess, sys, datetime, concurrent.futures as cf, argparse, urllib.parse
 
 LT="/Users/timrudorf/Documents/uni/lecture-tools"
-VAULT="/Users/timrudorf/Documents/jarvis-wiki"
+VAULT=os.environ.get("STUDIUM", os.path.expanduser("~/Nextcloud/Studium"))
 MIRROR="/Users/timrudorf/Documents/uni/moodle-mirror"
 CK=f"{LT}/cookies.txt"
 TRANSCRIBE=f"{LT}/transcribe.py"
@@ -39,7 +39,7 @@ def slugify_media(title, target, used):
     used.add(s); return s
 
 def transcript_path(modul, slug):
-    return f"{VAULT}/projekte/lernplan/{modul}/transkripte/{slug}.md"
+    return f"{VAULT}/Master/{modul}/transkripte/{slug}.md"
 
 def have_transcript(modul, slug):
     p=transcript_path(modul,slug)
@@ -165,12 +165,9 @@ def build_queue(only=None):
 
 STATUS=f"{LT}/bulk_status.json"
 def commit_vault(msg):
-    try:
-        subprocess.run(["git","-C",VAULT,"add","projekte/lernplan"],capture_output=True)
-        r=subprocess.run(["git","-C",VAULT,"commit","-m",msg],capture_output=True,text=True)
-        if "nothing to commit" not in (r.stdout+r.stderr):
-            subprocess.run(["git","-C",VAULT,"push"],capture_output=True)
-    except Exception as e: print("commit-err:",e,flush=True)
+    """No-op: der Studium-Vault liegt in Nextcloud, der Sync-Client verteilt selbst.
+    Bleibt als Funktion stehen, damit die Aufrufstellen unveraendert bleiben."""
+    return
 
 if __name__=="__main__":
     ap=argparse.ArgumentParser()

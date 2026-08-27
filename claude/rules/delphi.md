@@ -18,9 +18,3 @@ CI-Stufe `delphi-validate-encoding` fängt das.
 Sichere Wege: auf der VM editieren · byte-genauer `git checkout`-Restore ·
 oder nach dem Edit `iconv -f UTF-8 -t WINDOWS-1252 <datei> -o <datei>` und
 anschließend auf U+FFFD prüfen.
-
-## Tests wachsen mit
-
-Jede Delphi-Änderung ergänzt oder passt DUnitX-Tests an, und **vor jedem
-Commit läuft die gesamte Suite** — nur grün wird committet. So wächst die
-Abdeckung inkrementell statt als einmaliger Kraftakt.

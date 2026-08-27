@@ -285,7 +285,7 @@ Verifiziert per Apple-Calendar-Eintragung 2026-05-27 (Tim selbst für KW22-Uni-F
 | Cafeteria Hoagascht (SKW-Bib) | `50.130080,8.668506` | `Cafeteria Hoagascht\nWismarer Straße 4\, 60323 Frankfurt\, Germany` — Tims **Default-Mittag-Uni** wenn vor Mittag bereits in der SKW-Bib. Geo identisch mit SKW-Gebäude. MAPKIT-HANDLE TBD (Tim bitte einmal in Apple Maps "Hoagascht" tippen, Termin händisch anlegen, dann übernehmen wir den Handle). Fallback: extern-Format mit REFERENCEFRAME=1, X-RADIUS=70, ohne Handle — Apple Maps reverse-geocoded beim Open. |
 | Er-Sie-Es (Stammfriseur) | `50.122926,8.702079` | `Er-Sie-Es\nHabsburgerallee 1a\, 60385 Frankfurt am Main` — Tims **Stammfriseur**, fester Stylist **ismail**. Termine kommen als Shore-Buchungsbestätigung per iCloud-Mail (Absender `noreply@shore.com`, Betreff „Terminerinnerung: Er-Sie-Es …"). Beim Anlegen: SUMMARY `💇 Friseur Er-Sie-Es (ismail)`, Default-Dauer 60 min, Kalender `Privat`. MAPKIT-HANDLE TBD; bis dahin extern-Format REFERENCEFRAME=1, X-RADIUS=70, ohne Handle. |
 
-Für neue Stamm-Locations: Adresse verifizieren (siehe `tim/feedback/kalender-location.md`) → **am liebsten** Tim einmal in Apple Calendar händisch eintragen lassen (MAPKIT-HANDLE = beste Maps-Integration), dann Event-Body lesen und hier ablegen. Fallback: Nominatim geocoden + extern-Format (`REFERENCEFRAME=1`, ohne MAPKIT-HANDLE).
+Für neue Stamm-Locations: Adresse verifizieren → **am liebsten** Tim einmal in Apple Calendar händisch eintragen lassen (MAPKIT-HANDLE = beste Maps-Integration), dann Event-Body lesen und hier ablegen. Fallback: Nominatim geocoden + extern-Format (`REFERENCEFRAME=1`, ohne MAPKIT-HANDLE).
 
 **Beispiel-Event mit Apple-Maps-Karte + Attendee:**
 
@@ -304,7 +304,7 @@ END:VEVENT
 
 ## Schreib-Konventionen
 
-- **Location bei fixen Orten immer mitgeben** (siehe `tim/feedback/kalender-location.md`) — bei Studio-Sessions zusätzlich `X-APPLE-STRUCTURED-LOCATION` aus der Stamm-Tabelle setzen:
+- **Location bei fixen Orten immer mitgeben** — bei Studio-Sessions zusätzlich `X-APPLE-STRUCTURED-LOCATION` aus der Stamm-Tabelle setzen:
   - **Default für ALLE Sport-Studio-Termine** (Mo/Mi Gym Tilli, Di/Do AM Schulter/Arme, Fr/Sa Solo OK/UK): **Fitness First Konstablerwache** — Snippet aus Stamm-Tabelle. Tim sagt explizit Bescheid, wenn ein Ausnahme-Studio (MyZeil, Opernplatz, …) anliegt.
   - Do Intervalle mit Tillmann → *Laufbahn Ostendpark, Frankfurt am Main*
 - **Zeitzone:** `Europe/Berlin` mit `TZID=`. Keine UTC-Offsets ausrechnen.
@@ -331,7 +331,7 @@ Tims primärer Mail-Alias in iCloud-Kalender ist **`tim@rudorf.me`** (nicht `tim
 
 ## Approval
 
-Tims Kalender ist sein eigenes System. **Keine Rückfrage**, einfach machen — auch bei Massen-Updates. Siehe `tim/feedback/eigenstaendigkeit.md`. Approval-Pflicht gilt nur für **Außenwirkung** (externe Kommunikation, shared/destructive, Kosten).
+Tims Kalender ist sein eigenes System. **Keine Rückfrage**, einfach machen — auch bei Massen-Updates (`eigenstaendigkeit`). Approval-Pflicht gilt nur für **Außenwirkung** (externe Kommunikation, shared/destructive, Kosten).
 
 ## NIE TUN
 
@@ -339,7 +339,7 @@ Tims Kalender ist sein eigenes System. **Keine Rückfrage**, einfach machen — 
 - Auf Nextcloud-Calendars zugreifen — die wurden 2026-05-05 komplett gelöscht, alle Termine sind in iCloud.
 - DTSTART/DTEND ohne TZID schreiben.
 - ATTENDEE/ORGANIZER mit fremden Principal-Pfaden (`/aXX...principal/`) per PUT durchschleifen — iCloud lehnt mit 412 ab. Bei Migrations-/Rekonstruktions-Szenarien diese Properties strippen oder Event mit frischer UID neu anlegen.
-- Verbose Reminder-Splits (Pomodoro-Schritte etc.) anlegen — siehe `tim/feedback/kalender-source-of-truth.md`.
+- Verbose Reminder-Splits (Pomodoro-Schritte etc.) anlegen — der Kalender ist die Source of Truth, nicht das Protokoll.
 
 ## zsh-Fallstrick
 

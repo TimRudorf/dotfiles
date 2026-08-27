@@ -12,7 +12,7 @@ Autonome Iterations-Schleife für UI-/Design-Änderungen an EDP-Web-Projekten. �
 > **Die Design-Sprache kommt aus `edp-frontend-design` — diesen Skill zuerst laden.** Er hält den
 > verbindlichen EDP-Kanon (Fluent 2 als Vorbild, Primary abgeschafft zugunsten von Secondary, keine
 > Versalien/Sperrung, Gruppierung über Weißraum statt Linien, gedrückt = dunkler statt tiefer) und
-> verweist auf die belegten Fluent-2-Werte in `$VAULT/referenz/fluent2-design.md`. **Nicht** den
+> holt die belegten Fluent-2-Werte aus `@fluentui/tokens`. **Nicht** den
 > generischen `frontend-design:frontend-design` direkt anwenden — dessen freie Stilwahl ist hier
 > durch den Kanon ersetzt; `edp-frontend-design` zieht ihn selbst als Basis heran.
 

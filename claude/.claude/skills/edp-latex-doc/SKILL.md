@@ -6,7 +6,7 @@ disable-model-invocation: true
 
 # EDP LaTeX-Dokument erstellen
 
-Workflow zum Anlegen, Kompilieren und Mergen eines neuen LaTeX-Dokuments im edp-Hausstil. Vollarchitektur des Repos siehe `$VAULT/projekte/edp-latex/architektur.md`.
+Workflow zum Anlegen, Kompilieren und Mergen eines neuen LaTeX-Dokuments im edp-Hausstil.
 
 ## Voraussetzungen
 

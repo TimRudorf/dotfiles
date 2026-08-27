@@ -2,7 +2,7 @@
 """Queue-Drainer: transkribiert alle in den Vault-`_pending.json`-Queues offenen
 Aufzeichnungen (befüllt vom Container via moodle_sync.py) — der Mac-Gegenpart zur
 Container-Detection. Bug-2-Fix der Transkriptions-Pipeline (siehe
-projekte/lernplan/vorlesungs-transkription/pipeline-bugfix-pickup.md).
+Studium-Vault: Methodik/vorlesungs-transkription/pipeline-bugfix-pickup.md).
 
 Flow (von /transcribe orchestriert, interaktiv am Mac):
   1. Alle <modul>/transkripte/_pending.json einsammeln.

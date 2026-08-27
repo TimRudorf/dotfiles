@@ -1,7 +1,7 @@
 ---
 name: zammad-send
 description: This skill should be used when the user asks to "reply to a customer", "answer a Zammad ticket", "send a response", "create a new ticket", "neues Ticket erstellen", "E-Mail an Kunden senden", or uses /zammad-send. It replies to existing tickets or creates new ones with auto-detected channel.
-argument-hint: [ticket-number | customer-name] [options]
+argument-hint: "[ticket-number | customer-name] [options]"
 ---
 
 # Zammad Kundenantwort senden / Neues Ticket erstellen
@@ -272,6 +272,23 @@ curl -s -X POST \
   && jq '{id, ticket_id, type, created_at}' /tmp/z_send_article.json
 ```
 
+#### Read-back (Pflicht, `schreib-verify`)
+
+Die POST-Antwort ist **kein** Nachweis — ein HTTP 200 mit leerem Rumpf kommt vor.
+Den Artikel vom Server zurücklesen und gegen die Absicht prüfen:
+
+```bash
+BASE="${ZAMMAD_HOST%/}"
+AID=$(jq -r '.id' /tmp/z_send_article.json)
+curl -s -H "Authorization: Token token=${ZAMMAD_TOKEN}" \
+  "$BASE/api/v1/ticket_articles/$AID" > /tmp/z_verify_article.json
+jq '{id, ticket_id, type, sender, internal, body_len: (.body|length)}' /tmp/z_verify_article.json
+```
+
+Stimmen müssen: `ticket_id`, `type` (der in Schritt 2 erkannte Kanal), `internal: false`
+und `body_len` > 0. Weicht etwas ab oder bleibt der Abruf leer, gilt das Senden als
+**nicht** bestätigt — das melden, statt „erledigt“ zu sagen.
+
 ### Schritt 9: Ticket-Status setzen (optional)
 
 If a status was resolved in Schritt 4, update the ticket. Ansonsten weiter zu Schritt 10.
@@ -335,6 +352,8 @@ After success, display:
 - Neuer Status (falls geändert), bei `pending close` auch das Datum anzeigen
 
 On error: show HTTP status code and error body.
+
+**Erst melden, wenn der Read-back stimmt.** Ohne bestätigten Artikel keine Erfolgsmeldung.
 
 ## Notes
 
