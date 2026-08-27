@@ -1,6 +1,6 @@
 ---
 name: lecture-transcribe
-description: Transkribiert TU-Darmstadt-Panopto-Vorlesungsaufzeichnungen (Moodle-LTI → Panopto → Audio → gpt-4o-transcribe) zu timestamped Markdown-Transkripten im Vault unter projekte/lernplan/<modul>/transkripte/. Dienen als Primärquelle bei der Lerneinheit-Erstellung — v.a. für Kontrollfragen, deren Antwort nur verbal in der VL fällt. Use when Tim Vorlesungen/Übungen transkribieren will, einzelne oder im Bulk pro Modul. Trigger keywords - transkribieren, Vorlesung transkribieren, Aufzeichnung, Panopto, Transkript, /lecture-transcribe.
+description: Transkribiert TU-Darmstadt-Panopto-Vorlesungsaufzeichnungen (Moodle-LTI → Panopto → Audio → gpt-4o-transcribe) zu timestamped Markdown-Transkripten im Studium-Vault unter Master/<modul>/transkripte/. Dienen als Primärquelle bei der Lerneinheit-Erstellung — v.a. für Kontrollfragen, deren Antwort nur verbal in der VL fällt. Use when Tim Vorlesungen/Übungen transkribieren will, einzelne oder im Bulk pro Modul. Trigger keywords - transkribieren, Vorlesung transkribieren, Aufzeichnung, Panopto, Transkript, /lecture-transcribe.
 disable-model-invocation: true
 argument-hint: <modul-slug> [all|<cmid>] [--seg=300]
 ---
@@ -13,7 +13,7 @@ Holt TU-Panopto-Aufzeichnungen (eingebunden per Moodle-LTI), extrahiert Audio un
 - Env: `OPENAI_API_KEY_PRIVATE` (Uni = **privater** Kontext; EDP-Kontext nutzt `_WORK`, siehe )
 - Tools: `yt-dlp`, `ffmpeg`, `python3`, `playwright-cli`, `curl`
 - Datei: `transcribe.py` (chunk-weise ASR, `--lang`, Retry/Backoff, Prompt-Echo-Stripper) · für Bulk: `transcribe_bulk.py` + `build_indexes.py` (alle in diesem Skill-Verzeichnis) · `~/Documents/uni/lecture-tools/cookies.txt` (SSO-Session) · pro Modul `<modul>-terms.txt`
-- Projekt: `~/Documents/uni/moodle-mirror/<modul>/` (Mirror) + Course-ID aus `projekte/lernplan/<modul>/moodle-snapshot.json`
+- Projekt: `~/Documents/uni/moodle-mirror/<modul>/` (Mirror) + Course-ID aus `$STUDIUM/Master/<modul>/moodle-snapshot.json`
 
 Voraussetzungen gemäß `requirement-checker` Skill validieren. Bei Fehlschlag abbrechen.
 
@@ -79,7 +79,7 @@ Pro-Modul-Fachbegriffe in `~/Documents/uni/lecture-tools/<modul>-terms.txt` (fü
 ```bash
 set -a; source ~/.env; set +a   # OPENAI_API_KEY_PRIVATE laden
 python3 ~/.claude/skills/lecture-transcribe/transcribe.py \
-  "<audio>.mp3" "<VAULT>/projekte/lernplan/<modul>/transkripte/<slug>.md" \
+  "<audio>.mp3" "$STUDIUM/Master/<modul>/transkripte/<slug>.md" \
   --seg 300 --lang de --title "<slug> <titel>" --prompt-file ~/Documents/uni/lecture-tools/<modul>-terms.txt
 ```
 

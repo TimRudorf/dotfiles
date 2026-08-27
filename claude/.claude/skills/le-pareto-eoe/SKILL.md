@@ -14,16 +14,16 @@ Erzeugt aus einer **eoe-Lerneinheit** (Modul *Modern Firm*, **Part B** / Rode �
 
 Die eoe-Einheit kann übergeben werden als:
 
-- **eoe-`einheit-id`** (Muster `eoe-NN-slug`, z.B. `eoe-04-labor-markets`): direkt `$VAULT/projekte/lernplan/modern-firm/lerneinheiten/$ARGUMENTS.md` lesen.
+- **eoe-`einheit-id`** (Muster `eoe-NN-slug`, z.B. `eoe-04-labor-markets`): direkt `$STUDIUM/Master/modern-firm/lerneinheiten/$ARGUMENTS.md` lesen.
 - **Datei-Pfad / Inline-Text**: entsprechend Datei lesen bzw. Text direkt nutzen.
 
-Vault-Root host-abhängig (Mac: `~/Documents/jarvis-wiki/`, Container: `/workspace/wiki/`) — den existierenden als `$VAULT` merken.
+`$STUDIUM` = `~/Nextcloud/Studium` (lokaler Nextcloud-Sync)
 
 **Content-als-PDF-Pattern (bei eoe fast immer):** Der eigentliche Stoff steht NICHT im Markdown, sondern im verlinkten Content-PDF (Frontmatter `le-pdf` / `le-pdf-de`, Callout „Content-PDF"). Zwingend das PDF lesen — das **englische** `le-pdf` (Klausursprache EN), damit die Fachbegriffe stimmen. Bei umfangreichen PDFs vollständig lesen (`plan-quellen-tiefenanalyse`).
 
 ## Schritt 2: Relevanz-Sortierung (leichtgewichtig)
 
-`$VAULT/projekte/lernplan/modern-firm/mock-frageformen.md` lesen, nur um die Paper zu **sortieren**: mock-belegte + *starred* Paper zuerst, danach die supporting-Paper, ganz ans Ende die unbelegten (dort genügt ein Einzeiler unter „Nebenrolle"). Mehr wird daraus nicht gebraucht — keine Frageform-Aufspaltung.
+`$STUDIUM/Master/modern-firm/mock-frageformen.md` lesen, nur um die Paper zu **sortieren**: mock-belegte + *starred* Paper zuerst, danach die supporting-Paper, ganz ans Ende die unbelegten (dort genügt ein Einzeiler unter „Nebenrolle"). Mehr wird daraus nicht gebraucht — keine Frageform-Aufspaltung.
 
 **Supporting-Paper mit MC-Beleg bekommen einen vollen Block**, keinen Einzeiler — auch wenn die Mock-Tabelle sie als Distraktor führt (z.B. Baumol 1990: Distraktor *und* konzeptionelle Grundlage des Topics). „Nebenrolle" ist nur für Paper **ohne jeden Mock-Beleg**, etwa Rodes moderne Follow-ups.
 
