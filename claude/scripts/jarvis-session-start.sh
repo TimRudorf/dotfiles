@@ -86,6 +86,11 @@ export JARVIS_CWD_OUT="$CWD"
 export JARVIS_VAULT_OUT="${VAULT_PATH:-(nicht gefunden)}"
 export JARVIS_VAULT_STATUS_OUT="$VAULT_STATUS"
 
+# Regeln mit paths:-Bindung sind sonst unsichtbar, bis eine passende Datei
+# ueber Read/Edit/Write angefasst wird. Die Liste macht ihre Existenz bekannt.
+JARVIS_RULE_INDEX_OUT="$("$DOTFILES_DIR/claude/scripts/jarvis-regel-zustellung.sh" --index 2>/dev/null || true)"
+export JARVIS_RULE_INDEX_OUT
+
 if command -v python3 >/dev/null 2>&1; then
   python3 <<'PYEOF' 2>/dev/null || printf '{"continue":true}\n'
 import json, os
@@ -108,6 +113,10 @@ ctx_parts = [
     "hostübergreifend gelten — also keine host-spezifischen Pfade ohne "
     "Klammerzusatz aufschreiben.",
 ]
+
+rule_index = os.environ.get("JARVIS_RULE_INDEX_OUT", "").strip()
+if rule_index:
+    ctx_parts += ["", rule_index]
 
 ctx = "\n".join(ctx_parts)
 
