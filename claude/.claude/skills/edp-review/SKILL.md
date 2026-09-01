@@ -41,7 +41,16 @@ Einen Sub-Agent starten. Der Auftrag muss **konkret** sein — ein generisches �
    - **Registrierung:** neue Delphi-Units in `.dpr` **und** `.dproj` — Haupt- und Testprojekt.
    - **Encoding:** Windows-1252, kein BOM, kein U+FFFD.
    - **Frontend:** Konsistenz mit bestehenden Listenern/Konventionen; entfernte Trigger nirgends sonst benutzt.
-6. **Ausgabeformat:** nach Schwere sortiert, je Fund `Datei:Zeile` + Fehler + Szenario + Behebungsvorschlag. Geprüft-und-in-Ordnung ans Ende, eine Zeile pro Punkt, ohne Lob.
+6. **Regelkonformität** gegen `~/.claude/rules/` (`shared/`, `host/`, `local/`). Der Agent hat diese Regeln **nicht** im Kontext: `paths`-gebundene Regeln laden nur, wenn eine passende Datei über Read/Edit/Write angefasst wird — ein Sub-Agent, der mit `cat`/`grep` liest, löst das nie aus. Deshalb wörtlich in den Auftrag:
+   - **Anwendbare Regeln selbst bestimmen und im Volltext lesen**, nicht nach Titel raten:
+     ```bash
+     for f in ~/.claude/rules/*/*.md; do echo "== $f"; sed -n '1,15p' "$f"; done
+     ```
+     Kein `---` in Zeile 1 → die Regel gilt immer. Mit `paths:` → nur, wenn ein Glob auf eine geänderte Datei passt.
+   - Prüfen ist **Textvergleich**: je Verstoß **Regeldatei + Abschnitt**, `Datei:Zeile` und Soll/Ist. Das ist der Beleg — ein Fehlerszenario (Punkt 2) braucht ein Regelverstoß nicht.
+   - Nur, was der Diff **einbringt oder anfasst**. Altlast im Umfeld getrennt auflisten (RULES.md → „Erkannte Regelverstöße": Behebung anbieten, nicht ungefragt mitfixen).
+   - Nicht nur Code: **PR-Titel, PR-Body und Commit-Botschaften** fallen unter `texte.md` (Wesentliches zuerst, bearbeiten statt anhängen, echte Umlaute) und unter die Unsichtbarkeits-Regel — kein Hinweis auf AI.
+7. **Ausgabeformat:** nach Schwere sortiert, je Fund `Datei:Zeile` + Fehler + Szenario + Behebungsvorschlag. **Regelverstöße als eigener Block**, damit sie nicht zwischen den Bugs untergehen. Geprüft-und-in-Ordnung ans Ende, eine Zeile pro Punkt, ohne Lob.
 
 ## Schritt 3: Funde verifizieren
 
@@ -49,6 +58,7 @@ Einen Sub-Agent starten. Der Auftrag muss **konkret** sein — ein generisches �
 
 - **Berechtigt** → fixen, Tests ergänzen wo sinnvoll, committen.
 - **Fehlalarm** → verwerfen und im Report kurz begründen, warum er keiner ist.
+- **Regelverstoß** → die zitierte Regelstelle selbst nachlesen, bevor gefixt wird. Der Agent zitiert aus einer Datei, die sonst niemand in dieser Sitzung gesehen hat; eine falsch verstandene Regel erzeugt einen Fix, den die Regel gar nicht verlangt.
 
 Bei Unsicherheit den Agent per Nachfrage weiterarbeiten lassen, statt zu raten.
 
