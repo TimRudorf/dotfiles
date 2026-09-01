@@ -192,11 +192,11 @@ Helfern aus `Test.Source.Quelltext`.
 #### Mutationsprobe
 
 Jede neue Schutzmaßnahme einmal gezielt kaputtmachen und belegen, dass sie rot
-wird. Werkzeug: **`scripts/mutationsprobe.py`** (Fallliste oben in der Datei
-anpassen) — es fährt die Reihe seriell gegen die Dev-VM und prüft je Fall, dass
-die Mutation den Baum wirklich verändert hat, dass der Push serverseitig
-angekommen ist, dass die Testanzahl stimmt und dass **genau die erwarteten
-Testnamen** rot sind.
+wird. Werkzeug: **`scripts/mutationsprobe.py`** in diesem Skill-Verzeichnis
+(Fallliste oben in der Datei anpassen) — es fährt die Reihe seriell gegen die
+Dev-VM und prüft je Fall, dass die Mutation den Baum wirklich verändert hat,
+dass der Push serverseitig angekommen ist, dass die Testanzahl stimmt und dass
+**genau die erwarteten Testnamen** rot sind.
 
 Pflichtbestandteile jeder Reihe:
 
