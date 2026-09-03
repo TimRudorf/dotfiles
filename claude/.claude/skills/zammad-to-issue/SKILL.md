@@ -307,11 +307,17 @@ Je nach Herkunft des Tickets unterschiedliche Formulierung:
 
 ## Regeln für den Inhalt
 
+🔴 **Regelgrundlage ist `~/.claude/rules/shared/texte.md`** — für Titel, Body und
+den Zammad-Kommentar aus Schritt 5. Sie wird hier **nicht** wiederholt; maßgeblich
+sind *Das Wesentliche zuerst*, *Kurz heißt: Prosa raus, Substanz bleibt* und
+*Echte Umlaute*. Die Metadaten (Typ, Assignee) regelt `issue-metadaten.md` —
+deshalb sind Typ (2d) und Repo (2b) Pflichtfelder.
+
+Was dieser Skill darüber hinaus verlangt:
+
 - **Deutsche Sprache**, professioneller Ton
 - **Kein Hinweis** auf AI oder automatische Erstellung
 - **Kein Copy-Paste** von Kunden-Mails — Inhalt wird in eigenen Worten zusammengefasst und fachlich aufbereitet
-- Fachlich präzise, keine Füllwörter
-- **Echte Umlaute** (ä, ö, ü, ß) verwenden — niemals ASCII-Umschreibungen (ae, oe, ue, ss)
 - Bug vs. Feature/Verbesserung bestimmt welche Sektionen genutzt werden
 
 ## GHE-Spezifika
