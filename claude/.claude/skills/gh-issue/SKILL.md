@@ -146,13 +146,15 @@ GH_HOST=github.com gh pr create -R TimRudorf/<repo> --base <default> --title "�
 ```
 
 Body: `## Summary` + `## Test plan` (inkl. Verifikations-Beleg) und `Closes #<nr>`.
+Inhalt und Länge nach `texte.md` (Core → *Regelgrundlage für jeden erzeugten Text*).
 Label nur aus dem vorhandenen Standard-Satz (`bug`, `enhancement`,
 `documentation`) — die `merge:*`/`todo:*`-Schemata der Arbeits-Repos gibt es hier
 nicht. Kein Reviewer, kein Assignee-Zwang.
 
 ### `«ABSCHLUSS»` — selbst mergen und aufräumen
 
-Merge-ready reicht **nicht**. Ohne Rückfrage:
+Merge-ready reicht **nicht**. Ohne Rückfrage — das Löschen des Quell-Branches
+gehört nach `git-branches.md` in denselben Zug wie der Merge:
 
 ```bash
 GH_HOST=github.com gh pr merge <nr> -R TimRudorf/<repo> --squash --delete-branch

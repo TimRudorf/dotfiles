@@ -80,7 +80,13 @@ Aus den Commits und dem Branch-Namen einen prägnanten Titel ableiten. Format: `
 
 Der Body wird von einem **Menschen** gelesen, der entscheiden muss. Er will
 wissen, was sich ändert, warum, wo er hinschauen soll und was er prüfen muss —
-sonst nichts. Regelgrundlage: `texte.md` → *Was in einen Vorgang gehört*.
+sonst nichts.
+
+🔴 **Regelgrundlage ist `~/.claude/rules/shared/texte.md`.** Sie gilt für jeden
+Text, den dieser Skill erzeugt — PR-Titel, Body, Zammad-Kommentar — und wird
+hier **nicht** wiederholt. Vor dem Absenden gegen ihre Abschnitte prüfen, allen
+voran *Das Wesentliche zuerst*, *Was in einen Vorgang gehört*, *Bearbeiten,
+nicht anhängen* und *Echte Umlaute*.
 
 ```markdown
 <2–4 Zeilen ohne Überschrift: was sich ändert und warum. Closes #<nummer>.>
@@ -102,21 +108,10 @@ ohne Befund blieben. Danach als Checkliste, was noch offen ist:>
 
 Die `Closes #<nummer>`-Zeile **nur** einfügen, wenn eine Ticket-Nummer aus dem Branch-Namen extrahiert wurde.
 
-**Nicht in den Body** — das steht in Git, im Issue oder im Ticket:
-
-- der Werdegang („erst hatte ich X, dann Y"), verworfene Ansätze, lokale
-  Review-Runden, Rebase- und Formatier-Hinweise
-- vollständige Messprotokolle und Fundstellenlisten → wenn sie wirklich
-  hierher gehören, in einen `<details>`-Block
-- Begründungen für Dinge, die *nicht* getan wurden — außer die Entscheidung
-  soll bestätigt oder gekippt werden
-
-**Obergrenze: ein Bildschirm.** Wer scrollen muss, um zu sehen, was er prüfen
-soll, prüft es nicht. Wird der Entwurf länger, ist das ein Zeichen, dass
-Werdegang mitgeschrieben wurde — nicht, dass der PR groß ist.
-
-**Korrekturen später gehören in den Body**, nicht als Kommentar darunter. Wer
-den PR öffnet, liest den Body und hält ihn für gültig.
+Was **nicht** in den Body gehört und wo die Längengrenze liegt, steht in
+`texte.md` → *Was in einen Vorgang gehört*. Der Prüfgriff für diesen Skill:
+reißt der Entwurf die Faustzahl von einem Bildschirm, wurde Werdegang
+mitgeschrieben — das ist kein Zeichen dafür, dass der PR groß ist.
 
 ### Schritt 5: Entwurf präsentieren
 
@@ -227,7 +222,8 @@ Die Bestätigung aus dem /zammad-write Skill **überspringen** — der User hat 
 
 - **GitHub-Leseabfragen** über Subagent-Delegation — kein MCP
 - **GitHub-Schreibaktionen** über `gh` CLI
-- **Deutsche Sprache** im PR-Body mit echten Umlauten (ä, ö, ü, ß)
+- **Jeder erzeugte Text** folgt `~/.claude/rules/shared/texte.md` — deutsch, echte
+  Umlaute, Wesentliches zuerst, Korrekturen im Body statt als Nachtrag
 - **Kein** `Co-Authored-By` Trailer
 - **Kein Hinweis** auf AI oder automatische Erstellung im PR-Body
 - Alle Metadaten (Repos, Projects) werden **live abgefragt**, nie hardcoded
@@ -235,7 +231,7 @@ Die Bestätigung aus dem /zammad-write Skill **überspringen** — der User hat 
 - Base-Branch ist immer `dev`
 - Assignee ist immer `tim-rudorf`
 - **Kein Reviewer** wird automatisch gesetzt — Copilot ist auf der GHE-Instanz inaktiv (Begründung im Create-Modus). Geprüft wird per `/edp-review`, im Issue-Workflow vor dem Erstellen. `patrick-vogel` NICHT automatisch — nur wenn der User es ausdrücklich verlangt.
-- Alle `gh`-Aufrufe mit vollem GHE-Host: `-R einsatzleitsoftware.ghe.com/edp/<repo>` bzw. `--hostname einsatzleitsoftware.ghe.com` (sonst loest `gh` gegen github.com auf → "Could not resolve to a Repository")
+- Alle `gh`-Aufrufe mit vollem GHE-Host: `-R einsatzleitsoftware.ghe.com/edp/<repo>` bzw. `--hostname einsatzleitsoftware.ghe.com` (sonst löst `gh` gegen github.com auf → "Could not resolve to a Repository")
 - **Fehlertoleranz**: Fehlende GitHub-Scopes oder API-Fehler bei optionalen Schritten (Projects) überspringen statt abbrechen
 - Bei Unsicherheiten den User fragen
 

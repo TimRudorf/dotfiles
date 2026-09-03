@@ -33,6 +33,21 @@ Host-agnostischer Ablauf vom Issue bis zum mergebaren PR. Wird von `edp-issue`
   `korrektur-erreicht-alle-traeger`, `tests-dynamisch-erweitern`, `schreib-verify`
   und `programmier-grundsaetze`. Sie werden hier **nicht** wiederholt.
 
+## Regelgrundlage für jeden erzeugten Text
+
+Der Ablauf schreibt an vielen Stellen Text, den ein Mensch liest. Für **jeden**
+davon gelten die Regeln aus `~/.claude/rules/shared/`; sie werden hier nicht
+wiederholt, sondern angewendet:
+
+| Regel | Wo im Ablauf |
+|---|---|
+| `texte.md` | Issue-Kommentar (Schritt 1, 7), Issue-Body eines ausgekoppelten Randfunds (7), Commit-Botschaft (5), PR-Titel und -Body (8), Report an Tim (8.6) |
+| `issue-metadaten.md` | jedes **neu angelegte** Issue (7): Typ und Assignee im selben `gh issue create`-Aufruf, nicht nachträglich |
+| `git-branches.md` | nur wenn `«ABSCHLUSS»` selbst mergt (8.5): Quell-Branch lokal **und** auf `origin` löschen, im selben Zug |
+
+`sprache-im-code.md` gilt hier **nicht** — sie nimmt Doku, Commit-Botschaft,
+PR-Body und Issue ausdrücklich aus. Bezeichner im Diff fallen weiter darunter.
+
 ## Schritt 1: Issue + Kontext erfassen
 
 Repo und Nummer aus `$ARGUMENTS` ableiten (URL, `<repo>#<nr>` oder Nummer +
@@ -101,9 +116,9 @@ Dokument) — **nicht** in den Skill. Der Skill trägt nur, was er zum Arbeiten
 braucht. Fehlende Erkenntnisse (Root-Cause, Branch-Entscheidung) am Issue ergänzen.
 
 **Randfunde auskoppeln statt mitfixen**: eigenes Issue mit Messung und
-Akzeptanzkriterien. Vorher den Bestand prüfen — offen **und** geschlossen, Titel
-**und** Body, und mit einem Kontrollbegriff, von dem feststeht, dass er treffen
-muss. Erst den Vorgang anlegen, dann seine Nummer irgendwo nennen; geratene
+Akzeptanzkriterien, Typ und Assignee nach `issue-metadaten.md`. Vorher den
+Bestand prüfen — offen **und** geschlossen, Titel **und** Body, und mit einem
+Kontrollbegriff, von dem feststeht, dass er treffen muss. Erst den Vorgang anlegen, dann seine Nummer irgendwo nennen; geratene
 Nummern sind auch dann falsch, wenn sie zufällig stimmen.
 
 ## Schritt 8: Review, dann PR
