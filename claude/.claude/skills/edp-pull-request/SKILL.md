@@ -93,7 +93,9 @@ sonst nichts. Regelgrundlage: `texte.md` → *Was in einen Vorgang gehört*.
 
 ## Was geprüft ist
 
-<Was grün ist, mit Zahlen. Danach als Checkliste, was noch offen ist:>
+<Was grün ist, mit Zahlen — Tests, Live-Verifikation, und der Prüfstand des
+lokalen Reviews („gegen `<sha>` geprüft, Schwerpunkte: …") samt der Punkte, die
+ohne Befund blieben. Danach als Checkliste, was noch offen ist:>
 
 - [ ] <konkreter Prüfschritt für den Reviewer>
 ```
@@ -159,9 +161,9 @@ Assignee setzen:
 gh pr edit <pr-nummer> -R einsatzleitsoftware.ghe.com/edp/<repo> --add-assignee tim-rudorf
 ```
 
-> **Kein Copilot-Review mehr.** Seit 2026-08-06 wird Copilot **nicht** angefordert — der Bot ist auf der GHE-Instanz inaktiv (in den letzten 40 edpweb-PRs kein einziges Review), `gh pr edit --add-reviewer copilot-pull-request-reviewer` ist ein stiller No-op, und die GraphQL-Anforderung braucht eine Bot-Node-ID, die sich ohne vorhandenes Review nicht ermitteln lässt. Stattdessen den PR per **`/edp-review`** von einem skeptischen lokalen Agent prüfen lassen.
+> **Kein Copilot-Review mehr.** Seit 2026-08-06 wird Copilot **nicht** angefordert — der Bot ist auf der GHE-Instanz inaktiv (in den letzten 40 edpweb-PRs kein einziges Review), `gh pr edit --add-reviewer copilot-pull-request-reviewer` ist ein stiller No-op, und die GraphQL-Anforderung braucht eine Bot-Node-ID, die sich ohne vorhandenes Review nicht ermitteln lässt. Stattdessen prüft ein skeptischer lokaler Agent per **`/edp-review`** — im Issue-Workflow **vor** dem Erstellen des PR (`issue-workflow-core.md` → Schritt 8). So beschreibt der Body den Endstand, und die Fix-Runde kostet keinen zweiten CI-Durchgang.
 
-`patrick-vogel` wird **nicht** automatisch als Reviewer gesetzt — nur wenn der User es ausdruecklich sagt (dann `--add-reviewer patrick-vogel`).
+`patrick-vogel` wird **nicht** automatisch als Reviewer gesetzt — nur wenn der User es ausdrücklich sagt (dann `--add-reviewer patrick-vogel`).
 
 **6d: Project zuordnen (optional)**
 
@@ -185,7 +187,7 @@ gh pr edit <nummer> -R einsatzleitsoftware.ghe.com/edp/<repo> --title "<titel>" 
 gh pr edit <nummer> -R einsatzleitsoftware.ghe.com/edp/<repo> --add-assignee tim-rudorf
 ```
 
-Kein Reviewer wird automatisch gesetzt (siehe Create-Modus: Copilot ist auf der GHE-Instanz inaktiv). Zum Prüfen `/edp-review` nutzen. `patrick-vogel` nur auf ausdrueckliche Ansage.
+Kein Reviewer wird automatisch gesetzt (siehe Create-Modus: Copilot ist auf der GHE-Instanz inaktiv). Geprüft wird per `/edp-review`; dessen Ergebnis wird in den **Body eingearbeitet**, nicht als Kommentar angehängt. `patrick-vogel` nur auf ausdrückliche Ansage.
 
 **6c: Project zuordnen (optional)**
 
@@ -232,7 +234,7 @@ Die Bestätigung aus dem /zammad-write Skill **überspringen** — der User hat 
 - **Keine Labels** zuweisen
 - Base-Branch ist immer `dev`
 - Assignee ist immer `tim-rudorf`
-- **Kein Reviewer** wird automatisch gesetzt — Copilot ist auf der GHE-Instanz inaktiv (Begründung im Create-Modus). Geprüft wird per `/edp-review`. `patrick-vogel` NICHT automatisch — nur wenn der User es ausdruecklich verlangt.
+- **Kein Reviewer** wird automatisch gesetzt — Copilot ist auf der GHE-Instanz inaktiv (Begründung im Create-Modus). Geprüft wird per `/edp-review`, im Issue-Workflow vor dem Erstellen. `patrick-vogel` NICHT automatisch — nur wenn der User es ausdrücklich verlangt.
 - Alle `gh`-Aufrufe mit vollem GHE-Host: `-R einsatzleitsoftware.ghe.com/edp/<repo>` bzw. `--hostname einsatzleitsoftware.ghe.com` (sonst loest `gh` gegen github.com auf → "Could not resolve to a Repository")
 - **Fehlertoleranz**: Fehlende GitHub-Scopes oder API-Fehler bei optionalen Schritten (Projects) überspringen statt abbrechen
 - Bei Unsicherheiten den User fragen

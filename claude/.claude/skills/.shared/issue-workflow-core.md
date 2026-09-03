@@ -106,27 +106,43 @@ Akzeptanzkriterien. Vorher den Bestand prüfen — offen **und** geschlossen, Ti
 muss. Erst den Vorgang anlegen, dann seine Nummer irgendwo nennen; geratene
 Nummern sind auch dann falsch, wenn sie zufällig stimmen.
 
-## Schritt 8: PR bis zum Abschluss treiben
+## Schritt 8: Review, dann PR
 
-1. **PR** gemäß `«PR»`, ohne Zwischenbestätigung. `Closes #<nr>` je vollständig
-   erledigtem Issue in Body **und** Commit-Botschaft; nach jeder Body-Änderung
-   `--json closingIssuesReferences` gegenlesen. Teilbezüge nur als `Ref #<nr>`.
-2. **CI beobachten.** Bei Rot erst die Fehlerstelle holen und belegen, dass der
-   Pfad nicht aus diesem Diff stammt — „ist bestimmt flaky" ist keine Messung.
-   Das Ergebnis gehört in den PR-Body, nicht weggeschwiegen.
-3. **Lokales Review** per `/edp-review` auf den serverseitigen Head-SHA ansetzen.
+🔴 **Das Review läuft vor dem PR, nicht danach.** Zwei Gründe: der PR-Body wird
+aus dem fertigen Stand geschrieben, statt nachträglich um Review-Runden ergänzt zu
+werden, und jede Fix-Runde nach dem Öffnen kostet einen weiteren CI-Durchgang.
+
+1. **Lokales Review** per `/edp-review` auf den fertig verifizierten Stand: Diff
+   `origin/<base>...HEAD`, den Commit-SHA (`git rev-parse HEAD`) wörtlich in den
+   Auftrag. Vor Schritt 6 hat es keinen Sinn — was nicht verifiziert ist, ändert
+   sich noch.
+
    Funde selbst verifizieren, dabei die Gegenprobe **anders konstruieren** als die
    Messung, die den Fund erzeugt hat. Auch der vorgeschlagene **Fix** ist eine
-   Behauptung und wird gemessen. Ändert die Runde das Verhalten, sind die im
-   PR-Body zitierten Belege überholt und neu zu messen — Live-Messung und
-   Mutationsprobe eingeschlossen.
-4. **Loop bis mergebar**: `mergeable MERGEABLE` und `mergeStateStatus CLEAN` als
+   Behauptung und wird gemessen. Ändert die Runde das Verhalten, sind die Belege
+   aus Schritt 5 und 6 überholt und neu zu messen — Live-Messung und
+   Mutationsprobe eingeschlossen; danach erneut reviewen. Erst wenn eine Runde
+   nichts mehr ändert, geht der PR auf.
+2. **PR** gemäß `«PR»`, ohne Zwischenbestätigung. `Closes #<nr>` je vollständig
+   erledigtem Issue in Body **und** Commit-Botschaft; nach jeder Body-Änderung
+   `--json closingIssuesReferences` gegenlesen. Teilbezüge nur als `Ref #<nr>`.
+
+   Der Body beschreibt den **Endstand**. Was das Review geprüft und für gut
+   befunden hat, gehört als Prüfstand-Angabe hinein — „gegen `<sha>` geprüft,
+   Schwerpunkte: …" samt der Punkte **ohne** Befund; das ist die halbe Ersparnis
+   für den menschlichen Reviewer. Der Werdegang gehört nicht hinein: keine
+   Fundliste, keine „behoben/verworfen"-Chronik, kein Hinweis auf den Prüfer oder
+   den eigenen Apparat.
+3. **CI beobachten.** Bei Rot erst die Fehlerstelle holen und belegen, dass der
+   Pfad nicht aus diesem Diff stammt — „ist bestimmt flaky" ist keine Messung.
+   Das Ergebnis gehört in den PR-Body, nicht weggeschwiegen.
+4. **Nachrunden ändern den Body, nicht den Kommentarstrang.** Bewegt sich der Diff
+   nach dem Öffnen (CI-Rot, Nachforderung, menschliches Review), das Review auf
+   das Delta erneut ansetzen — und die betroffene Body-Stelle **ändern** statt
+   einen Nachtrag anzuhängen (`texte.md` → *Bearbeiten, nicht anhängen*).
+5. **Loop bis mergebar**: `mergeable MERGEABLE` und `mergeStateStatus CLEAN` als
    Mindestzustand. Danach gilt `«ABSCHLUSS»`.
-5. **Report** an Tim: Issue, Ursache bzw. Lösung, Fix-Zusammenfassung,
+6. **Report** an Tim: Issue, Ursache bzw. Lösung, Fix-Zusammenfassung,
    Verifikations-Beleg, PR-URL + Status. Kompakt, deutsch, echte Umlaute.
 
-Die Review-Notiz am PR nennt auch die Funde **ohne** Befund („geprüft und in
-Ordnung") — das ist die halbe Ersparnis für den menschlichen Reviewer. Sie
-benennt den **Prüfstand** („gegen Head `<sha>` geprüft, Schwerpunkte: …"), nicht
-den Prüfer; ein Hinweis auf den eigenen Apparat gehört nicht in Repo-sichtbaren
-Text. Kein Hinweis auf AI in Issue-, PR- oder Review-Text.
+Kein Hinweis auf AI in Issue-, PR- oder Review-Text.

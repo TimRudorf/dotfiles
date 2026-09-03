@@ -274,6 +274,11 @@ Issue und PR begründen.
 
 ### `«PR»` — `/edp-pull-request`, dieses Profil gewinnt
 
+🔴 **Der PR geht erst auf, wenn das lokale Review durch ist** (Core Schritt 8).
+Der erste CI-Lauf soll der einzige sein — was ein Review vorher findet, kostet
+keinen zweiten Durchgang auf der GHE-Instanz. Und der Body entsteht aus dem
+Endstand, statt später um Review-Runden ergänzt zu werden.
+
 ⚠️ Jener Skill sagt „keine Labels" und will den Entwurf bestätigt haben — beides
 ist hier überholt: Labels sind Pflicht, im Autonomie-Modus entfällt die
 Zwischenbestätigung. Seine Zammad-Notiz greift nur bei echtem `EDP#<nr>` im Body.
@@ -360,9 +365,14 @@ halten.
   daran vorbei einen neuen Branch aufmachen.
 - Der Worktree ist geteilt. Vor einem Branch-Wechsel darin ansagen, und ihn nicht
   über einen laufenden Review legen.
-- Review-Agenten gegen den **serverseitigen** PR-Head beauftragen, nicht gegen „das
-  Arbeitsverzeichnis" — ein Arbeitsverzeichnis kann während des Laufs wandern.
-- Doppelte Review-Notizen zusammenführen, Randfunde nicht doppelt erfassen.
+- Review-Agenten gegen einen **festen SHA** beauftragen (`git rev-parse HEAD`, bei
+  offenem PR dessen Head), nicht gegen „das Arbeitsverzeichnis" — das kann
+  während des Laufs wandern.
+- Läuft das Review vor dem PR, hat die andere Session denselben Stand vielleicht
+  schon geprüft: vor dem Beauftragen kurz abgleichen, statt zwei Agenten auf
+  denselben Diff zu setzen.
+- Doppelte Review-Ergebnisse im PR-Body zusammenführen, Randfunde nicht doppelt
+  erfassen.
 
 ## Fremde Repos: erst lesen, dann schreiben
 
